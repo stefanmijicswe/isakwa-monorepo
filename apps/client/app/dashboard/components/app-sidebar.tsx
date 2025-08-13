@@ -11,8 +11,7 @@ import {
   GraduationCap,
   Calendar,
   FileText,
-  Bell,
-  IconInnerShadowTop
+  Bell
 } from "lucide-react"
 
 import {
