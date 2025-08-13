@@ -35,7 +35,7 @@ export default function TermsPage() {
           {/* Title */}
           <div className="text-center mb-16">
             <h1 className="text-4xl font-light text-slate-900 mb-4">Terms of Service</h1>
-            <p className="text-slate-500">Last updated: December 2024</p>
+            <p className="text-slate-500">Last updated: August 14, 2025</p>
             <p className="text-sm text-slate-400 mt-2">Singidunum University • Belgrade, Serbia</p>
           </div>
           
@@ -407,7 +407,7 @@ export default function TermsPage() {
           {/* Footer */}
           <div className="text-center pt-8 border-t border-slate-100">
             <p className="text-slate-500 text-sm mb-6">
-              These Terms of Service are effective as of December 2024 and constitute the complete agreement between users and Singidunum University regarding the use of our Services.
+              These Terms of Service are effective as of August 14, 2025 and constitute the complete agreement between users and Singidunum University regarding the use of our Services.
             </p>
             <div className="flex justify-center space-x-4">
               <Link href="/">
