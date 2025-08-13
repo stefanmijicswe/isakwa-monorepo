@@ -11,7 +11,12 @@
             ]
         },
         "dev": {
-            "cache": false
+            "cache": false,
+            "persistent": true
+        },
+        "start:dev": {
+            "cache": false,
+            "persistent": true
         },
         "lint": {
             "dependsOn": [
@@ -21,6 +26,11 @@
         "type-check": {
             "dependsOn": [
                 "^type-check"
+            ]
+        },
+        "test": {
+            "dependsOn": [
+                "^build"
             ]
         }
     }
