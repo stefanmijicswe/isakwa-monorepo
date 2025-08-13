@@ -99,7 +99,7 @@ export function Footer() {
           </div>
           <div className="flex space-x-8 text-sm text-slate-400">
             <Link href="/policy" className="hover:text-white transition-colors duration-200">Privacy Policy</Link>
-            <Link href="#" className="hover:text-white transition-colors duration-200">Terms of Service</Link>
+            <Link href="/terms" className="hover:text-white transition-colors duration-200">Terms of Service</Link>
             <Link href="#" className="hover:text-white transition-colors duration-200">Accessibility</Link>
             <Link href="#" className="hover:text-white transition-colors duration-200">Cookie Policy</Link>
           </div>
