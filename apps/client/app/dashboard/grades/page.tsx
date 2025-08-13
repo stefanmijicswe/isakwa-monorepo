@@ -5,7 +5,7 @@ export default function GradesPage() {
         <h1 className="text-3xl font-bold text-slate-900">Grades</h1>
         <p className="text-slate-600">View and manage grades and assessments</p>
       </div>
-      
+
       <div className="bg-white p-6 rounded-lg border border-slate-200">
         <h2 className="text-lg font-semibold text-slate-900 mb-4">Recent Grades</h2>
         <div className="space-y-3">
@@ -19,7 +19,7 @@ export default function GradesPage() {
               <p className="text-sm text-slate-600">Excellent</p>
             </div>
           </div>
-          
+
           <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
             <div>
               <h3 className="font-medium text-slate-900">Data Structures & Algorithms</h3>
@@ -30,7 +30,7 @@ export default function GradesPage() {
               <p className="text-sm text-slate-600">Very Good</p>
             </div>
           </div>
-          
+
           <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
             <div>
               <h3 className="font-medium text-slate-900">Web Development</h3>

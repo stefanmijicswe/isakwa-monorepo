@@ -5,7 +5,7 @@ export default function StudentsPage() {
         <h1 className="text-3xl font-bold text-slate-900">Students</h1>
         <p className="text-slate-600">Manage your student roster and information</p>
       </div>
-      
+
       <div className="bg-white p-6 rounded-lg border border-slate-200">
         <h2 className="text-lg font-semibold text-slate-900 mb-4">Student List</h2>
         <div className="space-y-3">
@@ -21,7 +21,7 @@ export default function StudentsPage() {
             </div>
             <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">Active</span>
           </div>
-          
+
           <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
@@ -34,7 +34,7 @@ export default function StudentsPage() {
             </div>
             <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">Active</span>
           </div>
-          
+
           <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
