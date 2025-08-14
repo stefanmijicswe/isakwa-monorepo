@@ -1,8 +1,55 @@
+"use client"
+
 import { Button } from "../../components/ui/button"
 import { Badge } from "../../components/ui/badge"
 import Image from "next/image"
+import { useEffect, useState } from "react"
+
+// Hook za animaciju brojčana
+function useCountAnimation(target: number, duration: number = 2000) {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    let startTime: number
+    let animationFrame: number
+
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime
+      const progress = Math.min((currentTime - startTime) / duration, 1)
+      
+      // Smoother easing function (easeOutQuart)
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4)
+      const currentCount = Math.floor(target * easeOutQuart)
+      
+      setCount(currentCount)
+      
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate)
+      }
+    }
+
+    // Delay za početak animacije
+    const timer = setTimeout(() => {
+      animationFrame = requestAnimationFrame(animate)
+    }, 200)
+
+    return () => {
+      clearTimeout(timer)
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame)
+      }
+    }
+  }, [target, duration])
+
+  return count
+}
 
 export function HeroSection() {
+  // Animirane vrednosti
+  const activeStudents = useCountAnimation(15000, 1500)
+  const academicPrograms = useCountAnimation(200, 1300)
+  const employmentRate = useCountAnimation(95, 1100)
+
   return (
     <section className="relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 overflow-hidden">
       <div className="absolute inset-0">
@@ -106,15 +153,21 @@ export function HeroSection() {
 
             <div className="grid grid-cols-3 gap-8 pt-8">
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600 mb-2">15,000+</div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">
+                  {activeStudents.toLocaleString()}+
+                </div>
                 <div className="text-slate-600 text-sm">Active Students</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-purple-600 mb-2">200+</div>
+                <div className="text-3xl font-bold text-purple-600 mb-2">
+                  {academicPrograms}+
+                </div>
                 <div className="text-slate-600 text-sm">Academic Programs</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-600 mb-2">95%</div>
+                <div className="text-3xl font-bold text-green-600 mb-2">
+                  {employmentRate}%
+                </div>
                 <div className="text-slate-600 text-sm">Employment Rate</div>
               </div>
             </div>
