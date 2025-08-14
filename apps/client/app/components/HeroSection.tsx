@@ -176,8 +176,8 @@ export function HeroSection() {
                         <div className="relative">
                 <div className="w-full h-[600px] relative rounded-3xl shadow-2xl overflow-hidden">
                   <Image
-                    src="/studentHeader.jpg"
-                    alt="Student at Singidunum University"
+                    src="/graduates.png"
+                    alt="Graduates at Singidunum University"
                     fill
                     className="object-cover"
                     priority
