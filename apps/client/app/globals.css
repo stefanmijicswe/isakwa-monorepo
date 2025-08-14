@@ -86,3 +86,41 @@ body {
     max-width: 1280px;
   }
 }
+
+/* Moving ticker animation for partner logos */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes scroll-smooth {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 20s linear infinite;
+}
+
+.animate-scroll-smooth {
+  animation: scroll-smooth 40s linear infinite;
+  will-change: transform;
+  animation-fill-mode: none;
+}
+
+/* Pause animation on hover */
+.animate-scroll:hover {
+  animation-play-state: paused;
+}
+
+.animate-scroll-smooth:hover {
+  animation-play-state: paused;
+}

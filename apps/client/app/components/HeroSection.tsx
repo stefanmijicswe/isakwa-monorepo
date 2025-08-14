@@ -11,7 +11,7 @@ export function HeroSection() {
         <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-blue-200/20 rounded-full blur-2xl"></div>
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20 lg:pt-12 lg:pb-32">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <div className="space-y-4">
@@ -22,13 +22,78 @@ export function HeroSection() {
                 </span>
               </h1>
               <h2 className="text-3xl lg:text-4xl font-semibold text-slate-700">
-                <span className="bg-yellow-300 px-2 py-1 rounded">Private University</span>
+                <span className="bg-yellow-300 px-2 py-1 rounded">#1 University in Serbia</span>
               </h2>
             </div>
 
             <p className="text-xl lg:text-2xl text-slate-600 leading-relaxed max-w-lg">
               To advance, adapt and accelerate careers through innovative education and cutting-edge research.
             </p>
+
+            <div className="bg-gradient-to-r from-slate-50/80 to-white/80 backdrop-blur-sm rounded-2xl p-4 border border-slate-200/50 shadow-xl overflow-hidden">
+              <p className="text-xs font-semibold text-slate-400 mb-3 text-center tracking-wider uppercase">Trusted by Industry Leaders</p>
+              <div className="relative h-12 flex items-center">
+                <div className="flex animate-scroll-smooth space-x-12 items-center">
+                  {/* First set of logos */}
+                  <div className="flex items-center justify-center min-w-fit opacity-90 hover:opacity-100 transition-opacity duration-500">
+                    <Image src="/logos/Microsoft_logo.svg" alt="Microsoft" width={100} height={24} className="object-contain max-h-6 filter grayscale hover:grayscale-0 transition-all duration-500" />
+                  </div>
+                  
+                  <div className="flex items-center justify-center min-w-fit opacity-90 hover:opacity-100 transition-opacity duration-500">
+                    <Image src="/logos/nvidia.svg" alt="NVIDIA" width={100} height={24} className="object-contain max-h-6 filter grayscale hover:grayscale-0 transition-all duration-500" />
+                  </div>
+                  
+                  <div className="flex items-center justify-center min-w-fit opacity-90 hover:opacity-100 transition-opacity duration-500">
+                    <Image src="/logos/Amazon_Web_Services_Logo.svg" alt="Amazon Web Services" width={100} height={24} className="object-contain max-h-6 filter grayscale hover:grayscale-0 transition-all duration-500" />
+                  </div>
+                  
+                  <div className="flex items-center justify-center min-w-fit opacity-90 hover:opacity-100 transition-opacity duration-500">
+                    <Image src="/logos/google-1-1.svg" alt="Google" width={100} height={24} className="object-contain max-h-6 filter grayscale hover:grayscale-0 transition-all duration-500" />
+                  </div>
+                  
+                  <div className="flex items-center justify-center min-w-fit opacity-90 hover:opacity-100 transition-opacity duration-500">
+                    <Image src="/logos/meta-color.svg" alt="Meta" width={100} height={24} className="object-contain max-h-6 filter grayscale hover:grayscale-0 transition-all duration-500" />
+                  </div>
+                  
+                  <div className="flex items-center justify-center min-w-fit opacity-90 hover:opacity-100 transition-opacity duration-500">
+                    <Image src="/logos/netflix-3.svg" alt="Netflix" width={100} height={24} className="object-contain max-h-6 filter grayscale hover:grayscale-0 transition-all duration-500" />
+                  </div>
+                  
+                  <div className="flex items-center justify-center min-w-fit opacity-90 hover:opacity-100 transition-opacity duration-500">
+                    <Image src="/logos/uber-2.svg" alt="Uber" width={100} height={24} className="object-contain max-h-6 filter grayscale hover:grayscale-0 transition-all duration-500" />
+                  </div>
+                  
+                  {/* Duplicate set for seamless loop */}
+                  <div className="flex items-center justify-center min-w-fit opacity-90 hover:opacity-100 transition-opacity duration-500">
+                    <Image src="/logos/Microsoft_logo.svg" alt="Microsoft" width={100} height={24} className="object-contain max-h-6 filter grayscale hover:grayscale-0 transition-all duration-500" />
+                  </div>
+                  
+                  <div className="flex items-center justify-center min-w-fit opacity-90 hover:opacity-100 transition-opacity duration-500">
+                    <Image src="/logos/nvidia.svg" alt="NVIDIA" width={100} height={24} className="object-contain max-h-6 filter grayscale hover:grayscale-0 transition-all duration-500" />
+                  </div>
+                  
+                  <div className="flex items-center justify-center min-w-fit opacity-90 hover:opacity-100 transition-opacity duration-500">
+                    <Image src="/logos/Amazon_Web_Services_Logo.svg" alt="Amazon Web Services" width={100} height={24} className="object-contain max-h-6 filter grayscale hover:grayscale-0 transition-all duration-500" />
+                  </div>
+                  
+                  <div className="flex items-center justify-center min-w-fit opacity-90 hover:opacity-100 transition-opacity duration-500">
+                    <Image src="/logos/google-1-1.svg" alt="Google" width={100} height={24} className="object-contain max-h-6 filter grayscale hover:grayscale-0 transition-all duration-500" />
+                  </div>
+                  
+                  <div className="flex items-center justify-center min-w-fit opacity-90 hover:opacity-100 transition-opacity duration-500">
+                    <Image src="/logos/meta-color.svg" alt="Meta" width={100} height={24} className="object-contain max-h-6 filter grayscale hover:grayscale-0 transition-all duration-500" />
+                  </div>
+                  
+                  <div className="flex items-center justify-center min-w-fit opacity-90 hover:opacity-100 transition-opacity duration-500">
+                    <Image src="/logos/netflix-3.svg" alt="Netflix" width={100} height={24} className="object-contain max-h-6 filter grayscale hover:grayscale-0 transition-all duration-500" />
+                  </div>
+                  
+                  <div className="flex items-center justify-center min-w-fit opacity-90 hover:opacity-100 transition-opacity duration-500">
+                    <Image src="/logos/uber-2.svg" alt="Uber" width={100} height={24} className="object-contain max-h-6 filter grayscale hover:grayscale-0 transition-all duration-500" />
+                  </div>
+                </div>
+              </div>
+            </div>
 
                             <div className="flex flex-col sm:flex-row gap-4">
                   <Button size="lg" className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 w-[280px] h-16 flex items-center justify-center">
