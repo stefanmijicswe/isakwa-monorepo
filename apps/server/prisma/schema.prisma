@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  PROFESOR
+  STUDENT
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  password    String
+  firstName   String
+  lastName    String
+  role        UserRole
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relacije specifične za ulogu
+  profesorProfile ProfessorProfile?
+  studentProfile  StudentProfile?
+
+  @@map("users")
+}
+
+model ProfessorProfile {
+  id          Int    @id @default(autoincrement())
+  userId      Int    @unique
+  department  String
+  title       String // Dr, Prof, Asistent, itd.
+  phoneNumber String?
+  officeRoom  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("professor_profiles")
+}
+
+model StudentProfile {
+  id           Int     @id @default(autoincrement())
+  userId       Int     @unique
+  studentIndex String  @unique
+  year         Int
+  program      String
+  phoneNumber  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("student_profiles")
+}
