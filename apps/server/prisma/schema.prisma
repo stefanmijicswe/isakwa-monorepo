@@ -17,6 +17,18 @@ enum UserRole {
   ADMIN
   PROFESOR
   STUDENT
+  STUDENTSKA_SLUZBA
+}
+
+enum SemesterType {
+  ZIMSKI
+  LETNJI
+}
+
+enum ExamStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
 }
 
 model User {
@@ -60,5 +72,173 @@ model StudentProfile {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Relacije
+  enrollments CourseEnrollment[]
+  examRegistrations ExamRegistration[]
+  grades Grade[]
+
   @@map("student_profiles")
+}
+
+// Osnovni entiteti za strukturu univerziteta
+model University {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  address     String?
+  phone       String?
+  email       String?
+  website     String?
+  rectorName  String?
+  rectorTitle String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  faculties Faculty[]
+
+  @@map("universities")
+}
+
+model Faculty {
+  id           Int      @id @default(autoincrement())
+  universityId Int
+  name         String
+  description  String?
+  address      String?
+  phone        String?
+  email        String?
+  deanName     String?
+  deanTitle    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  university     University      @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  studyPrograms  StudyProgram[]
+
+  @@map("faculties")
+}
+
+model StudyProgram {
+  id               Int      @id @default(autoincrement())
+  facultyId        Int
+  name             String
+  description      String?
+  duration         Int      // broj godina
+  directorName     String?
+  directorTitle    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  faculty  Faculty   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  subjects Subject[]
+
+  @@map("study_programs")
+}
+
+model Subject {
+  id             Int      @id @default(autoincrement())
+  studyProgramId Int
+  name           String
+  code           String   @unique
+  description    String?
+  credits        Int      // ECTS bodovi
+  semester       Int      // koji semestar
+  lectureHours   Int      @default(0)
+  exerciseHours  Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  studyProgram StudyProgram @relation(fields: [studyProgramId], references: [id], onDelete: Cascade)
+  
+  // Relacije
+  courses CourseEnrollment[]
+  exams Exam[]
+
+  @@map("subjects")
+}
+
+// Sistem za upis na predmete
+model CourseEnrollment {
+  id             Int      @id @default(autoincrement())
+  studentId      Int
+  subjectId      Int
+  academicYear   String   // npr. "2024/2025"
+  semesterType   SemesterType
+  enrollmentDate DateTime @default(now())
+  isActive       Boolean  @default(true)
+
+  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, subjectId, academicYear])
+  @@map("course_enrollments")
+}
+
+// Sistem za ispite
+model ExamPeriod {
+  id          Int      @id @default(autoincrement())
+  name        String
+  startDate   DateTime
+  endDate     DateTime
+  academicYear String
+  semesterType SemesterType
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  exams Exam[]
+
+  @@map("exam_periods")
+}
+
+model Exam {
+  id           Int        @id @default(autoincrement())
+  subjectId    Int
+  examPeriodId Int
+  examDate     DateTime
+  examTime     String     // npr. "09:00"
+  duration     Int        // u minutima
+  location     String?
+  maxPoints    Int        @default(100)
+  status       ExamStatus @default(SCHEDULED)
+  createdAt    DateTime   @default(now())
+
+  subject    Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  examPeriod ExamPeriod @relation(fields: [examPeriodId], references: [id], onDelete: Cascade)
+  
+  registrations ExamRegistration[]
+  grades Grade[]
+
+  @@map("exams")
+}
+
+model ExamRegistration {
+  id              Int      @id @default(autoincrement())
+  studentId       Int
+  examId          Int
+  registrationDate DateTime @default(now())
+  isActive        Boolean  @default(true)
+
+  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  exam    Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, examId])
+  @@map("exam_registrations")
+}
+
+// Sistem za ocene
+model Grade {
+  id          Int      @id @default(autoincrement())
+  studentId   Int
+  examId      Int
+  points      Int      // osvojeni bodovi
+  grade       Int?     // ocena (6-10)
+  passed      Boolean  @default(false)
+  attempt     Int      @default(1) // broj pokušaja
+  gradedAt    DateTime @default(now())
+  gradedBy    Int?     // ID profesora koji je dao ocenu
+
+  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  exam    Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@map("grades")
 }
