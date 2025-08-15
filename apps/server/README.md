@@ -1,48 +1,139 @@
-# IsaKwa Server
+# IsaKwa Server - NestJS Backend
 
-NestJS backend server for the IsaKwa application.
+Backend server za IsaKwa aplikaciju izgrađen sa NestJS, Prisma ORM i SQLite bazom.
 
-## Description
+## ✨ Funkcionalnosti
 
-This is the backend API server built with NestJS framework, providing RESTful endpoints for the IsaKwa application.
+- 🔐 **Autentifikacija i autorizacija** sa JWT tokenima
+- 👥 **Tri korisničke uloge**: Admin, Profesor, Student
+- 📊 **Prisma ORM** sa SQLite bazom podataka
+- 🛡️ **Role-based access control** (RBAC)
+- 📝 **Profili korisnika** specifični za ulogu
+- ✅ **Validation** sa class-validator
+- 🧪 **Test endpoints** za sve funkcionalnosti
 
-## Installation
+## 🗄️ Struktura baze podataka
+
+### Korisnici (User)
+- Osnovni podaci: email, password, ime, prezime, uloga
+- Opciono: profesor profil ili student profil
+
+### Profesor profil (ProfessorProfile)  
+- Departman, titula, telefon, kancelarija
+
+### Student profil (StudentProfile)
+- Index, godina, program, telefon
+
+## 🚀 Pokretanje
 
 ```bash
+# Instaliranje dependencija
 yarn install
-```
 
-## Running the app
-
-```bash
-# development
+# Pokretanje u development modu
 yarn start:dev
 
-# production mode
+# Production build
+yarn build
 yarn start:prod
 ```
 
-## Test
+## 🔧 Konfiguracija
 
-```bash
-# unit tests
-yarn test
-
-# e2e tests
-yarn test:e2e
-
-# test coverage
-yarn test:cov
+Kreirati `.env` fajl:
+```
+DATABASE_URL="file:./dev.db"
+JWT_SECRET="your-secret-key"
+JWT_EXPIRES_IN="7d"
+PORT=3001
 ```
 
-## API Endpoints
+## 📡 API Endpoints
 
-- `GET /api` - Welcome message
-- `GET /api/health` - Health check endpoint
+### Autentifikacija
+- `POST /api/auth/register` - Registracija korisnika
+- `POST /api/auth/login` - Login korisnika
 
-## Environment Variables
+### Korisnici (zaštićeno)
+- `GET /api/users/profile` - Profil trenutnog korisnika
+- `GET /api/users` - Svi korisnici (samo admin)
+- `GET /api/users/professors` - Lista profesora (samo admin)
+- `GET /api/users/students` - Lista studenata (admin i profesor)
 
-- `PORT` - Server port (default: 3001)
+### Test endpoints
+- `GET /api/test/public` - Javni endpoint
+- `GET /api/test/protected` - Zaštićeni (samo ulogovan)
+- `GET /api/test/admin-only` - Samo admin
+- `GET /api/test/professor-only` - Samo profesor  
+- `GET /api/test/student-only` - Samo student
+- `GET /api/test/professor-or-admin` - Profesor ili admin
+
+## 🧪 Testiranje
+
+Pokrenuti test script:
+```bash
+./test-api.ps1      # Kompletan test svih funkcionalnosti
+./simple-test.ps1   # Jednostavan test korisnika
+```
+
+## 📋 Primer registracije
+
+### Admin
+```json
+{
+  "email": "admin@isakwa.com",
+  "password": "admin123", 
+  "firstName": "Admin",
+  "lastName": "Administrator",
+  "role": "ADMIN"
+}
+```
+
+### Profesor
+```json
+{
+  "email": "profesor@isakwa.com",
+  "password": "profesor123",
+  "firstName": "Marko", 
+  "lastName": "Petrović",
+  "role": "PROFESOR",
+  "department": "Informatika",
+  "title": "Dr",
+  "phoneNumber": "+381611234567",
+  "officeRoom": "101"
+}
+```
+
+### Student
+```json
+{
+  "email": "student@isakwa.com",
+  "password": "student123",
+  "firstName": "Ana",
+  "lastName": "Milić", 
+  "role": "STUDENT",
+  "studentIndex": "SW123-2021",
+  "year": 3,
+  "program": "Softversko inženjerstvo",
+  "phoneNumber": "+381611234568"
+}
+```
+
+## 🏗️ Arhitektura
+
+- **Prisma ORM** - tipovan ORM za bazu podataka
+- **JWT Guards** - autentifikacija sa Bearer tokenima
+- **Role Guards** - autorizacija na osnovu uloge
+- **DTO Validation** - validacija input podataka
+- **Global Exception Filters** - centralizovano rukovanje greškama
+
+## 🔒 Sigurnost
+
+- Passwordi su hash-ovani sa bcrypt
+- JWT tokeni imaju expiration
+- Role-based access control
+- Input validation na svim endpoints
+- CORS konfiguracija
 
 ## Development
 

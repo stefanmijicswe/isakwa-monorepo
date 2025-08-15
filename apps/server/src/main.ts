@@ -1,8 +1,16 @@
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  
+  // Global validation pipe
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
   
   // Enable CORS
   app.enableCors({
@@ -23,6 +31,7 @@ async function bootstrap() {
   
   console.log(`🚀 Server is running on: http://localhost:${port}`);
   console.log(`📚 API documentation: http://localhost:${port}/api`);
+  console.log(`🔐 Auth endpoints: http://localhost:${port}/api/auth/login | http://localhost:${port}/api/auth/register`);
 }
 
 bootstrap();
