@@ -15,20 +15,33 @@ datasource db {
 
 enum UserRole {
   ADMIN
-  PROFESOR
+  PROFESSOR
   STUDENT
-  STUDENTSKA_SLUZBA
+  STUDENT_SERVICE
 }
 
 enum SemesterType {
-  ZIMSKI
-  LETNJI
+  WINTER
+  SUMMER
 }
 
 enum ExamStatus {
   SCHEDULED
   COMPLETED
   CANCELLED
+}
+
+enum TeachingType {
+  LECTURE
+  EXERCISE
+  LABORATORY
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+  GRADUATED
+  INTERRUPTED
 }
 
 model User {
@@ -63,21 +76,46 @@ model ProfessorProfile {
 }
 
 model StudentProfile {
-  id           Int     @id @default(autoincrement())
-  userId       Int     @unique
-  studentIndex String  @unique
+  id           Int           @id @default(autoincrement())
+  userId       Int           @unique
+  studentIndex String        @unique
   year         Int
   program      String
   phoneNumber  String?
+  status       StudentStatus @default(ACTIVE)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Relacije
-  enrollments CourseEnrollment[]
+  enrollments       CourseEnrollment[]
   examRegistrations ExamRegistration[]
-  grades Grade[]
+  grades            Grade[]
 
   @@map("student_profiles")
+}
+
+// Lokacije i adrese
+model City {
+  id       Int    @id @default(autoincrement())
+  name     String
+  zipCode  String
+  
+  addresses Address[]
+
+  @@map("cities")
+}
+
+model Address {
+  id       Int    @id @default(autoincrement())
+  street   String
+  number   String
+  cityId   Int
+  
+  city         City           @relation(fields: [cityId], references: [id])
+  universities University[]
+  faculties    Faculty[]
+
+  @@map("addresses")
 }
 
 // Osnovni entiteti za strukturu univerziteta
@@ -85,7 +123,7 @@ model University {
   id          Int      @id @default(autoincrement())
   name        String
   description String?
-  address     String?
+  addressId   Int?
   phone       String?
   email       String?
   website     String?
@@ -94,6 +132,7 @@ model University {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  address   Address?  @relation(fields: [addressId], references: [id])
   faculties Faculty[]
 
   @@map("universities")
@@ -104,7 +143,7 @@ model Faculty {
   universityId Int
   name         String
   description  String?
-  address      String?
+  addressId    Int?
   phone        String?
   email        String?
   deanName     String?
@@ -113,6 +152,7 @@ model Faculty {
   updatedAt    DateTime @updatedAt
 
   university     University      @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  address        Address?        @relation(fields: [addressId], references: [id])
   studyPrograms  StudyProgram[]
 
   @@map("faculties")
