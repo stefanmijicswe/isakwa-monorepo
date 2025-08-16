@@ -54,7 +54,7 @@ export class TestController {
 
   @Get('professor-only')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.PROFESOR)
+  @Roles(UserRole.PROFESSOR)
   getProfessorData(@CurrentUser() user: any) {
     return {
       message: 'Ovo je profesor endpoint - dostupan samo profesorima',
@@ -94,7 +94,7 @@ export class TestController {
 
   @Get('professor-or-admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.PROFESOR, UserRole.ADMIN)
+  @Roles(UserRole.PROFESSOR, UserRole.ADMIN)
   getProfessorOrAdminData(@CurrentUser() user: any) {
     return {
       message: 'Ovo je endpoint dostupan profesorima i administratorima',

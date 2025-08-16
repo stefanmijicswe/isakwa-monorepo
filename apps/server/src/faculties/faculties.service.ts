@@ -5,7 +5,7 @@ export interface CreateFacultyData {
   universityId: number;
   name: string;
   description?: string;
-  address?: string;
+  addressId?: number;
   phone?: string;
   email?: string;
   deanName?: string;
@@ -15,7 +15,7 @@ export interface CreateFacultyData {
 export interface UpdateFacultyData {
   name?: string;
   description?: string;
-  address?: string;
+  addressId?: number;
   phone?: string;
   email?: string;
   deanName?: string;
@@ -28,7 +28,16 @@ export class FacultiesService {
 
   async create(data: CreateFacultyData) {
     return this.prisma.faculty.create({
-      data,
+      data: {
+        universityId: data.universityId,
+        name: data.name,
+        description: data.description,
+        addressId: data.addressId,
+        phone: data.phone,
+        email: data.email,
+        deanName: data.deanName,
+        deanTitle: data.deanTitle,
+      },
       include: {
         university: true,
         studyPrograms: true,
@@ -75,7 +84,15 @@ export class FacultiesService {
 
     return this.prisma.faculty.update({
       where: { id },
-      data,
+      data: {
+        name: data.name,
+        description: data.description,
+        addressId: data.addressId,
+        phone: data.phone,
+        email: data.email,
+        deanName: data.deanName,
+        deanTitle: data.deanTitle,
+      },
       include: {
         university: true,
         studyPrograms: true,

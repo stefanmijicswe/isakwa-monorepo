@@ -12,8 +12,8 @@ export class CreateFacultyDto {
   description?: string;
 
   @IsOptional()
-  @IsString()
-  address?: string;
+  @IsNumber()
+  addressId?: number;
 
   @IsOptional()
   @IsString()

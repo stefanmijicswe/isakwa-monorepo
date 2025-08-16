@@ -24,7 +24,7 @@ export class FacultiesController {
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.STUDENTSKA_SLUZBA)
+  @Roles(UserRole.ADMIN, UserRole.STUDENT_SERVICE)
   create(@Body() createFacultyDto: CreateFacultyDto) {
     return this.facultiesService.create(createFacultyDto);
   }
@@ -46,7 +46,7 @@ export class FacultiesController {
 
   @Patch(':id')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.STUDENTSKA_SLUZBA)
+  @Roles(UserRole.ADMIN, UserRole.STUDENT_SERVICE)
   update(
     @Param('id', ParseIntPipe) id: number, 
     @Body() updateFacultyDto: UpdateFacultyDto

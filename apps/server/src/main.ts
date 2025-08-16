@@ -1,3 +1,17 @@
+import { config } from 'dotenv';
+config(); // Učitaj .env fajl pre bilo čega drugog
+
+// Fallback za DATABASE_URL ako nije postavljena
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'file:./prisma/dev.db';
+}
+
+// Fallback za JWT_SECRET ako nije postavljena
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'fallback-jwt-secret-key-for-development-only';
+  console.warn('⚠️  Using fallback JWT_SECRET. Set JWT_SECRET environment variable for production!');
+}
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';

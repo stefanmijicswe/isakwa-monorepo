@@ -27,12 +27,12 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   async getProfessors() {
-    return this.usersService.findByRole(UserRole.PROFESOR);
+    return this.usersService.findByRole(UserRole.PROFESSOR);
   }
 
   @Get('students')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.PROFESOR)
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
   async getStudents() {
     return this.usersService.findByRole(UserRole.STUDENT);
   }

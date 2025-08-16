@@ -35,7 +35,7 @@ export class UsersService {
     });
 
     // Kreirati profil na osnovu uloge
-    if (data.role === UserRole.PROFESOR) {
+    if (data.role === UserRole.PROFESSOR) {
       await this.prisma.professorProfile.create({
         data: {
           userId: user.id,
