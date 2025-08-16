@@ -1,56 +1,38 @@
-# IsaKwa Server
+# ISA KWA Server
 
-NestJS backend server for the IsaKwa application.
+NestJS backend for university LMS system.
 
-## Description
-
-This is the backend API server built with NestJS framework, providing RESTful endpoints for the IsaKwa application.
-
-## Installation
+## Setup
 
 ```bash
+# Install dependencies
 yarn install
-```
 
-## Running the app
+# Set environment variables
+echo 'DATABASE_URL="file:./prisma/dev.db"' > .env
+echo 'JWT_SECRET="dev-secret-key"' >> .env
 
-```bash
-# development
+# Generate database
+yarn prisma generate
+yarn prisma db push
+
+# Start server
 yarn start:dev
-
-# production mode
-yarn start:prod
 ```
 
-## Test
+Server runs on `http://localhost:3001`
 
-```bash
-# unit tests
-yarn test
+## API Routes
 
-# e2e tests
-yarn test:e2e
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `GET /api/users/profile` - Get current user profile
+- `GET /api/test/*` - Test endpoints for different roles
 
-# test coverage
-yarn test:cov
-```
+## Stack
 
-## API Endpoints
-
-- `GET /api` - Welcome message
-- `GET /api/health` - Health check endpoint
-
-## Environment Variables
-
-- `PORT` - Server port (default: 3001)
-
-## Development
-
-This server is part of a Turborepo monorepo. You can run it alongside the client application using:
-
-```bash
-# From the root directory
-yarn dev
-```
-
-This will start both the client (port 3000) and server (port 3001) in development mode.
+- NestJS
+- Prisma ORM
+- SQLite
+- JWT Auth
+- TypeScript
