@@ -55,4 +55,3 @@ Preporučujemo korištenje Conventional Commits za bolju organizaciju koda i aut
 - Za merge na main svi se zajedno dogovaramo kada i kako ćemo to raditi
 - POŽELJNO je koristiti conventional commits za bolje praćenje promjena
 - **Commit poruke pišemo na engleskom** (osim ako baš mora na srpskom) 
-
