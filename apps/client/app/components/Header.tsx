@@ -62,6 +62,11 @@ export function Header() {
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
+                <Link href="/faculties" className="group inline-flex h-10 w-max items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-all duration-200">
+                  FACULTIES
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
                 <Link href="#" className="group inline-flex h-10 w-max items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-all duration-200">
                   ACADEMICS
                 </Link>

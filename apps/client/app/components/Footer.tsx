@@ -45,6 +45,7 @@ export function Footer() {
           <div className="space-y-6">
             <h4 className="text-lg font-semibold text-white">Quick Links</h4>
             <ul className="space-y-3">
+              <li><Link href="/faculties" className="text-slate-300 hover:text-white transition-colors duration-200">Faculties</Link></li>
               <li><Link href="#" className="text-slate-300 hover:text-white transition-colors duration-200">Programs</Link></li>
               <li><Link href="#" className="text-slate-300 hover:text-white transition-colors duration-200">Admissions</Link></li>
               <li><Link href="#" className="text-slate-300 hover:text-white transition-colors duration-200">Student Life</Link></li>
