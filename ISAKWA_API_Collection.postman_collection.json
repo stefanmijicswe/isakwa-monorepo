@@ -321,6 +321,120 @@
 			]
 		},
 		{
+			"name": "🏛️ Universities Management",
+			"item": [
+				{
+					"name": "Get All Universities",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/universities",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"universities"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get University by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/universities/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"universities",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Main University Info",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/universities/main/info",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"universities",
+								"main",
+								"info"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get University with Faculties",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/universities/1/faculties",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"universities",
+								"1",
+								"faculties"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
 			"name": "🏫 Faculties Management",
 			"item": [
 				{

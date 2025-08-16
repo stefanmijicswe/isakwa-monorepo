@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TestModule } from './test/test.module';
 import { FacultiesModule } from './faculties/faculties.module';
+import { UniversitiesModule } from './universities/universities.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { FacultiesModule } from './faculties/faculties.module';
     AuthModule, 
     UsersModule, 
     TestModule, 
-    FacultiesModule
+    FacultiesModule,
+    UniversitiesModule
   ],
   controllers: [AppController],
   providers: [AppService],
