@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 
-const prisma = new PrismaClient();
-
-export async function seedUniversity() {
+export async function seedUniversity(prisma: PrismaService) {
   // First create city
   const city = await prisma.city.upsert({
     where: { id: 1 },
@@ -50,13 +48,68 @@ export async function seedUniversity() {
     },
   });
 
-  console.log('University seeded:', mainUniversity.name);
+  // Create faculties
+  const facultiesData = [
+    {
+      id: 1,
+      name: 'Faculty of Technical Sciences',
+      description: 'Leading faculty for engineering and technology education',
+      universityId: mainUniversity.id,
+      phone: '+381 11 789-1241',
+      email: 'ftn@harvox.edu.rs',
+      deanName: 'Prof. Dr. Marko Petković',
+      deanTitle: 'Dean'
+    },
+    {
+      id: 2,
+      name: 'Faculty of Business',
+      description: 'Excellence in business education and management',
+      universityId: mainUniversity.id,
+      phone: '+381 11 789-1242',
+      email: 'business@harvox.edu.rs',
+      deanName: 'Prof. Dr. Milica Nikolić',
+      deanTitle: 'Dean'
+    },
+    {
+      id: 3,
+      name: 'Faculty of Applied Ecology "Futura"',
+      description: 'Sustainable development and environmental sciences',
+      universityId: mainUniversity.id,
+      phone: '+381 11 789-1243',
+      email: 'ecology@harvox.edu.rs',
+      deanName: 'Prof. Dr. Stefan Milosavljević',
+      deanTitle: 'Dean'
+    },
+    {
+      id: 4,
+      name: 'Faculty of Tourism and Hospitality',
+      description: 'Tourism industry and hospitality management education',
+      universityId: mainUniversity.id,
+      phone: '+381 11 789-1244',
+      email: 'tourism@harvox.edu.rs',
+      deanName: 'Prof. Dr. Jovana Stojanović',
+      deanTitle: 'Dean'
+    }
+  ];
+
+  for (const facultyData of facultiesData) {
+    await prisma.faculty.upsert({
+      where: { id: facultyData.id },
+      update: facultyData,
+      create: facultyData
+    });
+  }
+
+  console.log('University and faculties seeded:', mainUniversity.name);
   return mainUniversity;
 }
 
 // Run seeding if file is called directly
 if (require.main === module) {
-  seedUniversity()
+  const { PrismaClient } = require('@prisma/client');
+  const prismaClient = new PrismaClient();
+  
+  seedUniversity(prismaClient)
     .then(() => {
       console.log('Seeding completed');
       process.exit(0);
@@ -66,6 +119,6 @@ if (require.main === module) {
       process.exit(1);
     })
     .finally(async () => {
-      await prisma.$disconnect();
+      await prismaClient.$disconnect();
     });
 }
