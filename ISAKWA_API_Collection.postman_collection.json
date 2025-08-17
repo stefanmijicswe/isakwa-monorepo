@@ -787,6 +787,156 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "📚 Subjects",
+			"item": [
+				{
+					"name": "Get All Subjects (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/subjects?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["subjects"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "studyProgramId",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "semester",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "credits",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Subject by ID (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/subjects/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["subjects", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Subjects by Study Program (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/subjects/study-program/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["subjects", "study-program", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Subjects by Semester (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/subjects/semester/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["subjects", "semester", "1"]
+						}
+					}
+				},
+				{
+					"name": "Create Subject (Admin/Professor)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Advanced Programming\",\n  \"code\": \"CS301\",\n  \"description\": \"Advanced programming concepts and techniques\",\n  \"credits\": 8,\n  \"semester\": 3,\n  \"lectureHours\": 45,\n  \"exerciseHours\": 30,\n  \"studyProgramId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/subjects",
+							"host": ["{{baseUrl}}"],
+							"path": ["subjects"]
+						}
+					}
+				},
+				{
+					"name": "Update Subject (Admin/Professor)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Subject Name\",\n  \"credits\": 7\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/subjects/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["subjects", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete Subject (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/subjects/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["subjects", "1"]
+						}
+					}
+				}
+			]
 		}
 	],
 	"variable": [
