@@ -172,6 +172,7 @@ model StudyProgram {
   faculty  Faculty   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
   subjects Subject[]
 
+  @@unique([facultyId, name])
   @@map("study_programs")
 }
 
