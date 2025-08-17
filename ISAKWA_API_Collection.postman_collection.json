@@ -656,6 +656,154 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "📚 Study Programs",
+			"item": [
+				{
+					"name": "Get All Study Programs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/study-programs?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["study-programs"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "facultyId",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "duration",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Study Program by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/study-programs/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["study-programs", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Programs by Faculty",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/study-programs/faculty/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["study-programs", "faculty", "1"]
+						}
+					}
+				},
+				{
+					"name": "Create Study Program",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Artificial Intelligence\",\n  \"description\": \"Advanced AI and machine learning program\",\n  \"duration\": 4,\n  \"directorName\": \"Dr. Miloš Stojanović\",\n  \"directorTitle\": \"Professor\",\n  \"facultyId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/study-programs",
+							"host": ["{{baseUrl}}"],
+							"path": ["study-programs"]
+						}
+					}
+				},
+				{
+					"name": "Update Study Program",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Program Name\",\n  \"description\": \"Updated description\",\n  \"duration\": 3\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/study-programs/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["study-programs", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete Study Program",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/study-programs/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["study-programs", "1"]
+						}
+					}
+				}
+			]
 		}
 	],
 	"variable": [
