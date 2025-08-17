@@ -20,12 +20,11 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 
 @Controller('study-programs')
-@UseGuards(JwtAuthGuard)
 export class StudyProgramsController {
   constructor(private readonly studyProgramsService: StudyProgramsService) {}
 
   @Post()
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   create(@Body() createStudyProgramDto: CreateStudyProgramDto) {
     return this.studyProgramsService.create(createStudyProgramDto);
@@ -58,7 +57,7 @@ export class StudyProgramsController {
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   update(
     @Param('id', ParseIntPipe) id: number, 
@@ -68,7 +67,7 @@ export class StudyProgramsController {
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.studyProgramsService.remove(id);
