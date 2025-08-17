@@ -194,6 +194,11 @@ export function Header() {
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
+                <Link href="/faculties" className="group inline-flex h-10 w-max items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-all duration-200">
+                  FACULTIES
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
                 <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
                   <Link href="#" className="text-slate-700 hover:text-blue-600">
                     ACADEMICS
@@ -210,11 +215,21 @@ export function Header() {
             </NavigationMenuList>
           </NavigationMenu>
 
-          <div className="flex items-center space-x-4">
-            <Button className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5">
-              CONTACT US
-            </Button>
-          </div>
+                           <div className="flex items-center space-x-4">
+                   <Link href="/auth/login">
+                     <Button variant="outline" className="border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 px-6 py-3 rounded-lg transition-all duration-300">
+                       LOGIN
+                     </Button>
+                   </Link>
+                   <Link href="/auth/register">
+                     <Button variant="outline" className="border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 px-6 py-3 rounded-lg transition-all duration-300">
+                       REGISTER
+                     </Button>
+                   </Link>
+                   <Button className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5">
+                     CONTACT US
+                   </Button>
+                 </div>
         </div>
       </div>
     </header>

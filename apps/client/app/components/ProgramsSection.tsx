@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { Badge } from "../../components/ui/badge"
 import { Button } from "../../components/ui/button"
@@ -101,13 +102,23 @@ export function ProgramsSection() {
         </div>
 
         <div className="text-center mt-16">
-          <Button
-            variant="outline"
-            size="lg"
-            className="border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 px-8 py-4 text-lg rounded-xl transition-all duration-300 transform hover:-translate-y-1"
-          >
-            View All Programs
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              variant="outline"
+              size="lg"
+              className="border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 px-8 py-4 text-lg rounded-xl transition-all duration-300 transform hover:-translate-y-1"
+            >
+              View All Programs
+            </Button>
+            <Link href="/faculties">
+              <Button
+                size="lg"
+                className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              >
+                View All Faculties
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </section>
