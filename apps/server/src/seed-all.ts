@@ -8,7 +8,7 @@ async function main() {
   try {
     console.log('Starting database seeding...');
     
-    await seedUniversity(prisma);
+    await seedUniversity();
     await seedStudyPrograms(prisma);
     
     console.log('Database seeding completed successfully!');

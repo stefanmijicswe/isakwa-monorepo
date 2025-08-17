@@ -117,19 +117,26 @@ export async function seedStudyPrograms(prisma: PrismaService) {
     
     if (faculty) {
       for (const programData of facultyData.programs) {
-        await prisma.studyProgram.upsert({
+        const existing = await prisma.studyProgram.findFirst({
           where: {
-            facultyId_name: {
-              facultyId: faculty.id,
-              name: programData.name
-            }
-          },
-          update: programData,
-          create: {
-            ...programData,
-            facultyId: faculty.id
+            facultyId: faculty.id,
+            name: programData.name
           }
         });
+
+        if (existing) {
+          await prisma.studyProgram.update({
+            where: { id: existing.id },
+            data: programData
+          });
+        } else {
+          await prisma.studyProgram.create({
+            data: {
+              ...programData,
+              facultyId: faculty.id
+            }
+          });
+        }
       }
     }
   }
