@@ -9,6 +9,7 @@ import { TestModule } from './test/test.module';
 import { FacultiesModule } from './faculties/faculties.module';
 import { UniversitiesModule } from './universities/universities.module';
 import { StudyProgramsModule } from './study-programs/study-programs.module';
+import { SubjectsModule } from './subjects/subjects.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { StudyProgramsModule } from './study-programs/study-programs.module';
     TestModule, 
     FacultiesModule,
     UniversitiesModule,
-    StudyProgramsModule
+    StudyProgramsModule,
+    SubjectsModule
   ],
   controllers: [AppController],
   providers: [AppService],
