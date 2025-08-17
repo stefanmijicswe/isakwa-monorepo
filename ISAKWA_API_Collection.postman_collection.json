@@ -438,18 +438,8 @@
 			"name": "🏫 Faculties Management",
 			"item": [
 				{
-					"name": "Get All Faculties",
+					"name": "Get All Faculties (Public)",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{authToken}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -464,18 +454,8 @@
 					}
 				},
 				{
-					"name": "Get Faculty by ID",
+					"name": "Get Faculty by ID (Public)",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{authToken}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -485,6 +465,24 @@
 							],
 							"path": [
 								"faculties",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Faculties by University (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/faculties/university/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"faculties",
+								"university",
 								"1"
 							]
 						}
@@ -661,15 +659,10 @@
 			"name": "📚 Study Programs",
 			"item": [
 				{
-					"name": "Get All Study Programs",
+					"name": "Get All Study Programs (Public)",
 					"request": {
 						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
+						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/study-programs?page=1&limit=10",
 							"host": ["{{baseUrl}}"],
@@ -703,15 +696,10 @@
 					}
 				},
 				{
-					"name": "Get Study Program by ID",
+					"name": "Get Study Program by ID (Public)",
 					"request": {
 						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
+						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/study-programs/1",
 							"host": ["{{baseUrl}}"],
@@ -720,15 +708,10 @@
 					}
 				},
 				{
-					"name": "Get Programs by Faculty",
+					"name": "Get Programs by Faculty (Public)",
 					"request": {
 						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
+						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/study-programs/faculty/1",
 							"host": ["{{baseUrl}}"],
@@ -737,7 +720,7 @@
 					}
 				},
 				{
-					"name": "Create Study Program",
+					"name": "Create Study Program (Admin Only)",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -762,7 +745,7 @@
 					}
 				},
 				{
-					"name": "Update Study Program",
+					"name": "Update Study Program (Admin Only)",
 					"request": {
 						"method": "PATCH",
 						"header": [
@@ -787,7 +770,7 @@
 					}
 				},
 				{
-					"name": "Delete Study Program",
+					"name": "Delete Study Program (Admin Only)",
 					"request": {
 						"method": "DELETE",
 						"header": [
