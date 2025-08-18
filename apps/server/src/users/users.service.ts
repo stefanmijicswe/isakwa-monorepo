@@ -51,7 +51,6 @@ export class UsersService {
           userId: user.id,
           studentIndex: data.studentIndex || '',
           year: data.year || 1,
-          program: data.program || '',
           phoneNumber: data.phoneNumber,
         },
       });

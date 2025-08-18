@@ -5,6 +5,7 @@ import { PrismaService } from './prisma/prisma.service';
 import { seedUniversity } from './universities/seed-university';
 import { seedStudyPrograms } from './study-programs/seed-study-programs';
 import { seedSubjects } from './subjects/seed-subjects';
+import { seedAcademicRecords } from './academic-records/seed-academic-records';
 
 async function main() {
   const prisma = new PrismaService();
@@ -15,6 +16,7 @@ async function main() {
     await seedUniversity(prisma);
     await seedStudyPrograms(prisma);
     await seedSubjects(prisma);
+    await seedAcademicRecords(prisma);
     
     console.log('Database seeding completed successfully!');
   } catch (error) {

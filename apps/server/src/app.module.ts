@@ -10,6 +10,7 @@ import { FacultiesModule } from './faculties/faculties.module';
 import { UniversitiesModule } from './universities/universities.module';
 import { StudyProgramsModule } from './study-programs/study-programs.module';
 import { SubjectsModule } from './subjects/subjects.module';
+import { AcademicRecordsModule } from './academic-records/academic-records.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { SubjectsModule } from './subjects/subjects.module';
     FacultiesModule,
     UniversitiesModule,
     StudyProgramsModule,
-    SubjectsModule
+    SubjectsModule,
+    AcademicRecordsModule
   ],
   controllers: [AppController],
   providers: [AppService],

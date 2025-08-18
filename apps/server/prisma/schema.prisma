@@ -58,6 +58,7 @@ model User {
   // Relacije specifične za ulogu
   profesorProfile ProfessorProfile?
   studentProfile  StudentProfile?
+  professorAssignments ProfessorAssignment[]
 
   @@map("users")
 }
@@ -80,14 +81,17 @@ model StudentProfile {
   userId       Int           @unique
   studentIndex String        @unique
   year         Int
-  program      String
+  studyProgramId Int?
   phoneNumber  String?
   status       StudentStatus @default(ACTIVE)
+  enrollmentYear String? 
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studyProgram StudyProgram? @relation(fields: [studyProgramId], references: [id])
 
   // Relacije
-  enrollments       CourseEnrollment[]
+  enrollments       StudentEnrollment[]
+  courseEnrollments CourseEnrollment[]
   examRegistrations ExamRegistration[]
   grades            Grade[]
 
@@ -171,6 +175,9 @@ model StudyProgram {
 
   faculty  Faculty   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
   subjects Subject[]
+  students StudentProfile[]
+  studentEnrollments StudentEnrollment[]
+  professorAssignments ProfessorAssignment[]
 
   @@unique([facultyId, name])
   @@map("study_programs")
@@ -192,8 +199,9 @@ model Subject {
   studyProgram StudyProgram @relation(fields: [studyProgramId], references: [id], onDelete: Cascade)
   
   // Relacije
-  courses CourseEnrollment[]
+  courseEnrollments CourseEnrollment[]
   exams Exam[]
+  professorAssignments ProfessorAssignment[]
 
   @@map("subjects")
 }
@@ -215,12 +223,51 @@ model CourseEnrollment {
   @@map("course_enrollments")
 }
 
+// Student enrollment u study program
+model StudentEnrollment {
+  id             Int      @id @default(autoincrement())
+  studentId      Int
+  studyProgramId Int
+  academicYear   String   // npr. "2024/2025"
+  year           Int      // koja godina studija (1, 2, 3, 4)
+  status         StudentStatus @default(ACTIVE)
+  enrollmentDate DateTime @default(now())
+  completionDate DateTime?
+
+  student      StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studyProgram StudyProgram   @relation(fields: [studyProgramId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, studyProgramId, academicYear])
+  @@map("student_enrollments")
+}
+
+// Professor assignment na subjects
+model ProfessorAssignment {
+  id             Int          @id @default(autoincrement())
+  professorId    Int
+  subjectId      Int
+  studyProgramId Int
+  academicYear   String
+  teachingType   TeachingType @default(LECTURE)
+  isActive       Boolean      @default(true)
+  assignedAt     DateTime     @default(now())
+
+  professor    User         @relation(fields: [professorId], references: [id], onDelete: Cascade)
+  subject      Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  studyProgram StudyProgram @relation(fields: [studyProgramId], references: [id], onDelete: Cascade)
+
+  @@unique([professorId, subjectId, academicYear])
+  @@map("professor_assignments")
+}
+
 // Sistem za ispite
 model ExamPeriod {
   id          Int      @id @default(autoincrement())
   name        String
   startDate   DateTime
   endDate     DateTime
+  registrationStartDate DateTime
+  registrationEndDate DateTime
   academicYear String
   semesterType SemesterType
   isActive    Boolean  @default(true)
