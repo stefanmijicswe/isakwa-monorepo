@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   Patch,
   Param,
@@ -22,6 +23,13 @@ import {
   GradeExamDto,
   SearchStudentsDto,
   UpdateEnrollmentDto,
+  CreateSyllabusDto,
+  UpdateSyllabusDto,
+  GetSyllabusDto,
+  CreateSyllabusTopicDto,
+  UpdateSyllabusTopicDto,
+  CreateSyllabusMaterialDto,
+  UpdateSyllabusMaterialDto,
 } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -192,5 +200,121 @@ export class AcademicRecordsController {
       ),
       currentCourses: history.currentEnrollments,
     };
+  }
+
+  // Syllabus Management Endpoints
+  @Post('syllabus')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
+  async createSyllabus(
+    @Body() dto: CreateSyllabusDto,
+    @Request() req: any,
+  ) {
+    return this.academicRecordsService.createSyllabus(dto, req.user.id);
+  }
+
+  @Put('syllabus/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
+  async updateSyllabus(
+    @Param('id') id: string,
+    @Body() dto: UpdateSyllabusDto,
+    @Request() req: any,
+  ) {
+    return this.academicRecordsService.updateSyllabus(parseInt(id), dto, req.user.id);
+  }
+
+  @Get('syllabus')
+  @UseGuards(JwtAuthGuard)
+  async getSyllabus(
+    @Query() filters: GetSyllabusDto,
+    @Request() req: any,
+  ) {
+    const professorId = req.user.role === UserRole.PROFESSOR ? req.user.id : undefined;
+    return this.academicRecordsService.getSyllabus(filters, professorId);
+  }
+
+  @Get('syllabus/:id')
+  @UseGuards(JwtAuthGuard)
+  async getSyllabusById(
+    @Param('id') id: string,
+    @Request() req: any,
+  ) {
+    const professorId = req.user.role === UserRole.PROFESSOR ? req.user.id : undefined;
+    return this.academicRecordsService.getSyllabusById(parseInt(id), professorId);
+  }
+
+  @Delete('syllabus/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
+  async deleteSyllabus(
+    @Param('id') id: string,
+    @Request() req: any,
+  ) {
+    return this.academicRecordsService.deleteSyllabus(parseInt(id), req.user.id);
+  }
+
+  // Syllabus Topic Management Endpoints
+  @Post('syllabus/topic')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
+  async createSyllabusTopic(
+    @Body() dto: CreateSyllabusTopicDto,
+    @Request() req: any,
+  ) {
+    return this.academicRecordsService.createSyllabusTopic(dto, req.user.id);
+  }
+
+  @Put('syllabus/topic/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
+  async updateSyllabusTopic(
+    @Param('id') id: string,
+    @Body() dto: UpdateSyllabusTopicDto,
+    @Request() req: any,
+  ) {
+    return this.academicRecordsService.updateSyllabusTopic(parseInt(id), dto, req.user.id);
+  }
+
+  @Delete('syllabus/topic/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
+  async deleteSyllabusTopic(
+    @Param('id') id: string,
+    @Request() req: any,
+  ) {
+    return this.academicRecordsService.deleteSyllabusTopic(parseInt(id), req.user.id);
+  }
+
+  // Syllabus Material Management Endpoints
+  @Post('syllabus/material')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
+  async createSyllabusMaterial(
+    @Body() dto: CreateSyllabusMaterialDto,
+    @Request() req: any,
+  ) {
+    return this.academicRecordsService.createSyllabusMaterial(dto, req.user.id);
+  }
+
+  @Put('syllabus/material/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
+  async updateSyllabusMaterial(
+    @Param('id') id: string,
+    @Body() dto: UpdateSyllabusMaterialDto,
+    @Request() req: any,
+  ) {
+    return this.academicRecordsService.updateSyllabusMaterial(parseInt(id), dto, req.user.id);
+  }
+
+  @Delete('syllabus/material/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
+  async deleteSyllabusMaterial(
+    @Param('id') id: string,
+    @Request() req: any,
+  ) {
+    return this.academicRecordsService.deleteSyllabusMaterial(parseInt(id), req.user.id);
   }
 }

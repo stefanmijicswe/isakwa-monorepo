@@ -23,7 +23,7 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(registerDto.password, 12);
 
-    // Kreirati korisnika
+    // Kreirati korisnika sa svim podacima
     const user = await this.usersService.create({
       ...registerDto,
       password: hashedPassword,

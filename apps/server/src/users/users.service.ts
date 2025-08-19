@@ -17,6 +17,12 @@ export interface CreateUserData {
   studentIndex?: string;
   year?: number;
   program?: string;
+  // Dodatni podaci za sve korisnike
+  phone?: string;
+  dateOfBirth?: string;
+  cityId?: number;
+  address?: string;
+  indexNumber?: string;
 }
 
 @Injectable()
@@ -31,6 +37,7 @@ export class UsersService {
         firstName: data.firstName,
         lastName: data.lastName,
         role: data.role,
+        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
       },
     });
 
@@ -41,7 +48,7 @@ export class UsersService {
           userId: user.id,
           department: data.department || '',
           title: data.title || '',
-          phoneNumber: data.phoneNumber,
+          phoneNumber: data.phoneNumber || data.phone,
           officeRoom: data.officeRoom,
         },
       });
@@ -49,9 +56,9 @@ export class UsersService {
       await this.prisma.studentProfile.create({
         data: {
           userId: user.id,
-          studentIndex: data.studentIndex || '',
+          studentIndex: data.studentIndex || data.indexNumber || '',
           year: data.year || 1,
-          phoneNumber: data.phoneNumber,
+          phoneNumber: data.phoneNumber || data.phone,
         },
       });
     }
@@ -63,7 +70,7 @@ export class UsersService {
     return this.prisma.user.findUnique({
       where: { email },
       include: {
-        profesorProfile: true,
+        professorProfile: true,
         studentProfile: true,
       },
     });
@@ -73,7 +80,7 @@ export class UsersService {
     return this.prisma.user.findUnique({
       where: { id },
       include: {
-        profesorProfile: true,
+        professorProfile: true,
         studentProfile: true,
       },
     });
@@ -82,7 +89,7 @@ export class UsersService {
   async findAll() {
     return this.prisma.user.findMany({
       include: {
-        profesorProfile: true,
+        professorProfile: true,
         studentProfile: true,
       },
     });
@@ -92,7 +99,7 @@ export class UsersService {
     return this.prisma.user.findMany({
       where: { role },
       include: {
-        profesorProfile: true,
+        professorProfile: true,
         studentProfile: true,
       },
     });

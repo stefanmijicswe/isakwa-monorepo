@@ -1,0 +1,102 @@
+import { PrismaService } from '../prisma/prisma.service';
+
+export async function seedSyllabus(prisma: PrismaService) {
+  console.log('Seeding syllabus data...');
+
+  // Create syllabus for existing subjects
+  const subjects = await prisma.subject.findMany({ take: 5 });
+  
+  for (const subject of subjects) {
+    // Create syllabus for winter semester 2024/2025
+    const syllabus = await prisma.syllabus.create({
+      data: {
+        subjectId: subject.id,
+        academicYear: '2024/2025',
+        semesterType: 'WINTER',
+        description: `Syllabus for ${subject.name} - Winter 2024/2025`,
+        objectives: `Students will learn the fundamentals of ${subject.name}`,
+        isActive: true,
+      },
+    });
+
+    // Create syllabus topics
+    const topics = [
+      {
+        title: 'Introduction and Overview',
+        description: 'Basic concepts and course structure',
+        weekNumber: 1,
+        order: 1,
+      },
+      {
+        title: 'Core Concepts',
+        description: 'Fundamental principles and theories',
+        weekNumber: 2,
+        order: 2,
+      },
+      {
+        title: 'Practical Applications',
+        description: 'Real-world examples and case studies',
+        weekNumber: 3,
+        order: 3,
+      },
+      {
+        title: 'Advanced Topics',
+        description: 'Complex scenarios and advanced techniques',
+        weekNumber: 4,
+        order: 4,
+      },
+      {
+        title: 'Review and Assessment',
+        description: 'Course review and preparation for exams',
+        weekNumber: 5,
+        order: 5,
+      },
+    ];
+
+    for (const topic of topics) {
+      await prisma.syllabusTopic.create({
+        data: {
+          syllabusId: syllabus.id,
+          ...topic,
+          isActive: true,
+        },
+      });
+    }
+
+    // Create syllabus materials
+    const materials = [
+      {
+        title: 'Course Textbook',
+        description: 'Primary reading material for the course',
+        fileType: 'pdf',
+        fileSize: 2048000, // 2MB
+      },
+      {
+        title: 'Lecture Slides',
+        description: 'PowerPoint presentations from lectures',
+        fileType: 'ppt',
+        fileSize: 512000, // 512KB
+      },
+      {
+        title: 'Practice Exercises',
+        description: 'Additional problems and exercises',
+        fileType: 'pdf',
+        fileSize: 1024000, // 1MB
+      },
+    ];
+
+    for (const material of materials) {
+      await prisma.syllabusMaterial.create({
+        data: {
+          syllabusId: syllabus.id,
+          ...material,
+          isActive: true,
+        },
+      });
+    }
+
+    console.log(`Created syllabus for ${subject.name}`);
+  }
+
+  console.log('Syllabus seeding completed!');
+}

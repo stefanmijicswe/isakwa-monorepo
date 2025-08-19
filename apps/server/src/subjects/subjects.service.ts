@@ -27,15 +27,20 @@ export class SubjectsService {
     return this.prisma.subject.create({
       data: createSubjectDto,
       include: {
-        studyProgram: {
+        studyPrograms: {
           select: {
             id: true,
-            name: true,
-            facultyId: true,
-            faculty: {
+            studyProgram: {
               select: {
                 id: true,
-                name: true
+                name: true,
+                facultyId: true,
+                faculty: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
               }
             }
           }
@@ -84,19 +89,24 @@ export class SubjectsService {
         skip,
         take: limit,
         include: {
-          studyProgram: {
-            select: {
-              id: true,
-              name: true,
-              facultyId: true,
-              faculty: {
-                select: {
-                  id: true,
-                  name: true
+                  studyPrograms: {
+          select: {
+            id: true,
+            studyProgram: {
+              select: {
+                id: true,
+                name: true,
+                facultyId: true,
+                faculty: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
                 }
               }
             }
           }
+        }
         },
         orderBy: [
           { semester: 'asc' },
@@ -121,21 +131,26 @@ export class SubjectsService {
     const subject = await this.prisma.subject.findUnique({
       where: { id },
       include: {
-        studyProgram: {
+        studyPrograms: {
           select: {
             id: true,
-            name: true,
-            duration: true,
-            facultyId: true,
-            faculty: {
+            studyProgram: {
               select: {
                 id: true,
                 name: true,
-                universityId: true,
-                university: {
+                duration: true,
+                facultyId: true,
+                faculty: {
                   select: {
                     id: true,
-                    name: true
+                    name: true,
+                    universityId: true,
+                    University: {
+                      select: {
+                        id: true,
+                        name: true
+                      }
+                    }
                   }
                 }
               }
@@ -168,10 +183,15 @@ export class SubjectsService {
         { name: 'asc' }
       ],
       include: {
-        studyProgram: {
+        studyPrograms: {
           select: {
             id: true,
-            name: true
+            studyProgram: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
           }
         }
       }
@@ -185,14 +205,19 @@ export class SubjectsService {
         name: 'asc'
       },
       include: {
-        studyProgram: {
+        studyPrograms: {
           select: {
             id: true,
-            name: true,
-            faculty: {
+            studyProgram: {
               select: {
                 id: true,
-                name: true
+                name: true,
+                faculty: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
               }
             }
           }
@@ -234,15 +259,20 @@ export class SubjectsService {
       where: { id },
       data: updateSubjectDto,
       include: {
-        studyProgram: {
+        studyPrograms: {
           select: {
             id: true,
-            name: true,
-            facultyId: true,
-            faculty: {
+            studyProgram: {
               select: {
                 id: true,
-                name: true
+                name: true,
+                facultyId: true,
+                faculty: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
               }
             }
           }

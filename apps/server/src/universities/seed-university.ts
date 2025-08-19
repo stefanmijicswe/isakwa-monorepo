@@ -1,14 +1,24 @@
 import { PrismaService } from '../prisma/prisma.service';
 
 export async function seedUniversity(prisma: PrismaService) {
-  // First create city
+  // First create state
+  const state = await prisma.state.upsert({
+    where: { name: 'Srbija' },
+    update: {},
+    create: {
+      name: 'Srbija'
+    },
+  });
+
+  // Then create city
   const city = await prisma.city.upsert({
     where: { id: 1 },
     update: {},
     create: {
       id: 1,
       name: 'Belgrade',
-      zipCode: '11000'
+      zipCode: '11000',
+      stateId: state.id
     },
   });
 

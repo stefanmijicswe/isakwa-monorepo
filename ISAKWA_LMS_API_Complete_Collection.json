@@ -1,0 +1,1997 @@
+{
+  "info": {
+    "name": "ISAKWA LMS API - Complete Collection",
+    "description": "Complete API collection for ISAKWA Learning Management System including all endpoints for authentication, user management, academic records, syllabus management, and more.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001/api",
+      "type": "string"
+    },
+    {
+      "key": "adminAuthToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "professorAuthToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "studentAuthToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "studentServiceAuthToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "professorUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "studentUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "studentServiceUserId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{adminAuthToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Authentication - PUBLIC",
+      "item": [
+        {
+          "name": "Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@isakwa.edu\",\n  \"password\": \"admin123\",\n  \"firstName\": \"Admin\",\n  \"lastName\": \"User\",\n  \"role\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za Register Admin",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Postavi adminAuthToken",
+                  "    pm.collectionVariables.set(\"adminAuthToken\", responseJson.access_token);",
+                  "    ",
+                  "    // Postavi adminUserId",
+                  "    pm.collectionVariables.set(\"adminUserId\", responseJson.user.id);",
+                  "    ",
+                  "    console.log(\"✅ Admin varijable postavljene:\");",
+                  "    console.log(\"adminAuthToken:\", responseJson.access_token);",
+                  "    console.log(\"adminUserId:\", responseJson.user.id);",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register Professor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"professor@isakwa.edu\",\n  \"password\": \"prof123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Professor\",\n  \"role\": \"PROFESSOR\",\n  \"department\": \"Computer Science\",\n  \"title\": \"Associate Professor\",\n  \"phoneNumber\": \"+38160123456\",\n  \"officeRoom\": \"A101\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za Register Professor",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Postavi professorAuthToken",
+                  "    pm.collectionVariables.set(\"professorAuthToken\", responseJson.access_token);",
+                  "    ",
+                  "    // Postavi professorUserId",
+                  "    pm.collectionVariables.set(\"professorUserId\", responseJson.user.id);",
+                  "    ",
+                  "    console.log(\"✅ Professor varijable postavljene:\");",
+                  "    console.log(\"professorAuthToken:\", responseJson.access_token);",
+                  "    console.log(\"professorUserId:\", responseJson.user.id);",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student@isakwa.edu\",\n  \"password\": \"student123\",\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Student\",\n  \"role\": \"STUDENT\",\n  \"studentIndex\": \"2024001\",\n  \"year\": 1,\n  \"phoneNumber\": \"+38160123457\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za Register Student",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Postavi studentAuthToken",
+                  "    pm.collectionVariables.set(\"studentAuthToken\", responseJson.access_token);",
+                  "    ",
+                  "    // Postavi studentUserId",
+                  "    pm.collectionVariables.set(\"studentUserId\", responseJson.user.id);",
+                  "    ",
+                  "    console.log(\"✅ Student varijable postavljene:\");",
+                  "    console.log(\"studentAuthToken:\", responseJson.access_token);",
+                  "    console.log(\"studentUserId:\", responseJson.user.id);",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register Student Service",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"service@isakwa.edu\",\n  \"password\": \"service123\",\n  \"firstName\": \"Service\",\n  \"lastName\": \"Staff\",\n  \"role\": \"STUDENT_SERVICE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za Register Student Service",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Postavi studentServiceAuthToken",
+                  "    pm.collectionVariables.set(\"studentServiceAuthToken\", responseJson.access_token);",
+                  "    ",
+                  "    // Postavi studentServiceUserId",
+                  "    pm.collectionVariables.set(\"studentServiceUserId\", responseJson.user.id);",
+                  "    ",
+                  "    console.log(\"✅ Student Service varijable postavljene:\");",
+                  "    console.log(\"studentServiceAuthToken:\", responseJson.access_token);",
+                  "    console.log(\"studentServiceUserId:\", responseJson.user.id);",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@isakwa.edu\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za Login Admin",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Postavi adminAuthToken",
+                  "    pm.collectionVariables.set(\"adminAuthToken\", responseJson.access_token);",
+                  "    ",
+                  "    // Postavi adminUserId",
+                  "    pm.collectionVariables.set(\"adminUserId\", responseJson.user.id);",
+                  "    ",
+                  "    console.log(\"✅ Admin login uspešan - varijable ažurirane:\");",
+                  "    console.log(\"adminAuthToken:\", responseJson.access_token);",
+                  "    console.log(\"adminUserId:\", responseJson.user.id);",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Professor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"professor@isakwa.edu\",\n  \"password\": \"prof123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za Login Professor",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Postavi professorAuthToken",
+                  "    pm.collectionVariables.set(\"professorAuthToken\", responseJson.access_token);",
+                  "    ",
+                  "    // Postavi professorUserId",
+                  "    pm.collectionVariables.set(\"professorUserId\", responseJson.user.id);",
+                  "    ",
+                  "    console.log(\"✅ Professor login uspešan - varijable ažurirane:\");",
+                  "    console.log(\"professorAuthToken:\", responseJson.access_token);",
+                  "    console.log(\"professorUserId:\", responseJson.user.id);",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student@isakwa.edu\",\n  \"password\": \"student123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za Login Student",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Postavi studentAuthToken",
+                  "    pm.collectionVariables.set(\"studentAuthToken\", responseJson.access_token);",
+                  "    ",
+                  "    // Postavi studentUserId",
+                  "    pm.collectionVariables.set(\"studentUserId\", responseJson.user.id);",
+                  "    ",
+                  "    console.log(\"✅ Student login uspešan - varijable ažurirane:\");",
+                  "    console.log(\"studentAuthToken:\", responseJson.access_token);",
+                  "    console.log(\"studentUserId:\", responseJson.user.id);",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Student Service",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"service@isakwa.edu\",\n  \"password\": \"service123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za Login Student Service",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Postavi studentServiceAuthToken",
+                  "    pm.collectionVariables.set(\"studentServiceAuthToken\", responseJson.access_token);",
+                  "    ",
+                  "    // Postavi studentServiceUserId",
+                  "    pm.collectionVariables.set(\"studentServiceUserId\", responseJson.user.id);",
+                  "    ",
+                  "    console.log(\"✅ Student Service login uspešan - varijable ažurirane:\");",
+                  "    console.log(\"studentServiceAuthToken:\", responseJson.access_token);",
+                  "    console.log(\"studentServiceUserId:\", responseJson.user.id);",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Health & Status - PUBLIC",
+      "item": [
+        {
+          "name": "Get Hello",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            }
+          }
+        },
+        {
+          "name": "Get Health Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. University Structure - PUBLIC",
+      "item": [
+        {
+          "name": "Get All Universities",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/universities",
+              "host": ["{{baseUrl}}"],
+              "path": ["universities"]
+            }
+          }
+        },
+        {
+          "name": "Get University by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/universities/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["universities", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get University with Faculties",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/universities/1/faculties",
+              "host": ["{{baseUrl}}"],
+              "path": ["universities", "1", "faculties"]
+            }
+          }
+        },
+        {
+          "name": "Get Main University Info",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/universities/main/info",
+              "host": ["{{baseUrl}}"],
+              "path": ["universities", "main", "info"]
+            }
+          }
+        },
+        {
+          "name": "Get All Faculties",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/faculties",
+              "host": ["{{baseUrl}}"],
+              "path": ["faculties"]
+            }
+          }
+        },
+        {
+          "name": "Get Faculty by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/faculties/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["faculties", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Faculties by University",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/faculties/university/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["faculties", "university", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get All Study Programs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/study-programs",
+              "host": ["{{baseUrl}}"],
+              "path": ["study-programs"]
+            }
+          }
+        },
+        {
+          "name": "Get Study Program by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/study-programs/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["study-programs", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Study Programs by Faculty",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/study-programs/faculty/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["study-programs", "faculty", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get All Subjects",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/subjects",
+              "host": ["{{baseUrl}}"],
+              "path": ["subjects"]
+            }
+          }
+        },
+        {
+          "name": "Get Subject by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/subjects/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["subjects", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Subjects by Study Program",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/subjects/study-program/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["subjects", "study-program", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. User Management - AUTHENTICATED",
+      "item": [
+        {
+          "name": "Get My Profile (Admin)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "profile"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za Get My Profile (Admin)",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    console.log(\"✅ Admin profil uspešno učitán:\", responseJson);",
+                  "    ",
+                  "    // Proveri da li je role ADMIN",
+                  "    if (responseJson.role === \"ADMIN\") {",
+                  "        console.log(\"✅ Role provera uspešna: ADMIN\");",
+                  "    } else {",
+                  "        console.log(\"⚠️ Role provera neuspešna. Očekivano: ADMIN, Dobijeno:\", responseJson.role);",
+                  "    }",
+                  "} else {",
+                  "    console.log(\"❌ Greška pri učitavanju profila:\", pm.response.text());",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Profile (Professor)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "profile"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Profile (Student)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "profile"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Profile (Student Service)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "profile"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentServiceAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Users (Admin Only)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Professors (Admin Only)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/professors",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "professors"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Students (Admin Only)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/students",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "students"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Students (Professor)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/students",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "students"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Student Service Operations - STUDENT_SERVICE",
+      "item": [
+        {
+          "name": "Create Faculty",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Faculty of Informatics\",\n  \"description\": \"Faculty specializing in computer science and information technology\",\n  \"universityId\": 1,\n  \"addressId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/faculties",
+              "host": ["{{baseUrl}}"],
+              "path": ["faculties"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentServiceAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za Create Faculty",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    console.log(\"✅ Faculty uspešno kreiran:\", responseJson);",
+                  "    ",
+                  "    // Sačuvaj faculty ID kao varijablu",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set(\"lastFacultyId\", responseJson.id);",
+                  "        console.log(\"📝 Faculty ID sačuvan kao varijabla:\", responseJson.id);",
+                  "    }",
+                  "} else {",
+                  "    console.log(\"❌ Greška pri kreiranju faculty-a:\", pm.response.text());",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Faculty",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Faculty Name\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/faculties/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["faculties", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentServiceAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Study Program",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Software Engineering\",\n  \"description\": \"Bachelor program in software engineering\",\n  \"duration\": 4,\n  \"facultyId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/study-programs",
+              "host": ["{{baseUrl}}"],
+              "path": ["study-programs"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentServiceAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Study Program",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Program Name\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/study-programs/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["study-programs", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentServiceAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Subject",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Introduction to Programming\",\n  \"code\": \"SE101\",\n  \"description\": \"Basic programming concepts\",\n  \"credits\": 6,\n  \"semester\": 1,\n  \"lectureHours\": 30,\n  \"exerciseHours\": 30\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/subjects",
+              "host": ["{{baseUrl}}"],
+              "path": ["subjects"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentServiceAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Subject",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Subject Name\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/subjects/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["subjects", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentServiceAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Enroll Student in Study Program",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": {{studentUserId}},\n  \"studyProgramId\": 1,\n  \"academicYear\": \"2024/2025\",\n  \"semesterType\": \"FALL\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/enroll-student",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "enroll-student"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentServiceAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Exam Period",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"January 2025\",\n  \"startDate\": \"2025-01-15\",\n  \"endDate\": \"2025-01-30\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/exam-periods",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "exam-periods"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentServiceAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Exam",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subjectId\": 1,\n  \"examPeriodId\": 1,\n  \"examDate\": \"2025-01-20T10:00:00Z\",\n  \"maxPoints\": 100,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/exams",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "exams"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentServiceAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Admin Operations - ADMIN",
+      "item": [
+        {
+          "name": "Delete Faculty",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/faculties/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["faculties", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Study Program",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/study-programs/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["study-programs", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Subject",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/subjects/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["subjects", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Assign Professor to Subject",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"professorId\": {{professorUserId}},\n  \"subjectId\": 1,\n  \"studyProgramId\": 1,\n  \"academicYear\": \"2024/2025\",\n  \"teachingType\": \"LECTURE\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/assign-professor",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "assign-professor"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Student Operations - STUDENT",
+      "item": [
+        {
+          "name": "Enroll in Course",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": {{studentUserId}},\n  \"subjectId\": 1,\n  \"academicYear\": \"2024/2025\",\n  \"semesterType\": \"FALL\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/enroll-course",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "enroll-course"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za Enroll in Course",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    console.log(\"✅ Student uspešno upisan na predmet:\", responseJson);",
+                  "    ",
+                  "    // Sačuvaj enrollment ID kao varijablu",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set(\"lastEnrollmentId\", responseJson.id);",
+                  "        console.log(\"📝 Enrollment ID sačuvan kao varijabla:\", responseJson.id);",
+                  "    }",
+                  "} else {",
+                  "    console.log(\"❌ Greška pri upisu na predmet:\", pm.response.text());",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Active Exam Periods",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/exam-periods",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "exam-periods"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Register for Exam",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": {{studentUserId}},\n  \"examId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/register-exam",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "register-exam"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Academic History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/my-academic-history",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "my-academic-history"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Current Enrollments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/current-enrollments/{{studentUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "current-enrollments", "{{studentUserId}}"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/notifications/{{studentUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "notifications", "{{studentUserId}}"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Professor Operations - PROFESSOR",
+      "item": [
+        {
+          "name": "Get My Assigned Subjects",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/my-subjects?academicYear=2024/2025",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "my-subjects"],
+              "query": [
+                {
+                  "key": "academicYear",
+                  "value": "2024/2025"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Professor Subjects by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/professors/{{professorUserId}}/subjects?academicYear=2024/2025",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "professors", "{{professorUserId}}", "subjects"],
+              "query": [
+                {
+                  "key": "academicYear",
+                  "value": "2024/2025"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Students",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/students/search?firstName=John&lastName=Doe&studentIndex=2024001&year=1&minGPA=7.0&maxGPA=10.0",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "students", "search"],
+              "query": [
+                {
+                  "key": "firstName",
+                  "value": "John"
+                },
+                {
+                  "key": "lastName",
+                  "value": "Doe"
+                },
+                {
+                  "key": "studentIndex",
+                  "value": "2024001"
+                },
+                {
+                  "key": "year",
+                  "value": "1"
+                },
+                {
+                  "key": "minGPA",
+                  "value": "7.0"
+                },
+                {
+                  "key": "maxGPA",
+                  "value": "10.0"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Student Academic History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/students/{{studentUserId}}/academic-history",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "students", "{{studentUserId}}", "academic-history"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Grade Exam",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"examId\": 1,\n  \"studentId\": {{studentUserId}},\n  \"points\": 85,\n  \"grade\": 8,\n  \"comments\": \"Good work, but could improve in some areas.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/grade-exam",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "grade-exam"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za Grade Exam",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    console.log(\"✅ Ispit uspešno ocenjen:\", responseJson);",
+                  "    ",
+                  "    // Proveri da li su ocena i bodovi ispravno postavljeni",
+                  "    if (responseJson.points === 85 && responseJson.grade === 8) {",
+                  "        console.log(\"✅ Ocena i bodovi ispravno postavljeni:\", responseJson.points, \"/\", responseJson.grade);",
+                  "    } else {",
+                  "        console.log(\"⚠️ Ocena ili bodovi nisu ispravno postavljeni\");",
+                  "    }",
+                  "} else {",
+                  "    console.log(\"❌ Greška pri ocenjivanju ispita:\", pm.response.text());",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "9. Syllabus Management - PROFESSOR",
+      "item": [
+        {
+          "name": "Create Syllabus",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subjectId\": 1,\n  \"academicYear\": \"2024/2025\",\n  \"semesterType\": \"FALL\",\n  \"description\": \"Comprehensive introduction to programming concepts\",\n  \"objectives\": \"Students will learn basic programming, algorithms, and problem-solving skills\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/syllabus",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "syllabus"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za Create Syllabus",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    console.log(\"✅ Syllabus uspešno kreiran:\", responseJson);",
+                  "    ",
+                  "    // Možemo postaviti syllabus ID kao varijablu ako treba",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set(\"lastSyllabusId\", responseJson.id);",
+                  "        console.log(\"📝 Syllabus ID sačuvan kao varijabla:\", responseJson.id);",
+                  "    }",
+                  "} else {",
+                  "    console.log(\"❌ Greška pri kreiranju syllabus-a:\", pm.response.text());",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Syllabi",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/syllabus",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "syllabus"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Syllabus by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/syllabus/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "syllabus", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Syllabus",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated description for the syllabus\",\n  \"objectives\": \"Updated learning objectives\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/syllabus/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "syllabus", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Syllabus",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/syllabus/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "syllabus", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Syllabus Topic",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"syllabusId\": 1,\n  \"title\": \"Introduction to Variables\",\n  \"description\": \"Understanding variables, data types, and basic operations\",\n  \"weekNumber\": 1,\n  \"order\": 1,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/syllabus/topic",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "syllabus", "topic"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Syllabus Topic",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Topic Title\",\n  \"description\": \"Updated topic description\",\n  \"weekNumber\": 2,\n  \"order\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/syllabus/topic/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "syllabus", "topic", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Syllabus Topic",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/syllabus/topic/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "syllabus", "topic", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Syllabus Material",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"syllabusId\": 1,\n  \"title\": \"Programming Basics PDF\",\n  \"description\": \"Comprehensive guide to programming fundamentals\",\n  \"fileType\": \"pdf\",\n  \"fileSize\": 2048,\n  \"fileUrl\": \"https://example.com/materials/programming-basics.pdf\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/syllabus/material",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "syllabus", "material"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Syllabus Material",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Material Title\",\n  \"description\": \"Updated material description\",\n  \"fileUrl\": \"https://example.com/materials/updated-material.pdf\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/syllabus/material/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "syllabus", "material", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Syllabus Material",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/academic-records/syllabus/material/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["academic-records", "syllabus", "material", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Role-Based Security Tests",
+      "item": [
+        {
+          "name": "Public Endpoint Test",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/test/public",
+              "host": ["{{baseUrl}}"],
+              "path": ["test", "public"]
+            }
+          }
+        },
+        {
+          "name": "Protected Endpoint Test (Auth Required)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/test/protected",
+              "host": ["{{baseUrl}}"],
+              "path": ["test", "protected"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin Only Endpoint Test",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/test/admin-only",
+              "host": ["{{baseUrl}}"],
+              "path": ["test", "admin-only"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Professor Only Endpoint Test",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/test/professor-only",
+              "host": ["{{baseUrl}}"],
+              "path": ["test", "professor-only"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Student Only Endpoint Test",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/test/student-only",
+              "host": ["{{baseUrl}}"],
+              "path": ["test", "student-only"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

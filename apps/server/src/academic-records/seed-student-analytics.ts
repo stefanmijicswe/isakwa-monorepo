@@ -1,0 +1,93 @@
+import { PrismaService } from '../prisma/prisma.service';
+import { ViolationType, ProjectStatus, UserRole } from '@prisma/client';
+
+export async function seedStudentAnalytics(prisma: PrismaService) {
+  console.log('Seeding student analytics data...');
+
+  // Get existing students, subjects, and professors
+  const students = await prisma.studentProfile.findMany({ 
+    take: 5,
+    include: { user: true }
+  });
+  const subjects = await prisma.subject.findMany({ take: 3 });
+  const professors = await prisma.user.findMany({
+    where: { role: UserRole.PROFESSOR },
+    take: 2,
+  });
+
+  if (professors.length === 0 || students.length === 0 || subjects.length === 0) {
+    console.log('Missing required data, skipping student analytics seeding');
+    return;
+  }
+
+  const professor = professors[0];
+
+  // Create student violations
+  for (const student of students.slice(0, 3)) { // Only for first 3 students
+    const violations = [
+      {
+        description: 'Late submission of assignment',
+        violationType: ViolationType.LATE_SUBMISSION,
+        examId: null,
+      },
+      {
+        description: 'Absence from mandatory laboratory session',
+        violationType: ViolationType.ABSENCE,
+        examId: null,
+      },
+    ];
+
+    for (const violation of violations) {
+      await prisma.studentViolation.create({
+        data: {
+          studentId: student.id,
+          reportedBy: professor.id,
+          ...violation,
+          isActive: true,
+        },
+      });
+    }
+
+    console.log(`Created violations for student ${student.user.firstName} ${student.user.lastName}`);
+  }
+
+  // Create final projects
+  for (const student of students.slice(0, 3)) { // Only for first 3 students
+    const project = await prisma.finalProject.create({
+      data: {
+        studentId: student.id,
+        subjectId: subjects[0].id, // Assign to first subject
+        title: `Final Project: ${subjects[0].name}`,
+        description: `Comprehensive project demonstrating knowledge of ${subjects[0].name}`,
+        supervisorId: professor.id,
+        status: ProjectStatus.IN_PROGRESS,
+        isActive: true,
+      },
+    });
+
+    console.log(`Created final project for student ${student.user.firstName} ${student.user.lastName}`);
+  }
+
+  // Create some completed projects with grades
+  for (const student of students.slice(3, 5)) { // For last 2 students
+    const project = await prisma.finalProject.create({
+      data: {
+        studentId: student.id,
+        subjectId: subjects[1].id, // Assign to second subject
+        title: `Final Project: ${subjects[1].name}`,
+        description: `Comprehensive project demonstrating knowledge of ${subjects[1].name}`,
+        supervisorId: professor.id,
+        status: ProjectStatus.COMPLETED,
+        submittedAt: new Date('2024-12-15'),
+        defendedAt: new Date('2024-12-20'),
+        grade: 9,
+        points: 85,
+        isActive: true,
+      },
+    });
+
+    console.log(`Created completed final project for student ${student.user.firstName} ${student.user.lastName}`);
+  }
+
+  console.log('Student analytics seeding completed!');
+}

@@ -16,7 +16,7 @@ export async function seedAcademicRecords(prisma: PrismaService) {
 
   const professors = await prisma.user.findMany({
     where: { role: UserRole.PROFESSOR },
-    include: { profesorProfile: true },
+    include: { professorProfile: true },
   });
 
   if (students.length === 0 || professors.length === 0 || studyPrograms.length === 0) {

@@ -101,13 +101,13 @@ export class StudyProgramsService {
         subjects: {
           select: {
             id: true,
-            name: true,
-            code: true,
-            credits: true,
-            semester: true
-          },
-          orderBy: {
-            semester: 'asc'
+            subject: {
+              select: {
+                id: true,
+                code: true,
+                credits: true
+              }
+            }
           }
         }
       }

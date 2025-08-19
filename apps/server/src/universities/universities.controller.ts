@@ -9,7 +9,6 @@ import { UniversitiesService } from './universities.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('universities')
-@UseGuards(JwtAuthGuard)
 export class UniversitiesController {
   constructor(private readonly universitiesService: UniversitiesService) {}
 

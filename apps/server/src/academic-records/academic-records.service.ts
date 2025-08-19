@@ -10,6 +10,13 @@ import {
   GradeExamDto,
   SearchStudentsDto,
   UpdateEnrollmentDto,
+  CreateSyllabusDto,
+  UpdateSyllabusDto,
+  GetSyllabusDto,
+  CreateSyllabusTopicDto,
+  UpdateSyllabusTopicDto,
+  CreateSyllabusMaterialDto,
+  UpdateSyllabusMaterialDto,
 } from './dto';
 import { UserRole, StudentStatus } from '@prisma/client';
 
@@ -88,25 +95,32 @@ export class AcademicRecordsService {
   }
 
   async enrollInCourse(dto: EnrollCourseDto) {
-    const studentEnrollment = await this.prisma.studentEnrollment.findFirst({
-      where: {
-        studentId: dto.studentId,
-        academicYear: dto.academicYear,
-        status: StudentStatus.ACTIVE,
-      },
+    // Prvo pronađi student profile based na studentId (koji je zapravo student profile ID)
+    const studentProfile = await this.prisma.studentProfile.findUnique({
+      where: { id: dto.studentId },
       include: {
-        studyProgram: {
+        user: true,
+        enrollments: {
+          where: {
+            academicYear: dto.academicYear,
+            status: StudentStatus.ACTIVE,
+          },
           include: {
-            subjects: true,
+            studyProgram: {
+              include: {
+                subjects: true,
+              },
+            },
           },
         },
       },
     });
 
-    if (!studentEnrollment) {
+    if (!studentProfile || !studentProfile.enrollments.length) {
       throw new BadRequestException('Student must be enrolled in a study program for this academic year');
     }
 
+    const studentEnrollment = studentProfile.enrollments[0];
     const subject = await this.prisma.subject.findUnique({
       where: { id: dto.subjectId },
     });
@@ -153,7 +167,7 @@ export class AcademicRecordsService {
   async assignProfessor(dto: AssignProfessorDto) {
     const professor = await this.prisma.user.findUnique({
       where: { id: dto.professorId },
-      include: { profesorProfile: true },
+              include: { professorProfile: true },
     });
 
     if (!professor || professor.role !== UserRole.PROFESSOR) {
@@ -197,7 +211,6 @@ export class AcademicRecordsService {
           select: { name: true, code: true },
         },
         studyProgram: {
-          select: { name: true },
           include: {
             faculty: {
               select: { name: true },
@@ -609,7 +622,6 @@ export class AcademicRecordsService {
           },
         },
         studyProgram: {
-          select: { name: true },
           include: {
             faculty: {
               select: { name: true },
@@ -644,6 +656,432 @@ export class AcademicRecordsService {
         },
       },
       orderBy: { startDate: 'asc' },
+    });
+  }
+
+  // Syllabus Management Methods
+  async createSyllabus(dto: CreateSyllabusDto, professorId: number) {
+    // Verify professor is assigned to this subject
+    const assignment = await this.prisma.professorAssignment.findFirst({
+      where: {
+        professorId,
+        subjectId: dto.subjectId,
+        academicYear: dto.academicYear,
+        isActive: true,
+      },
+    });
+
+    if (!assignment) {
+      throw new ForbiddenException('Professor not assigned to this subject');
+    }
+
+    // Check if syllabus already exists
+    const existingSyllabus = await this.prisma.syllabus.findFirst({
+      where: {
+        subjectId: dto.subjectId,
+        academicYear: dto.academicYear,
+        semesterType: dto.semesterType,
+      },
+    });
+
+    if (existingSyllabus) {
+      throw new BadRequestException('Syllabus already exists for this subject, year, and semester');
+    }
+
+    return this.prisma.syllabus.create({
+      data: {
+        subjectId: dto.subjectId,
+        academicYear: dto.academicYear,
+        semesterType: dto.semesterType,
+        description: dto.description,
+        objectives: dto.objectives,
+        isActive: dto.isActive ?? true,
+      },
+      include: {
+        subject: {
+          select: { name: true, code: true },
+        },
+        topics: {
+          where: { isActive: true },
+          orderBy: { order: 'asc' },
+        },
+        materials: {
+          where: { isActive: true },
+        },
+      },
+    });
+  }
+
+  async updateSyllabus(syllabusId: number, dto: UpdateSyllabusDto, professorId: number) {
+    const syllabus = await this.prisma.syllabus.findUnique({
+      where: { id: syllabusId },
+      include: {
+        subject: {
+          include: {
+            ProfessorAssignment: {
+              where: {
+                professorId,
+                isActive: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!syllabus) {
+      throw new NotFoundException('Syllabus not found');
+    }
+
+    if (syllabus.subject.ProfessorAssignment.length === 0) {
+      throw new ForbiddenException('Professor not assigned to this subject');
+    }
+
+    return this.prisma.syllabus.update({
+      where: { id: syllabusId },
+      data: dto,
+      include: {
+        subject: {
+          select: { name: true, code: true },
+        },
+        topics: {
+          where: { isActive: true },
+          orderBy: { order: 'asc' },
+        },
+        materials: {
+          where: { isActive: true },
+        },
+      },
+    });
+  }
+
+  async getSyllabus(filters: GetSyllabusDto, professorId?: number) {
+    const where: any = { isActive: true };
+
+    if (filters.subjectId) {
+      where.subjectId = filters.subjectId;
+    }
+    if (filters.academicYear) {
+      where.academicYear = filters.academicYear;
+    }
+    if (filters.semesterType) {
+      where.semesterType = filters.semesterType;
+    }
+
+    // If professorId is provided, only return syllabi for subjects they're assigned to
+    if (professorId) {
+      where.subject = {
+        ProfessorAssignment: {
+          some: {
+            professorId,
+            isActive: true,
+          },
+        },
+      };
+    }
+
+    return this.prisma.syllabus.findMany({
+      where,
+      include: {
+        subject: {
+          select: { name: true, code: true },
+        },
+        topics: {
+          where: { isActive: true },
+          orderBy: { order: 'asc' },
+        },
+        materials: {
+          where: { isActive: true },
+        },
+      },
+      orderBy: [
+        { academicYear: 'desc' },
+        { semesterType: 'asc' },
+        { subject: { name: 'asc' } },
+      ],
+    });
+  }
+
+  async getSyllabusById(syllabusId: number, professorId?: number) {
+    const where: any = { id: syllabusId, isActive: true };
+
+    if (professorId) {
+      where.subject = {
+        ProfessorAssignment: {
+          some: {
+            professorId,
+            isActive: true,
+          },
+        },
+      };
+    }
+
+    const syllabus = await this.prisma.syllabus.findFirst({
+      where,
+      include: {
+        subject: {
+          select: { name: true, code: true },
+        },
+        topics: {
+          where: { isActive: true },
+          orderBy: { order: 'asc' },
+        },
+        materials: {
+          where: { isActive: true },
+        },
+      },
+    });
+
+    if (!syllabus) {
+      throw new NotFoundException('Syllabus not found');
+    }
+
+    return syllabus;
+  }
+
+  async deleteSyllabus(syllabusId: number, professorId: number) {
+    const syllabus = await this.prisma.syllabus.findUnique({
+      where: { id: syllabusId },
+              include: {
+          subject: {
+            include: {
+              ProfessorAssignment: {
+                where: {
+                  professorId,
+                  isActive: true,
+                },
+              },
+            },
+          },
+        },
+    });
+
+    if (!syllabus) {
+      throw new NotFoundException('Syllabus not found');
+    }
+
+    if (syllabus.subject.ProfessorAssignment.length === 0) {
+      throw new ForbiddenException('Professor not assigned to this subject');
+    }
+
+    // Soft delete - set isActive to false
+    return this.prisma.syllabus.update({
+      where: { id: syllabusId },
+      data: { isActive: false },
+    });
+  }
+
+  // Syllabus Topic Management
+  async createSyllabusTopic(dto: CreateSyllabusTopicDto, professorId: number) {
+    // Verify professor has access to this syllabus
+    const syllabus = await this.prisma.syllabus.findUnique({
+      where: { id: dto.syllabusId },
+      include: {
+        subject: {
+          include: {
+            ProfessorAssignment: {
+              where: {
+                professorId,
+                isActive: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!syllabus) {
+      throw new NotFoundException('Syllabus not found');
+    }
+
+    if (syllabus.subject.ProfessorAssignment.length === 0) {
+      throw new ForbiddenException('Professor not assigned to this subject');
+    }
+
+    return this.prisma.syllabusTopic.create({
+      data: dto,
+      include: {
+        syllabus: {
+          select: { subject: { select: { name: true } } },
+        },
+      },
+    });
+  }
+
+  async updateSyllabusTopic(topicId: number, dto: UpdateSyllabusTopicDto, professorId: number) {
+    const topic = await this.prisma.syllabusTopic.findUnique({
+      where: { id: topicId },
+      include: {
+        syllabus: {
+          include: {
+            subject: {
+              include: {
+                ProfessorAssignment: {
+                  where: {
+                    professorId,
+                    isActive: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!topic) {
+      throw new NotFoundException('Topic not found');
+    }
+
+    if (topic.syllabus.subject.ProfessorAssignment.length === 0) {
+      throw new ForbiddenException('Professor not assigned to this subject');
+    }
+
+    return this.prisma.syllabusTopic.update({
+      where: { id: topicId },
+      data: dto,
+    });
+  }
+
+  async deleteSyllabusTopic(topicId: number, professorId: number) {
+    const topic = await this.prisma.syllabusTopic.findUnique({
+      where: { id: topicId },
+      include: {
+        syllabus: {
+          include: {
+            subject: {
+              include: {
+                ProfessorAssignment: {
+                  where: {
+                    professorId,
+                    isActive: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!topic) {
+      throw new NotFoundException('Topic not found');
+    }
+
+    if (topic.syllabus.subject.ProfessorAssignment.length === 0) {
+      throw new ForbiddenException('Professor not assigned to this subject');
+    }
+
+    return this.prisma.syllabusTopic.update({
+      where: { id: topicId },
+      data: { isActive: false },
+    });
+  }
+
+  // Syllabus Material Management
+  async createSyllabusMaterial(dto: CreateSyllabusMaterialDto, professorId: number) {
+    // Verify professor has access to this syllabus
+    const syllabus = await this.prisma.syllabus.findUnique({
+      where: { id: dto.syllabusId },
+      include: {
+        subject: {
+          include: {
+            ProfessorAssignment: {
+              where: {
+                professorId,
+                isActive: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!syllabus) {
+      throw new NotFoundException('Syllabus not found');
+    }
+
+    if (syllabus.subject.ProfessorAssignment.length === 0) {
+      throw new ForbiddenException('Professor not assigned to this subject');
+    }
+
+    return this.prisma.syllabusMaterial.create({
+      data: dto,
+      include: {
+        syllabus: {
+          select: { subject: { select: { name: true } } },
+        },
+      },
+    });
+  }
+
+  async updateSyllabusMaterial(materialId: number, dto: UpdateSyllabusMaterialDto, professorId: number) {
+    const material = await this.prisma.syllabusMaterial.findUnique({
+      where: { id: materialId },
+      include: {
+        syllabus: {
+          include: {
+            subject: {
+              include: {
+                ProfessorAssignment: {
+                  where: {
+                    professorId,
+                    isActive: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!material) {
+      throw new NotFoundException('Material not found');
+    }
+
+    if (material.syllabus.subject.ProfessorAssignment.length === 0) {
+      throw new ForbiddenException('Professor not assigned to this subject');
+    }
+
+    return this.prisma.syllabusMaterial.update({
+      where: { id: materialId },
+      data: dto,
+    });
+  }
+
+  async deleteSyllabusMaterial(materialId: number, professorId: number) {
+    const material = await this.prisma.syllabusMaterial.findUnique({
+      where: { id: materialId },
+      include: {
+        syllabus: {
+          include: {
+            subject: {
+              include: {
+                ProfessorAssignment: {
+                  where: {
+                    professorId,
+                    isActive: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!material) {
+      throw new NotFoundException('Material not found');
+    }
+
+    if (material.syllabus.subject.ProfessorAssignment.length === 0) {
+      throw new ForbiddenException('Professor not assigned to this subject');
+    }
+
+    return this.prisma.syllabusMaterial.update({
+      where: { id: materialId },
+      data: { isActive: false },
     });
   }
 }

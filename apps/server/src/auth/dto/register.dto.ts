@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, IsEnum, IsOptional } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsEnum, IsOptional, IsNumber, IsDateString } from 'class-validator';
 import { UserRole } from '@prisma/client';
 
 export class RegisterDto {
@@ -46,4 +46,26 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   program?: string;
+
+  // Dodatni podaci za sve korisnike
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsDateString()
+  dateOfBirth?: string;
+
+  @IsOptional()
+  @IsNumber()
+  cityId?: number;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  // Alias za studentIndex (indexNumber)
+  @IsOptional()
+  @IsString()
+  indexNumber?: string;
 }

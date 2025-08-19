@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,6 +5,522 @@ generator client {
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     Int                     @id @default(autoincrement())
+  email                  String                  @unique
+  password               String
+  firstName              String
+  lastName               String
+  role                   UserRole
+  isActive               Boolean                 @default(true)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  dateOfBirth            DateTime?
+  createdFinalProjects   FinalProject[]
+  notificationRecipients NotificationRecipient[]
+  createdNotifications   Notification[]
+  professorAssignments   ProfessorAssignment[]
+  professorProfile       ProfessorProfile?
+  studentProfile         StudentProfile?
+  createdViolations      StudentViolation[]
+
+  @@map("users")
+}
+
+model State {
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  cities City[]
+
+  @@map("states")
+}
+
+model City {
+  id        Int       @id @default(autoincrement())
+  name      String
+  zipCode   String
+  stateId   Int
+  addresses Address[]
+  state     State     @relation(fields: [stateId], references: [id])
+
+  @@map("cities")
+}
+
+model Address {
+  id           Int          @id @default(autoincrement())
+  street       String
+  number       String
+  cityId       Int
+  city         City         @relation(fields: [cityId], references: [id])
+  faculties    Faculty[]
+  universities University[]
+
+  @@map("addresses")
+}
+
+model University {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  addressId   Int?
+  phone       String?
+  email       String?
+  website     String?
+  rectorName  String?
+  rectorTitle String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  faculties   Faculty[]
+  address     Address?  @relation(fields: [addressId], references: [id])
+
+  @@map("universities")
+}
+
+model Faculty {
+  id            Int            @id @default(autoincrement())
+  universityId  Int
+  name          String
+  description   String?
+  addressId     Int?
+  phone         String?
+  email         String?
+  deanName      String?
+  deanTitle     String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  address       Address?       @relation(fields: [addressId], references: [id])
+  University    University     @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  studyPrograms StudyProgram[]
+
+  @@map("faculties")
+}
+
+model StudyProgram {
+  id                   Int                   @id @default(autoincrement())
+  facultyId            Int
+  name                 String
+  description          String?
+  duration             Int
+  directorName         String?
+  directorTitle        String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  professorAssignments ProfessorAssignment[]
+  enrollments          StudentEnrollment[]
+  students             StudentProfile[]
+  subjects             StudyProgramSubject[]
+  faculty              Faculty               @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  Subject              Subject[]
+
+  @@unique([facultyId, name])
+  @@map("study_programs")
+}
+
+model Subject {
+  id                    Int                    @id @default(autoincrement())
+  studyProgramId        Int
+  name                  String
+  code                  String                 @unique
+  description           String?
+  credits               Int
+  semester              Int
+  lectureHours          Int                    @default(0)
+  exerciseHours         Int                    @default(0)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  courseEnrollments     CourseEnrollment[]
+  schedules             CourseSchedule[]
+  evaluationInstruments EvaluationInstrument[]
+  exams                 Exam[]
+  finalProjects         FinalProject[]
+  notifications         Notification[]
+  ProfessorAssignment   ProfessorAssignment[]
+  studyPrograms         StudyProgramSubject[]
+  outcomes              SubjectOutcome[]
+  study_programs        StudyProgram           @relation(fields: [studyProgramId], references: [id], onDelete: Cascade)
+  syllabi               Syllabus[]
+
+  @@map("subjects")
+}
+
+model SubjectOutcome {
+  id          Int     @id @default(autoincrement())
+  subjectId   Int
+  description String
+  order       Int
+  subject     Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@map("subject_outcomes")
+}
+
+model StudyProgramSubject {
+  id             Int          @id @default(autoincrement())
+  studyProgramId Int
+  subjectId      Int
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  subject        Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  studyProgram   StudyProgram @relation(fields: [studyProgramId], references: [id], onDelete: Cascade)
+
+  @@map("study_program_subjects")
+}
+
+model ProfessorProfile {
+  id          Int     @id @default(autoincrement())
+  userId      Int     @unique
+  department  String
+  title       String
+  phoneNumber String?
+  officeRoom  String?
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  titles      Title[]
+
+  @@map("professor_profiles")
+}
+
+model TitleType {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  titles Title[]
+
+  @@map("title_types")
+}
+
+model Title {
+  id               Int               @id @default(autoincrement())
+  professorId      Int
+  titleTypeId      Int
+  electionDate     DateTime
+  endDate          DateTime?
+  isActive         Boolean           @default(true)
+  titleType        TitleType         @relation(fields: [titleTypeId], references: [id], onDelete: Cascade)
+  professor        ProfessorProfile  @relation(fields: [professorId], references: [id], onDelete: Cascade)
+  scientificFields ScientificField[] @relation("ScientificFieldToTitle")
+
+  @@map("titles")
+}
+
+model ScientificField {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  titles Title[] @relation("ScientificFieldToTitle")
+
+  @@map("scientific_fields")
+}
+
+model ProfessorAssignment {
+  id             Int          @id @default(autoincrement())
+  professorId    Int
+  subjectId      Int
+  studyProgramId Int
+  academicYear   String
+  teachingType   TeachingType @default(LECTURE)
+  isActive       Boolean      @default(true)
+  assignedAt     DateTime     @default(now())
+  studyProgram   StudyProgram @relation(fields: [studyProgramId], references: [id], onDelete: Cascade)
+  subject        Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  professor      User         @relation(fields: [professorId], references: [id], onDelete: Cascade)
+
+  @@unique([professorId, subjectId, academicYear])
+  @@map("professor_assignments")
+}
+
+model StudentProfile {
+  id                    Int                    @id @default(autoincrement())
+  userId                Int                    @unique
+  studentIndex          String                 @unique
+  year                  Int
+  studyProgramId        Int?
+  phoneNumber           String?
+  status                StudentStatus          @default(ACTIVE)
+  enrollmentYear        String?
+  courseEnrollments     CourseEnrollment[]
+  evaluationSubmissions EvaluationSubmission[]
+  examRegistrations     ExamRegistration[]
+  finalProjects         FinalProject[]
+  grades                Grade[]
+  enrollments           StudentEnrollment[]
+  studyProgram          StudyProgram?          @relation(fields: [studyProgramId], references: [id])
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  violations            StudentViolation[]
+
+  @@map("student_profiles")
+}
+
+model StudentEnrollment {
+  id             Int            @id @default(autoincrement())
+  studentId      Int
+  studyProgramId Int
+  academicYear   String
+  year           Int
+  status         StudentStatus  @default(ACTIVE)
+  enrollmentDate DateTime       @default(now())
+  completionDate DateTime?
+  studyProgram   StudyProgram   @relation(fields: [studyProgramId], references: [id], onDelete: Cascade)
+  student        StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, studyProgramId, academicYear])
+  @@map("student_enrollments")
+}
+
+model CourseEnrollment {
+  id             Int            @id @default(autoincrement())
+  studentId      Int
+  subjectId      Int
+  academicYear   String
+  semesterType   SemesterType
+  enrollmentDate DateTime       @default(now())
+  isActive       Boolean        @default(true)
+  finalGrade     Int?
+  subject        Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  student        StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, subjectId, academicYear])
+  @@map("course_enrollments")
+}
+
+model ExamPeriod {
+  id                    Int          @id @default(autoincrement())
+  name                  String
+  startDate             DateTime
+  endDate               DateTime
+  registrationStartDate DateTime
+  registrationEndDate   DateTime
+  academicYear          String
+  semesterType          SemesterType
+  isActive              Boolean      @default(true)
+  createdAt             DateTime     @default(now())
+  exams                 Exam[]
+
+  @@map("exam_periods")
+}
+
+model Exam {
+  id            Int                @id @default(autoincrement())
+  subjectId     Int
+  examPeriodId  Int
+  examDate      DateTime
+  examTime      String
+  duration      Int
+  location      String?
+  maxPoints     Int                @default(100)
+  status        ExamStatus         @default(SCHEDULED)
+  createdAt     DateTime           @default(now())
+  registrations ExamRegistration[]
+  examPeriod    ExamPeriod         @relation(fields: [examPeriodId], references: [id], onDelete: Cascade)
+  subject       Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  grades        Grade[]
+  violations    StudentViolation[]
+
+  @@map("exams")
+}
+
+model ExamRegistration {
+  id               Int            @id @default(autoincrement())
+  studentId        Int
+  examId           Int
+  registrationDate DateTime       @default(now())
+  isActive         Boolean        @default(true)
+  exam             Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student          StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, examId])
+  @@map("exam_registrations")
+}
+
+model Grade {
+  id        Int            @id @default(autoincrement())
+  studentId Int
+  examId    Int
+  points    Int
+  grade     Int?
+  passed    Boolean        @default(false)
+  attempt   Int            @default(1)
+  gradedAt  DateTime       @default(now())
+  gradedBy  Int?
+  exam      Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("grades")
+}
+
+model Syllabus {
+  id           Int                @id @default(autoincrement())
+  subjectId    Int
+  academicYear String
+  semesterType SemesterType
+  description  String?
+  objectives   String?
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  subject      Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  materials    SyllabusMaterial[]
+  topics       SyllabusTopic[]
+
+  @@map("syllabi")
+}
+
+model SyllabusTopic {
+  id          Int      @id @default(autoincrement())
+  syllabusId  Int
+  title       String
+  description String?
+  weekNumber  Int?
+  order       Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  syllabus    Syllabus @relation(fields: [syllabusId], references: [id], onDelete: Cascade)
+
+  @@map("syllabus_topics")
+}
+
+model SyllabusMaterial {
+  id          Int      @id @default(autoincrement())
+  syllabusId  Int
+  title       String
+  description String?
+  filePath    String?
+  fileType    String?
+  fileSize    Int?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  syllabus    Syllabus @relation(fields: [syllabusId], references: [id], onDelete: Cascade)
+
+  @@map("syllabus_materials")
+}
+
+model CourseSchedule {
+  id           Int             @id @default(autoincrement())
+  subjectId    Int
+  academicYear String
+  semesterType SemesterType
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  subject      Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  sessions     CourseSession[]
+
+  @@map("course_schedules")
+}
+
+model CourseSession {
+  id          Int            @id @default(autoincrement())
+  scheduleId  Int
+  title       String
+  description String?
+  sessionDate DateTime
+  startTime   String
+  endTime     String
+  room        String?
+  sessionType TeachingType
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  schedule    CourseSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@map("course_sessions")
+}
+
+model EvaluationInstrument {
+  id          Int                    @id @default(autoincrement())
+  subjectId   Int
+  title       String
+  description String?
+  type        EvaluationType
+  maxPoints   Int                    @default(100)
+  dueDate     DateTime?
+  isActive    Boolean                @default(true)
+  createdAt   DateTime               @default(now())
+  subject     Subject                @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  submissions EvaluationSubmission[]
+
+  @@map("evaluation_instruments")
+}
+
+model EvaluationSubmission {
+  id           Int                  @id @default(autoincrement())
+  instrumentId Int
+  studentId    Int
+  submittedAt  DateTime             @default(now())
+  points       Int?
+  grade        Int?
+  passed       Boolean              @default(false)
+  feedback     String?
+  gradedAt     DateTime?
+  gradedBy     Int?
+  isActive     Boolean              @default(true)
+  student      StudentProfile       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  instrument   EvaluationInstrument @relation(fields: [instrumentId], references: [id], onDelete: Cascade)
+
+  @@map("evaluation_submissions")
+}
+
+model Notification {
+  id         Int                     @id @default(autoincrement())
+  subjectId  Int?
+  title      String
+  message    String
+  type       NotificationType
+  priority   NotificationPriority    @default(NORMAL)
+  isActive   Boolean                 @default(true)
+  createdAt  DateTime                @default(now())
+  createdBy  Int
+  recipients NotificationRecipient[]
+  creator    User                    @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  subject    Subject?                @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model NotificationRecipient {
+  id             Int          @id @default(autoincrement())
+  notificationId Int
+  userId         Int
+  isRead         Boolean      @default(false)
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@map("notification_recipients")
+}
+
+model StudentViolation {
+  id            Int            @id @default(autoincrement())
+  studentId     Int
+  examId        Int?
+  description   String
+  violationType ViolationType
+  reportedAt    DateTime       @default(now())
+  reportedBy    Int
+  isActive      Boolean        @default(true)
+  reporter      User           @relation(fields: [reportedBy], references: [id], onDelete: Cascade)
+  exam          Exam?          @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student       StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("student_violations")
+}
+
+model FinalProject {
+  id           Int            @id @default(autoincrement())
+  studentId    Int
+  subjectId    Int
+  title        String
+  description  String?
+  supervisorId Int?
+  status       ProjectStatus  @default(IN_PROGRESS)
+  submittedAt  DateTime?
+  defendedAt   DateTime?
+  grade        Int?
+  points       Int?
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  supervisor   User?          @relation(fields: [supervisorId], references: [id])
+  subject      Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  student      StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("final_projects")
 }
 
 enum UserRole {
@@ -35,6 +545,7 @@ enum TeachingType {
   LECTURE
   EXERCISE
   LABORATORY
+  MENTORING
 }
 
 enum StudentStatus {
@@ -44,289 +555,44 @@ enum StudentStatus {
   INTERRUPTED
 }
 
-model User {
-  id          Int      @id @default(autoincrement())
-  email       String   @unique
-  password    String
-  firstName   String
-  lastName    String
-  role        UserRole
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relacije specifične za ulogu
-  profesorProfile ProfessorProfile?
-  studentProfile  StudentProfile?
-  professorAssignments ProfessorAssignment[]
-
-  @@map("users")
+enum EvaluationType {
+  PROJECT
+  TEST
+  QUIZ
+  ASSIGNMENT
+  LABORATORY
+  PRESENTATION
+  MIDTERM
+  FINAL
 }
 
-model ProfessorProfile {
-  id          Int    @id @default(autoincrement())
-  userId      Int    @unique
-  department  String
-  title       String // Dr, Prof, Asistent, itd.
-  phoneNumber String?
-  officeRoom  String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("professor_profiles")
+enum NotificationType {
+  COURSE_ANNOUNCEMENT
+  EXAM_REMINDER
+  ASSIGNMENT_DUE
+  GENERAL
+  SYSTEM
 }
 
-model StudentProfile {
-  id           Int           @id @default(autoincrement())
-  userId       Int           @unique
-  studentIndex String        @unique
-  year         Int
-  studyProgramId Int?
-  phoneNumber  String?
-  status       StudentStatus @default(ACTIVE)
-  enrollmentYear String? 
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  studyProgram StudyProgram? @relation(fields: [studyProgramId], references: [id])
-
-  // Relacije
-  enrollments       StudentEnrollment[]
-  courseEnrollments CourseEnrollment[]
-  examRegistrations ExamRegistration[]
-  grades            Grade[]
-
-  @@map("student_profiles")
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
 }
 
-// Lokacije i adrese
-model City {
-  id       Int    @id @default(autoincrement())
-  name     String
-  zipCode  String
-  
-  addresses Address[]
-
-  @@map("cities")
+enum ViolationType {
+  CHEATING
+  PLAGIARISM
+  LATE_SUBMISSION
+  ABSENCE
+  OTHER
 }
 
-model Address {
-  id       Int    @id @default(autoincrement())
-  street   String
-  number   String
-  cityId   Int
-  
-  city         City           @relation(fields: [cityId], references: [id])
-  universities University[]
-  faculties    Faculty[]
-
-  @@map("addresses")
-}
-
-// Osnovni entiteti za strukturu univerziteta
-model University {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  addressId   Int?
-  phone       String?
-  email       String?
-  website     String?
-  rectorName  String?
-  rectorTitle String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  address   Address?  @relation(fields: [addressId], references: [id])
-  faculties Faculty[]
-
-  @@map("universities")
-}
-
-model Faculty {
-  id           Int      @id @default(autoincrement())
-  universityId Int
-  name         String
-  description  String?
-  addressId    Int?
-  phone        String?
-  email        String?
-  deanName     String?
-  deanTitle    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  university     University      @relation(fields: [universityId], references: [id], onDelete: Cascade)
-  address        Address?        @relation(fields: [addressId], references: [id])
-  studyPrograms  StudyProgram[]
-
-  @@map("faculties")
-}
-
-model StudyProgram {
-  id               Int      @id @default(autoincrement())
-  facultyId        Int
-  name             String
-  description      String?
-  duration         Int      // broj godina
-  directorName     String?
-  directorTitle    String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  faculty  Faculty   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
-  subjects Subject[]
-  students StudentProfile[]
-  studentEnrollments StudentEnrollment[]
-  professorAssignments ProfessorAssignment[]
-
-  @@unique([facultyId, name])
-  @@map("study_programs")
-}
-
-model Subject {
-  id             Int      @id @default(autoincrement())
-  studyProgramId Int
-  name           String
-  code           String   @unique
-  description    String?
-  credits        Int      // ECTS bodovi
-  semester       Int      // koji semestar
-  lectureHours   Int      @default(0)
-  exerciseHours  Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  studyProgram StudyProgram @relation(fields: [studyProgramId], references: [id], onDelete: Cascade)
-  
-  // Relacije
-  courseEnrollments CourseEnrollment[]
-  exams Exam[]
-  professorAssignments ProfessorAssignment[]
-
-  @@map("subjects")
-}
-
-// Sistem za upis na predmete
-model CourseEnrollment {
-  id             Int      @id @default(autoincrement())
-  studentId      Int
-  subjectId      Int
-  academicYear   String   // npr. "2024/2025"
-  semesterType   SemesterType
-  enrollmentDate DateTime @default(now())
-  isActive       Boolean  @default(true)
-
-  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-
-  @@unique([studentId, subjectId, academicYear])
-  @@map("course_enrollments")
-}
-
-// Student enrollment u study program
-model StudentEnrollment {
-  id             Int      @id @default(autoincrement())
-  studentId      Int
-  studyProgramId Int
-  academicYear   String   // npr. "2024/2025"
-  year           Int      // koja godina studija (1, 2, 3, 4)
-  status         StudentStatus @default(ACTIVE)
-  enrollmentDate DateTime @default(now())
-  completionDate DateTime?
-
-  student      StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  studyProgram StudyProgram   @relation(fields: [studyProgramId], references: [id], onDelete: Cascade)
-
-  @@unique([studentId, studyProgramId, academicYear])
-  @@map("student_enrollments")
-}
-
-// Professor assignment na subjects
-model ProfessorAssignment {
-  id             Int          @id @default(autoincrement())
-  professorId    Int
-  subjectId      Int
-  studyProgramId Int
-  academicYear   String
-  teachingType   TeachingType @default(LECTURE)
-  isActive       Boolean      @default(true)
-  assignedAt     DateTime     @default(now())
-
-  professor    User         @relation(fields: [professorId], references: [id], onDelete: Cascade)
-  subject      Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  studyProgram StudyProgram @relation(fields: [studyProgramId], references: [id], onDelete: Cascade)
-
-  @@unique([professorId, subjectId, academicYear])
-  @@map("professor_assignments")
-}
-
-// Sistem za ispite
-model ExamPeriod {
-  id          Int      @id @default(autoincrement())
-  name        String
-  startDate   DateTime
-  endDate     DateTime
-  registrationStartDate DateTime
-  registrationEndDate DateTime
-  academicYear String
-  semesterType SemesterType
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-
-  exams Exam[]
-
-  @@map("exam_periods")
-}
-
-model Exam {
-  id           Int        @id @default(autoincrement())
-  subjectId    Int
-  examPeriodId Int
-  examDate     DateTime
-  examTime     String     // npr. "09:00"
-  duration     Int        // u minutima
-  location     String?
-  maxPoints    Int        @default(100)
-  status       ExamStatus @default(SCHEDULED)
-  createdAt    DateTime   @default(now())
-
-  subject    Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  examPeriod ExamPeriod @relation(fields: [examPeriodId], references: [id], onDelete: Cascade)
-  
-  registrations ExamRegistration[]
-  grades Grade[]
-
-  @@map("exams")
-}
-
-model ExamRegistration {
-  id              Int      @id @default(autoincrement())
-  studentId       Int
-  examId          Int
-  registrationDate DateTime @default(now())
-  isActive        Boolean  @default(true)
-
-  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  exam    Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
-
-  @@unique([studentId, examId])
-  @@map("exam_registrations")
-}
-
-// Sistem za ocene
-model Grade {
-  id          Int      @id @default(autoincrement())
-  studentId   Int
-  examId      Int
-  points      Int      // osvojeni bodovi
-  grade       Int?     // ocena (6-10)
-  passed      Boolean  @default(false)
-  attempt     Int      @default(1) // broj pokušaja
-  gradedAt    DateTime @default(now())
-  gradedBy    Int?     // ID profesora koji je dao ocenu
-
-  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  exam    Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
-
-  @@map("grades")
+enum ProjectStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+  DEFENDED
+  COMPLETED
 }
