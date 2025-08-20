@@ -14,6 +14,8 @@ import { seedCourseSchedules } from './academic-records/seed-course-schedules';
 import { seedEvaluationInstruments } from './academic-records/seed-evaluation-instruments';
 import { seedNotifications } from './academic-records/seed-notifications';
 import { seedStudentAnalytics } from './academic-records/seed-student-analytics';
+import { seedLibrary } from './library/seed-library';
+import { seedInventory } from './inventory/seed-inventory';
 
 async function main() {
   const prisma = new PrismaService();
@@ -33,6 +35,8 @@ async function main() {
     await seedEvaluationInstruments(prisma);
     await seedNotifications(prisma);
     await seedStudentAnalytics(prisma);
+    await seedLibrary(prisma);
+    await seedInventory(prisma);
     
     console.log('Database seeding completed successfully!');
   } catch (error) {

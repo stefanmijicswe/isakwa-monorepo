@@ -11,6 +11,8 @@ import { UniversitiesModule } from './universities/universities.module';
 import { StudyProgramsModule } from './study-programs/study-programs.module';
 import { SubjectsModule } from './subjects/subjects.module';
 import { AcademicRecordsModule } from './academic-records/academic-records.module';
+import { LibraryModule } from './library/library.module';
+import { InventoryModule } from './inventory/inventory.module';
 
 @Module({
   imports: [
@@ -25,7 +27,9 @@ import { AcademicRecordsModule } from './academic-records/academic-records.modul
     UniversitiesModule,
     StudyProgramsModule,
     SubjectsModule,
-    AcademicRecordsModule
+    AcademicRecordsModule,
+    LibraryModule,
+    InventoryModule
   ],
   controllers: [AppController],
   providers: [AppService],

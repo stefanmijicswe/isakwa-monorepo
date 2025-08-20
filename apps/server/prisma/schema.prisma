@@ -25,6 +25,8 @@ model User {
   professorProfile       ProfessorProfile?
   studentProfile         StudentProfile?
   createdViolations      StudentViolation[]
+  inventoryRequests      InventoryRequest[]
+  approvedRequests       InventoryRequest[]      @relation("InventoryApprover")
 
   @@map("users")
 }
@@ -245,6 +247,7 @@ model StudentProfile {
   studyProgram          StudyProgram?          @relation(fields: [studyProgramId], references: [id])
   user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   violations            StudentViolation[]
+  libraryBorrowings     LibraryBorrowing[]
 
   @@map("student_profiles")
 }
@@ -595,4 +598,111 @@ enum ProjectStatus {
   SUBMITTED
   DEFENDED
   COMPLETED
+}
+
+// Library Management Models
+model LibraryItem {
+  id          Int                @id @default(autoincrement())
+  title       String
+  author      String?
+  isbn        String?            @unique
+  type        LibraryItemType
+  category    String?
+  description String?
+  totalCopies Int                @default(1)
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  borrowings  LibraryBorrowing[]
+
+  @@map("library_items")
+}
+
+model LibraryBorrowing {
+  id           Int            @id @default(autoincrement())
+  studentId    Int
+  libraryItemId Int
+  borrowedAt   DateTime       @default(now())
+  dueDate      DateTime
+  returnedAt   DateTime?
+  status       BorrowingStatus @default(BORROWED)
+  notes        String?
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  student      StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  libraryItem  LibraryItem    @relation(fields: [libraryItemId], references: [id], onDelete: Cascade)
+
+  @@map("library_borrowings")
+}
+
+// Inventory Management Models
+model InventoryItem {
+  id          Int                  @id @default(autoincrement())
+  name        String
+  category    InventoryCategory
+  description String?
+  quantity    Int                  @default(0)
+  unit        String?              // kom, kg, litar, etc.
+  minStock    Int                  @default(0)
+  isActive    Boolean              @default(true)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  requests    InventoryRequest[]
+
+  @@map("inventory_items")
+}
+
+model InventoryRequest {
+  id              Int                    @id @default(autoincrement())
+  requesterId     Int
+  inventoryItemId Int
+  quantityRequested Int
+  reason          String?
+  status          InventoryRequestStatus @default(PENDING)
+  approvedBy      Int?
+  approvedAt      DateTime?
+  fulfilledAt     DateTime?
+  notes           String?
+  isActive        Boolean                @default(true)
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  requester       User                   @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  approver        User?                  @relation("InventoryApprover", fields: [approvedBy], references: [id])
+  inventoryItem   InventoryItem          @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
+  @@map("inventory_requests")
+}
+
+enum LibraryItemType {
+  BOOK
+  JOURNAL
+  MAGAZINE
+  THESIS
+  MANUAL
+  OTHER
+}
+
+enum BorrowingStatus {
+  BORROWED
+  RETURNED
+  OVERDUE
+  LOST
+}
+
+enum InventoryCategory {
+  OFFICE_SUPPLIES
+  CLEANING_SUPPLIES
+  COMPUTER_ACCESSORIES
+  FURNITURE
+  STATIONERY
+  OTHER
+}
+
+enum InventoryRequestStatus {
+  PENDING
+  APPROVED
+  FULFILLED
+  REJECTED
+  CANCELLED
 }
