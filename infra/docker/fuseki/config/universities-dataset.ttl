@@ -1,0 +1,53 @@
+@prefix :        <#> .
+@prefix fuseki:  <http://jena.apache.org/fuseki#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ja:      <http://jena.hpl.hp.com/2005/11/Assembler#> .
+@prefix tdb2:    <http://jena.apache.org/2016/tdb#> .
+@prefix text:    <http://jena.apache.org/text#> .
+
+# TDB2 Dataset for Universities
+:universities_dataset rdf:type tdb2:DatasetTDB2 ;
+    tdb2:location "/fuseki/databases/universities" ;
+    tdb2:unionDefaultGraph true ;
+    .
+
+# Text Index for full-text search
+:universities_text_dataset rdf:type text:TextDataset ;
+    text:dataset :universities_dataset ;
+    text:index :universities_index ;
+    .
+
+:universities_index rdf:type text:TextIndexLucene ;
+    text:directory <file:/fuseki/databases/universities-text> ;
+    text:entityMap :universities_entity_map ;
+    .
+
+:universities_entity_map rdf:type text:EntityMap ;
+    text:entityField "uri" ;
+    text:defaultField "text" ;
+    text:map (
+        [ text:field "name" ; text:predicate <http://isakwa.edu/ontology/university#name> ]
+        [ text:field "description" ; text:predicate <http://isakwa.edu/ontology/university#description> ]
+        [ text:field "address" ; text:predicate <http://isakwa.edu/ontology/university#address> ]
+        [ text:field "city" ; text:predicate <http://isakwa.edu/ontology/university#city> ]
+        [ text:field "country" ; text:predicate <http://isakwa.edu/ontology/university#country> ]
+    ) ;
+    .
+
+# Fuseki Service Configuration
+:universities_service rdf:type fuseki:Service ;
+    fuseki:name "universities" ;
+    fuseki:serviceQuery "sparql" ;
+    fuseki:serviceUpdate "update" ;
+    fuseki:serviceUpload "upload" ;
+    fuseki:serviceReadWriteGraphStore "data" ;
+    fuseki:dataset :universities_text_dataset ;
+    .
+
+# Root configuration
+[] rdf:type fuseki:Server ;
+    fuseki:services ( :universities_service ) ;
+    fuseki:serverPort 3030 ;
+    fuseki:enableCompression true ;
+    .

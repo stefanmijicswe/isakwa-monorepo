@@ -1,0 +1,120 @@
+@prefix uni: <http://isakwa.edu/ontology/university#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix schema: <http://schema.org/> .
+
+# Ontology declaration
+<http://isakwa.edu/ontology/university> rdf:type owl:Ontology ;
+    rdfs:label "ISAKWA University Ontology" ;
+    rdfs:comment "Ontology for representing university data in ISAKWA LMS system" ;
+    owl:versionInfo "1.0.0" .
+
+# Classes
+uni:University rdf:type owl:Class ;
+    rdfs:label "University" ;
+    rdfs:comment "An educational institution of higher learning" ;
+    rdfs:subClassOf foaf:Organization .
+
+uni:Faculty rdf:type owl:Class ;
+    rdfs:label "Faculty" ;
+    rdfs:comment "Academic division within a university" .
+
+uni:StudyProgram rdf:type owl:Class ;
+    rdfs:label "Study Program" ;
+    rdfs:comment "Academic program offered by a faculty" .
+
+# Data Properties
+uni:name rdf:type owl:DatatypeProperty ;
+    rdfs:label "name" ;
+    rdfs:comment "The official name of the university" ;
+    rdfs:domain uni:University ;
+    rdfs:range xsd:string .
+
+uni:description rdf:type owl:DatatypeProperty ;
+    rdfs:label "description" ;
+    rdfs:comment "A detailed description of the university" ;
+    rdfs:domain uni:University ;
+    rdfs:range xsd:string .
+
+uni:establishedYear rdf:type owl:DatatypeProperty ;
+    rdfs:label "established year" ;
+    rdfs:comment "The year the university was established" ;
+    rdfs:domain uni:University ;
+    rdfs:range xsd:gYear .
+
+uni:address rdf:type owl:DatatypeProperty ;
+    rdfs:label "address" ;
+    rdfs:comment "Physical address of the university" ;
+    rdfs:domain uni:University ;
+    rdfs:range xsd:string .
+
+uni:city rdf:type owl:DatatypeProperty ;
+    rdfs:label "city" ;
+    rdfs:comment "City where the university is located" ;
+    rdfs:domain uni:University ;
+    rdfs:range xsd:string .
+
+uni:country rdf:type owl:DatatypeProperty ;
+    rdfs:label "country" ;
+    rdfs:comment "Country where the university is located" ;
+    rdfs:domain uni:University ;
+    rdfs:range xsd:string .
+
+uni:website rdf:type owl:DatatypeProperty ;
+    rdfs:label "website" ;
+    rdfs:comment "Official website URL" ;
+    rdfs:domain uni:University ;
+    rdfs:range xsd:anyURI .
+
+uni:email rdf:type owl:DatatypeProperty ;
+    rdfs:label "email" ;
+    rdfs:comment "Official contact email" ;
+    rdfs:domain uni:University ;
+    rdfs:range xsd:string .
+
+uni:phone rdf:type owl:DatatypeProperty ;
+    rdfs:label "phone" ;
+    rdfs:comment "Official contact phone number" ;
+    rdfs:domain uni:University ;
+    rdfs:range xsd:string .
+
+uni:isActive rdf:type owl:DatatypeProperty ;
+    rdfs:label "is active" ;
+    rdfs:comment "Whether the university is currently active" ;
+    rdfs:domain uni:University ;
+    rdfs:range xsd:boolean .
+
+uni:createdAt rdf:type owl:DatatypeProperty ;
+    rdfs:label "created at" ;
+    rdfs:comment "Timestamp when the record was created" ;
+    rdfs:domain uni:University ;
+    rdfs:range xsd:dateTime .
+
+uni:updatedAt rdf:type owl:DatatypeProperty ;
+    rdfs:label "updated at" ;
+    rdfs:comment "Timestamp when the record was last updated" ;
+    rdfs:domain uni:University ;
+    rdfs:range xsd:dateTime .
+
+# Object Properties
+uni:hasFaculty rdf:type owl:ObjectProperty ;
+    rdfs:label "has faculty" ;
+    rdfs:comment "Relationship between university and its faculties" ;
+    rdfs:domain uni:University ;
+    rdfs:range uni:Faculty .
+
+uni:belongsToUniversity rdf:type owl:ObjectProperty ;
+    rdfs:label "belongs to university" ;
+    rdfs:comment "Inverse relationship - faculty belongs to university" ;
+    rdfs:domain uni:Faculty ;
+    rdfs:range uni:University ;
+    owl:inverseOf uni:hasFaculty .
+
+uni:hasStudyProgram rdf:type owl:ObjectProperty ;
+    rdfs:label "has study program" ;
+    rdfs:comment "Relationship between faculty and its study programs" ;
+    rdfs:domain uni:Faculty ;
+    rdfs:range uni:StudyProgram .

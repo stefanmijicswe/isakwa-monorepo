@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  fuseki:
+    image: secoresearch/fuseki:latest
+    container_name: isakwa-fuseki
+    ports:
+      - "3030:3030"
+    environment:
+      - ADMIN_PASSWORD=${FUSEKI_ADMIN_PASSWORD:-admin123}
+      - JVM_ARGS=-Xmx2g -Xms1g
+    volumes:
+      - fuseki_data:/fuseki/databases
+      - fuseki_config:/fuseki/configuration
+    networks:
+      - isakwa-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3030/$/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Future: Add other services here (Redis, etc.)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: isakwa-redis
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - isakwa-network
+
+volumes:
+  fuseki_data:
+    driver: local
+  fuseki_config:
+    driver: local
+
+networks:
+  isakwa-network:
+    driver: bridge
+    name: isakwa-dev-network
