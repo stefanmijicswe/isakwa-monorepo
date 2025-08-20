@@ -13,6 +13,7 @@ import { SubjectsModule } from './subjects/subjects.module';
 import { AcademicRecordsModule } from './academic-records/academic-records.module';
 import { LibraryModule } from './library/library.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { CourseSchedulesModule } from './course-schedules/course-schedules.module';
 
 @Module({
   imports: [
@@ -29,7 +30,8 @@ import { InventoryModule } from './inventory/inventory.module';
     SubjectsModule,
     AcademicRecordsModule,
     LibraryModule,
-    InventoryModule
+    InventoryModule,
+    CourseSchedulesModule
   ],
   controllers: [AppController],
   providers: [AppService],
