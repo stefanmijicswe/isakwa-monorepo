@@ -20,7 +20,10 @@
     "test:debug": "node --inspect-brk -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:seed": "ts-node src/seed-all.ts",
-    "db:reset": "prisma db push --force-reset && npm run db:seed"
+    "db:reset": "prisma db push --force-reset && npm run db:seed",
+    "fuseki:setup": "ts-node src/rdf/setup-fuseki-dataset.ts",
+    "fuseki:test": "ts-node src/rdf/test-fuseki-connection.ts",
+    "fuseki:seed-universities": "ts-node src/universities/seed-universities-fuseki.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -31,14 +34,17 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^7.1.0",
     "@prisma/client": "^6.14.0",
+    "@types/n3": "^1.26.0",
     "bcryptjs": "^3.0.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "n3": "^1.26.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "prisma": "^6.14.0",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "sparql-http-client": "^3.0.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
@@ -50,6 +56,7 @@
     "@types/node": "^20.3.1",
     "@types/passport": "^0",
     "@types/passport-jwt": "^4.0.1",
+    "@types/sparql-http-client": "^3",
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
