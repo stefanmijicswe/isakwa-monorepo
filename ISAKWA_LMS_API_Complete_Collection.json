@@ -2293,6 +2293,620 @@
           ]
         }
       ]
+    },
+    {
+      "name": "12. Evaluation Instruments - PROFESSOR/ADMIN",
+      "item": [
+        {
+          "name": "Create Evaluation Instrument",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subjectId\": 1,\n  \"title\": \"Final Project Assignment\",\n  \"description\": \"Comprehensive project covering all course topics\",\n  \"type\": \"PROJECT\",\n  \"maxPoints\": 100,\n  \"dueDate\": \"2025-01-31T23:59:59Z\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za Create Evaluation Instrument",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    console.log(\"✅ Evaluation Instrument uspešno kreiran:\", responseJson);",
+                  "    ",
+                  "    // Sačuvaj instrument ID kao varijablu",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set(\"lastEvaluationInstrumentId\", responseJson.id);",
+                  "        console.log(\"📝 Evaluation Instrument ID sačuvan kao varijabla:\", responseJson.id);",
+                  "    }",
+                  "} else {",
+                  "    console.log(\"❌ Greška pri kreiranju evaluation instrument-a:\", pm.response.text());",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Evaluation Instruments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Evaluation Instrument by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/{{lastEvaluationInstrumentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "{{lastEvaluationInstrumentId}}"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Evaluation Instrument",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Project Assignment\",\n  \"description\": \"Updated project description with new requirements\",\n  \"maxPoints\": 120,\n  \"dueDate\": \"2025-02-15T23:59:59Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/{{lastEvaluationInstrumentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "{{lastEvaluationInstrumentId}}"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Evaluation Instrument",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/{{lastEvaluationInstrumentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "{{lastEvaluationInstrumentId}}"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Evaluation Submission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"evaluationInstrumentId\": {{lastEvaluationInstrumentId}},\n  \"studentId\": {{studentUserId}},\n  \"submissionDate\": \"2025-01-30T15:30:00Z\",\n  \"points\": 85,\n  \"grade\": 8,\n  \"comments\": \"Good work, well structured project\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/submissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "submissions"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za Create Evaluation Submission",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    console.log(\"✅ Evaluation Submission uspešno kreiran:\", responseJson);",
+                  "    ",
+                  "    // Sačuvaj submission ID kao varijablu",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set(\"lastEvaluationSubmissionId\", responseJson.id);",
+                  "        console.log(\"📝 Evaluation Submission ID sačuvan kao varijabla:\", responseJson.id);",
+                  "    }",
+                  "} else {",
+                  "    console.log(\"❌ Greška pri kreiranju evaluation submission-a:\", pm.response.text());",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Evaluation Submissions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/submissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "submissions"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Evaluation Submission by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/submissions/{{lastEvaluationSubmissionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "submissions", "{{lastEvaluationSubmissionId}}"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Evaluation Submission",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"points\": 90,\n  \"grade\": 9,\n  \"comments\": \"Excellent work, exceeded expectations\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/submissions/{{lastEvaluationSubmissionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "submissions", "{{lastEvaluationSubmissionId}}"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Evaluation Submission",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/submissions/{{lastEvaluationSubmissionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "submissions", "{{lastEvaluationSubmissionId}}"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Evaluation Instruments by Subject",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/subject/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "subject", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Evaluation Instruments by Type",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/type/PROJECT",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "type", "PROJECT"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Evaluation Statistics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/statistics",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "statistics"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Evaluation Results to XML",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/{{lastEvaluationInstrumentId}}/export/xml",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "{{lastEvaluationInstrumentId}}", "export", "xml"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za XML export",
+                  "if (pm.response.code === 200) {",
+                  "    console.log(\"✅ XML export uspešan\");",
+                  "    console.log(\"Content-Type:\", pm.response.headers.get(\"Content-Type\"));",
+                  "    console.log(\"Content-Disposition:\", pm.response.headers.get(\"Content-Disposition\"));",
+                  "    ",
+                  "    // Proveri da li je XML sadržaj",
+                  "    const responseText = pm.response.text();",
+                  "    if (responseText.includes('<evaluationResults>') || responseText.includes('<?xml')) {",
+                  "        console.log(\"✅ Response sadrži XML sadržaj\");",
+                  "    } else {",
+                  "        console.log(\"⚠️ Response možda nije XML format\");",
+                  "    }",
+                  "} else {",
+                  "    console.log(\"❌ Greška pri XML export-u:\", pm.response.text());",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Export Evaluation Results to PDF",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/{{lastEvaluationInstrumentId}}/export/pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "{{lastEvaluationInstrumentId}}", "export", "pdf"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za PDF export",
+                  "if (pm.response.code === 200) {",
+                  "    console.log(\"✅ PDF export uspešan\");",
+                  "    console.log(\"Content-Type:\", pm.response.headers.get(\"Content-Type\"));",
+                  "    console.log(\"Content-Disposition:\", pm.response.headers.get(\"Content-Disposition\"));",
+                  "    ",
+                  "    // Proveri da li je PDF sadržaj",
+                  "    const contentType = pm.response.headers.get(\"Content-Type\");",
+                  "    if (contentType && contentType.includes('application/pdf')) {",
+                  "        console.log(\"✅ Response je PDF format\");",
+                  "    } else {",
+                  "        console.log(\"⚠️ Response možda nije PDF format:\", contentType);",
+                  "    }",
+                  "} else {",
+                  "    console.log(\"❌ Greška pri PDF export-u:\", pm.response.text());",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bulk Export All Evaluation Results to XML",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/export/xml/bulk",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "export", "xml", "bulk"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Import Evaluation Results from XML",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/xml"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<evaluationResults>\n  <evaluationInstrument>\n    <id>1</id>\n    <title>Sample Project</title>\n    <type>PROJECT</type>\n  </evaluationInstrument>\n  <submissions>\n    <submission>\n      <studentId>1</studentId>\n      <points>85</points>\n      <grade>8</grade>\n      <comments>Good work</comments>\n    </submission>\n  </submissions>\n</evaluationResults>"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/import/xml",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "import", "xml"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test skripta za XML import",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    console.log(\"✅ XML import uspešan:\", responseJson);",
+                  "    ",
+                  "    // Proveri da li su podaci importovani",
+                  "    if (responseJson.message && responseJson.importedCount) {",
+                  "        console.log(\"✅ Importovano\", responseJson.importedCount, \"rezultata\");",
+                  "    }",
+                  "} else {",
+                  "    console.log(\"❌ Greška pri XML import-u:\", pm.response.text());",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Search Evaluation Instruments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/search?title=project&type=PROJECT&subjectId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "search"],
+              "query": [
+                {
+                  "key": "title",
+                  "value": "project"
+                },
+                {
+                  "key": "type",
+                  "value": "PROJECT"
+                },
+                {
+                  "key": "subjectId",
+                  "value": "1"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Evaluation Instruments by Professor",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/professor/{{professorUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "professor", "{{professorUserId}}"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Evaluation Submissions by Student",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/evaluation-instruments/submissions/student/{{studentUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation-instruments", "submissions", "student", "{{studentUserId}}"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{professorAuthToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
     }
   ]
 }

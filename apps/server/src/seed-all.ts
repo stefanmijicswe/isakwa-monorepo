@@ -11,7 +11,7 @@ import { seedSubjects } from './subjects/seed-subjects';
 import { seedAcademicRecords } from './academic-records/seed-academic-records';
 import { seedSyllabus } from './academic-records/seed-syllabus';
 import { seedCourseSchedules } from './academic-records/seed-course-schedules';
-import { seedEvaluationInstruments } from './academic-records/seed-evaluation-instruments';
+import { seedEvaluationInstruments } from './evaluation-instruments/seed-evaluation-instruments';
 import { seedNotifications } from './academic-records/seed-notifications';
 import { seedStudentAnalytics } from './academic-records/seed-student-analytics';
 import { seedLibrary } from './library/seed-library';
