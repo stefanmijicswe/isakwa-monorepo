@@ -14,7 +14,13 @@
     "infra:down": "cd infra/docker && docker-compose down",
     "infra:logs": "cd infra/docker && docker-compose logs -f",
     "infra:restart": "cd infra/docker && docker-compose restart",
-    "dev:full": "yarn infra:up && yarn dev"
+    "dev:full": "yarn infra:up && yarn dev",
+    "backend:dev": "cd apps/server && yarn start:dev",
+    "backend:dev:fuseki": "cd apps/server && yarn start:dev:fuseki",
+    "fuseki:start": "cd infra/docker && docker-compose up -d",
+    "fuseki:stop": "cd infra/docker && docker-compose down",
+    "fuseki:logs": "cd infra/docker && docker-compose logs -f fuseki",
+    "dev:backend:full": "yarn fuseki:start && yarn backend:dev"
   },
   "devDependencies": {
     "@types/react": "^19",

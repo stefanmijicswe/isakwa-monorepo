@@ -36,8 +36,8 @@ export interface UniversityRdfData {
 @Injectable()
 export class RdfService {
   private readonly logger = new Logger(RdfService.name);
-  private readonly namespace = 'http://isakwa.edu/ontology/university#';
-  private readonly entityNamespace = 'http://isakwa.edu/data/university/';
+  private readonly namespace = process.env.RDF_NAMESPACE || 'http://isakwa.pro/ontology/university#';
+  private readonly entityNamespace = process.env.RDF_ENTITY_NAMESPACE || 'http://isakwa.pro/data/university/';
 
   constructor(private readonly fusekiService: FusekiService) {}
 
@@ -108,7 +108,7 @@ export class RdfService {
         // Faculty relationships
         if (university.faculties) {
           university.faculties.forEach(faculty => {
-            const facultyUri = namedNode(`http://isakwa.edu/data/faculty/${faculty.id}`);
+            const facultyUri = namedNode(`${this.entityNamespace.replace('university', 'faculty')}${faculty.id}`);
             writer.addQuad(universityUri, namedNode(`${this.namespace}hasFaculty`), facultyUri);
             
             // Faculty basic info
@@ -173,7 +173,7 @@ export class RdfService {
                              uni:updatedAt "${university.updatedAt.toISOString()}"^^xsd:dateTime ${university.description ? `; uni:description "${escapeSparqlString(university.description)}"` : ''} ${university.phone ? `; uni:phone "${escapeSparqlString(university.phone)}"` : ''} ${university.email ? `; uni:email "${escapeSparqlString(university.email)}"` : ''} ${university.website ? `; uni:website "${escapeSparqlString(university.website)}"` : ''} ${university.rectorName ? `; uni:rectorName "${escapeSparqlString(university.rectorName)}"` : ''} ${university.rectorTitle ? `; uni:rectorTitle "${escapeSparqlString(university.rectorTitle)}"` : ''} .
           
           ${university.faculties ? university.faculties.map(faculty => {
-            const facultyUri = `http://isakwa.edu/data/faculty/${faculty.id}`;
+            const facultyUri = `${this.entityNamespace.replace('university', 'faculty')}${faculty.id}`;
             return `
             <${universityUri}> uni:hasFaculty <${facultyUri}> .
             <${facultyUri}> rdf:type uni:Faculty ;
