@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Button } from "../../components/ui/button"
 import { Separator } from "../../components/ui/separator"
 import { Input } from "../../components/ui/input"
+import Image from "next/image"
 
 export function Footer() {
   return (
@@ -9,17 +10,15 @@ export function Footer() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           <div className="space-y-6">
-                            <div className="flex items-center space-x-3">
-                  <div className="h-10 w-10 rounded-lg bg-white flex items-center justify-center">
-                    <span className="text-slate-900 font-bold text-lg">S</span>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-white">
-                      Singidunum
-                    </h3>
-                    <p className="text-sm text-slate-400">University</p>
-                  </div>
-                </div>
+            <div className="flex items-center space-x-2">
+              <Image src="/logos/logo.svg" alt="Logo" width={32} height={32} />
+              <span className="text-xl font-bold text-white">Harvox</span>
+            </div>
+            <p className="text-sm text-slate-400">
+              Email: info@harvox.edu<br />
+              Phone: +381 11 1234 567<br />
+              Address: Belgrade, Serbia
+            </p>
             <p className="text-slate-300 leading-relaxed">
               Empowering minds, shaping futures. Join our community of learners and innovators.
             </p>
@@ -70,23 +69,23 @@ export function Footer() {
             <p className="text-slate-300 leading-relaxed">
               Subscribe to our newsletter for updates and news.
             </p>
-                            <div className="flex space-x-2 items-stretch">
-                  <Input 
-                    placeholder="Enter your email" 
-                    className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent h-10 border-2" 
-                  />
-                  <Button 
-                    size="default"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 transition-all duration-300 h-10 border-2 border-blue-600"
-                  >
-                    Subscribe
-                  </Button>
-                </div>
+            <div className="flex space-x-2 items-stretch">
+              <Input 
+                placeholder="Enter your email" 
+                className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent h-10 border-2" 
+              />
+              <Button 
+                size="default"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 transition-all duration-300 h-10 border-2 border-blue-600"
+              >
+                Subscribe
+              </Button>
+            </div>
             <div className="space-y-2">
               <p className="text-slate-300 text-sm">
                 <strong className="text-white">Contact:</strong><br />
-                info@singidunum.edu<br />
-                +381 11 123 4567
+                info@harvox.edu<br />
+                +381 11 1234 567
               </p>
             </div>
           </div>
@@ -95,9 +94,9 @@ export function Footer() {
         <Separator className="my-12 bg-slate-700" />
 
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-          <div className="text-sm text-slate-400">
-            © 2024 Singidunum University. All rights reserved.
-          </div>
+          <p className="text-sm text-slate-400">
+            © 2024 Harvox University. All rights reserved.
+          </p>
           <div className="flex space-x-8 text-sm text-slate-400">
             <Link href="/privacy-policy" className="hover:text-white transition-colors duration-200">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-white transition-colors duration-200">Terms of Service</Link>

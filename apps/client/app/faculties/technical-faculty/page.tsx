@@ -11,8 +11,7 @@ const programs = {
       name: "Software and Data Engineering",
       description: "A comprehensive program that combines software engineering principles with data science fundamentals.",
       duration: "4 years",
-      credits: "240 ECTS",
-      link: "/faculties/technical-faculty/software-data-engineering"
+      credits: "240 ECTS"
     }
   ],
   master: [
@@ -20,15 +19,13 @@ const programs = {
       name: "Software and Data Engineering",
       description: "Advanced studies in software development and data analysis for complex systems.",
       duration: "2 years",
-      credits: "60 ECTS",
-      link: "/faculties/technical-faculty/software-data-engineering-master"
+      credits: "60 ECTS"
     },
     {
       name: "Data Science",
       description: "Specialized program focusing on advanced data analysis, machine learning, and statistical modeling.",
       duration: "2 years",
-      credits: "60 ECTS",
-      link: "/faculties/technical-faculty/data-science"
+      credits: "60 ECTS"
     }
   ],
   phd: [
@@ -36,8 +33,7 @@ const programs = {
       name: "Intelligent Software Engineering",
       description: "Research-focused program exploring AI-driven software development and intelligent systems.",
       duration: "3-4 years",
-      credits: "180 ECTS",
-      link: "/faculties/technical-faculty/intelligent-software-engineering"
+      credits: "180 ECTS"
     }
   ]
 }
@@ -45,7 +41,7 @@ const programs = {
 const dean = {
   name: "Prof. Dr. Milan Petrović",
   title: "Dean of the Technical Faculty",
-  email: "dean.fts@singidunum.edu",
+  email: "dean.fts@harvox.edu",
   phone: "+381 11 123 4568",
   office: "Room 301, Building A",
   bio: "Professor Petrović is a distinguished researcher in software engineering with over 20 years of experience in academia and industry. He has published more than 100 scientific papers and led numerous research projects in intelligent systems and software architecture."
@@ -81,7 +77,7 @@ export default function TechnicalFacultyPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <p className="text-slate-600 leading-relaxed text-lg">
-                      The Technical Faculty at Singidunum University is dedicated to excellence in engineering education, 
+                      The Technical Faculty at Harvox University is dedicated to excellence in engineering education, 
                       research, and innovation. Our programs combine theoretical knowledge with practical applications, preparing 
                       students for successful careers in the rapidly evolving technical landscape.
                     </p>
@@ -178,11 +174,9 @@ export default function TechnicalFacultyPage() {
                               <span>Duration: {program.duration}</span>
                               <span>{program.credits}</span>
                             </div>
-                            <Link href={program.link}>
-                              <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10">
-                                Learn More
-                              </Button>
-                            </Link>
+                            <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10 cursor-default">
+                              Learn More
+                            </Button>
                           </CardContent>
                         </Card>
                       ))}
@@ -213,11 +207,9 @@ export default function TechnicalFacultyPage() {
                               <span>Duration: {program.duration}</span>
                               <span>{program.credits}</span>
                             </div>
-                            <Link href={program.link}>
-                              <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10">
-                                Learn More
-                              </Button>
-                            </Link>
+                            <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10 cursor-default">
+                              Learn More
+                            </Button>
                           </CardContent>
                         </Card>
                       ))}
@@ -248,11 +240,9 @@ export default function TechnicalFacultyPage() {
                               <span>Duration: {program.duration}</span>
                               <span>{program.credits}</span>
                             </div>
-                            <Link href={program.link}>
-                              <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10">
-                                Learn More
-                              </Button>
-                            </Link>
+                            <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10 cursor-default">
+                              Learn More
+                            </Button>
                           </CardContent>
                         </Card>
                       ))}

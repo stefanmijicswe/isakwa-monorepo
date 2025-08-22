@@ -62,11 +62,8 @@ export function HeroSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <div className="space-y-4">
-              <h1 className="text-5xl lg:text-7xl font-bold tracking-tight text-slate-900">
-                Welcome to{" "}
-                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Singidunum
-                </span>
+              <h1 className="text-4xl md:text-6xl font-bold text-slate-800 leading-tight">
+                Welcome to <span className="text-blue-600">Harvox</span>
               </h1>
               <h2 className="text-3xl lg:text-4xl font-semibold text-slate-700">
                 <span className="bg-yellow-300 px-2 py-1 rounded">#1 University in Serbia</span>
@@ -177,7 +174,7 @@ export function HeroSection() {
                 <div className="w-full h-[600px] relative rounded-3xl shadow-2xl overflow-hidden">
                   <Image
                     src="/graduates.png"
-                    alt="Graduates at Singidunum University"
+                    alt="Graduates at Harvox University"
                     fill
                     className="object-cover"
                     priority

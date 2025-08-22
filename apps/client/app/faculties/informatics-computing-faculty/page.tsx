@@ -1,3 +1,4 @@
+
 import Link from "next/link"
 import { Header } from "../../components/Header"
 import { Footer } from "../../components/Footer"
@@ -10,15 +11,13 @@ const programs = {
       name: "Information Technologies",
       description: "Master modern computing systems, software development, and digital infrastructure for the information age.",
       duration: "4 years",
-      credits: "240 ECTS",
-      link: "/faculties/informatics-computing-faculty/information-technologies"
+      credits: "240 ECTS"
     },
     {
       name: "Applied Artificial Intelligence",
       description: "Learn to develop intelligent systems, machine learning algorithms, and AI-powered applications.",
       duration: "4 years",
-      credits: "240 ECTS",
-      link: "/faculties/informatics-computing-faculty/applied-ai"
+      credits: "240 ECTS"
     }
   ],
   master: [
@@ -26,8 +25,7 @@ const programs = {
       name: "Contemporary Information Technologies",
       description: "Advanced studies in cutting-edge computing, cloud systems, and emerging technologies for digital transformation.",
       duration: "2 years",
-      credits: "60 ECTS",
-      link: "/faculties/informatics-computing-faculty/contemporary-it"
+      credits: "60 ECTS"
     }
   ],
   phd: [
@@ -35,8 +33,7 @@ const programs = {
       name: "Advanced Security Systems",
       description: "Research-focused program exploring cybersecurity, cryptography, and next-generation security frameworks.",
       duration: "3-4 years",
-      credits: "180 ECTS",
-      link: "/faculties/informatics-computing-faculty/advanced-security"
+      credits: "180 ECTS"
     }
   ]
 }
@@ -44,7 +41,7 @@ const programs = {
 const dean = {
   name: "Prof. Dr. Marko Jovanović",
   title: "Dean of the Faculty of Informatics and Computing",
-  email: "dean.fic@singidunum.edu",
+  email: "dean.fic@harvox.edu",
   phone: "+381 11 123 4570",
   office: "Room 401, Building C",
   bio: "Professor Jovanović is a distinguished expert in computer science and artificial intelligence with over 22 years of experience in academia and industry. He has published extensively on machine learning and has led numerous research projects in intelligent systems and cybersecurity."
@@ -80,7 +77,7 @@ export default function InformaticsComputingFacultyPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <p className="text-slate-600 leading-relaxed text-lg">
-                      The Faculty of Informatics and Computing at Singidunum University is dedicated to excellence in computer science education, 
+                      The Faculty of Informatics and Computing at Harvox University is dedicated to excellence in computer science education, 
                       research, and innovation. Our programs combine theoretical knowledge with practical applications, preparing 
                       students for successful careers in the rapidly evolving digital landscape.
                     </p>
@@ -177,11 +174,9 @@ export default function InformaticsComputingFacultyPage() {
                               <span>Duration: {program.duration}</span>
                               <span>{program.credits}</span>
                             </div>
-                            <Link href={program.link}>
-                              <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10">
-                                Learn More
-                              </Button>
-                            </Link>
+                            <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10 cursor-default">
+                              Learn More
+                            </Button>
                           </CardContent>
                         </Card>
                       ))}
@@ -212,18 +207,16 @@ export default function InformaticsComputingFacultyPage() {
                               <span>Duration: {program.duration}</span>
                               <span>{program.credits}</span>
                             </div>
-                            <Link href={program.link}>
-                              <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10">
-                                Learn More
-                              </Button>
-                            </Link>
+                            <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10 cursor-default">
+                              Learn More
+                            </Button>
                           </CardContent>
                         </Card>
                       ))}
                     </div>
                   </div>
 
-                  <div>
+                                    <div>
                     <div className="flex items-center justify-center mb-16">
                       <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center mr-6">
                         <span className="text-2xl font-bold text-slate-700">3</span>
@@ -247,11 +240,9 @@ export default function InformaticsComputingFacultyPage() {
                               <span>Duration: {program.duration}</span>
                               <span>{program.credits}</span>
                             </div>
-                            <Link href={program.link}>
-                              <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10">
-                                Learn More
-                              </Button>
-                              </Link>
+                            <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10 cursor-default">
+                              Learn More
+                            </Button>
                           </CardContent>
                         </Card>
                       ))}

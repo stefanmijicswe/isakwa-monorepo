@@ -15,8 +15,9 @@ export function CTASection() {
             Ready to Transform Your Future?
           </h2>
           
-          <p className="text-xl mb-16 opacity-90 max-w-2xl mx-auto leading-relaxed">
-            Join thousands of students who have already discovered their potential at Singidunum University.
+          <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+            Join thousands of students who have already discovered their potential at Harvox University.
+            Your future starts here.
           </p>
 
                         <div className="flex flex-col sm:flex-row gap-6 justify-center mb-20">

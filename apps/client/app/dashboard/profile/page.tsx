@@ -23,7 +23,7 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
-              <p className="text-slate-900">john.doe@singidunum.edu.rs</p>
+              <p className="text-slate-900">john.doe@harvox.edu.rs</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Phone</label>

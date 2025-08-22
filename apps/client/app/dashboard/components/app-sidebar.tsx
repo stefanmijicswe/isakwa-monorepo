@@ -11,8 +11,11 @@ import {
   GraduationCap,
   Calendar,
   FileText,
-  Bell
+  Bell,
+  LogOut,
+  Library
 } from "lucide-react"
+import Image from "next/image"
 
 import {
   Sidebar,
@@ -113,7 +116,7 @@ const navigationByRole = {
     },
     {
       title: "Student Enrollment",
-      url: "/dashboard/student-enrollment",
+      url: "/dashboard/enroll",
       icon: Users,
     },
     {
@@ -134,7 +137,7 @@ const navigationByRole = {
     {
       title: "Library Management",
       url: "/dashboard/library",
-      icon: BookOpen,
+      icon: Library,
     },
     {
       title: "Inventory Management",
@@ -187,62 +190,121 @@ const getCurrentUserRole = (): keyof typeof navigationByRole => {
   // This will be replaced with actual authentication logic
   // For development, you can change this to test different roles:
   // return "student" | "teacher" | "studentService" | "admin"
-  return "student" // Default to student for now
+  return "studentService" // Default to studentService to access library
 }
 
 const data = {
   navMain: navigationByRole[getCurrentUserRole()],
 }
 
+const notificationCount = 6
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false)
+
+  const handleLogout = () => {
+    setShowLogoutConfirm(true)
+  }
+
+  const confirmLogout = () => {
+    // TODO: Implement actual logout logic
+    console.log("User confirmed logout")
+    setShowLogoutConfirm(false)
+  }
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false)
+  }
+
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <a href="/dashboard">
-                <div className="h-10 w-10 rounded-lg bg-slate-900 flex items-center justify-center">
-                  <GraduationCap className="h-6 w-6 text-white" />
-                </div>
-                <span className="text-base font-semibold">Singidunum</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu>
-          {data.navMain.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild tooltip={item.title}>
-                <a href={item.url}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
+    <>
+      <Sidebar collapsible="offcanvas" {...props}>
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                className="data-[slot=sidebar-menu-button]:!p-1.5"
+              >
+                <a href="/dashboard">
+                  <Image src="/logos/logo.svg" alt="Harvox Logo" width={40} height={40} />
+                  <span className="text-base font-semibold">Harvox</span>
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-              <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                <Bell className="h-4 w-4 text-green-600" />
+          </SidebarMenu>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarMenu>
+            {data.navMain.map((item) => (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton asChild tooltip={item.title}>
+                  <a href={item.url}>
+                    {item.icon && <item.icon />}
+                    <span>{item.title}</span>
+                    {item.title === "Notifications" && notificationCount > 0 && (
+                      <span className="ml-2 h-5 w-5 bg-red-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
+                        {notificationCount}
+                      </span>
+                    )}
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarContent>
+        <SidebarFooter>
+          <SidebarMenu>
+            <div className="flex items-center p-2">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
+                  <User className="h-4 w-4 text-slate-600" />
+                </div>
+                <div className="text-sm">
+                  <div className="font-medium text-slate-900">John Doe</div>
+                  <div className="text-slate-500 text-xs">Student</div>
+                </div>
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">Notifications</span>
-                <span className="text-muted-foreground truncate text-xs">3 new messages</span>
+              <button 
+                onClick={handleLogout}
+                className="p-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
+          </SidebarMenu>
+        </SidebarFooter>
+      </Sidebar>
+
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
+                <LogOut className="h-5 w-5 text-red-600" />
               </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Confirm Logout</h3>
+                <p className="text-sm text-slate-600">Are you sure you want to log out?</p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelLogout}
+                className="px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-md transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
