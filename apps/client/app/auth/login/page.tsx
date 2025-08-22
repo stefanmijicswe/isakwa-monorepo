@@ -1,4 +1,5 @@
 import { LoginForm } from "./components/login-form"
+import Image from "next/image"
 
 export default function LoginPage() {
   return (
@@ -7,16 +8,9 @@ export default function LoginPage() {
       
       <div className="relative z-10 flex min-h-svh w-full flex-col items-center justify-center p-6 md:p-10">
         <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2">
-          <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-lg bg-slate-900 flex items-center justify-center">
-              <span className="text-white font-bold text-lg">S</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-slate-900">
-                Singidunum
-              </h1>
-              <p className="text-xs text-slate-500 font-medium">University</p>
-            </div>
+          <div className="flex items-center space-x-2">
+            <Image src="/logos/logo.svg" alt="Logo" width={32} height={32} />
+            <span className="text-xl font-bold text-white">Harvox</span>
           </div>
         </div>
         

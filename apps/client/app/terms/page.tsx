@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Separator } from "../../components/ui/separator"
 import { Button } from "../../components/ui/button"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function TermsPage() {
   return (
@@ -11,11 +12,9 @@ export default function TermsPage() {
         <div className="container mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="h-8 w-8 rounded-lg bg-slate-900 flex items-center justify-center">
-                <span className="text-white font-semibold text-sm">S</span>
-              </div>
+              <Image src="/logos/logo.svg" alt="Harvox Logo" width={32} height={32} />
               <div>
-                <h1 className="text-lg font-medium text-slate-900">Singidunum</h1>
+                <h1 className="text-lg font-medium text-slate-900">Harvox</h1>
                 <p className="text-xs text-slate-500">University</p>
               </div>
             </div>
@@ -36,14 +35,14 @@ export default function TermsPage() {
           <div className="text-center mb-16">
             <h1 className="text-4xl font-light text-slate-900 mb-4">Terms of Service</h1>
             <p className="text-slate-500">Last updated: August 14, 2025</p>
-            <p className="text-sm text-slate-400 mt-2">Singidunum University • Belgrade, Serbia</p>
+            <p className="text-sm text-slate-400 mt-2">Harvox University • Belgrade, Serbia</p>
           </div>
           
           {/* Introduction */}
           <Card className="border-0 shadow-none bg-transparent mb-12">
             <CardContent className="p-0">
               <p className="text-lg text-slate-700 leading-relaxed">
-                These Terms of Service constitute a legally binding agreement between you and Singidunum University ("the University," "we," "us," or "our") governing your access to and use of our digital platforms, including but not limited to our website, learning management systems, student portals, and related services (collectively, "Services").
+                These Terms of Service constitute a legally binding agreement between you and Harvox University ("the University," "we," "us," or "our") governing your access to and use of our digital platforms, including but not limited to our website, learning management systems, student portals, and related services (collectively, "Services").
               </p>
             </CardContent>
           </Card>
@@ -386,7 +385,7 @@ export default function TermsPage() {
               <div>
                 <h3 className="font-medium text-slate-800 mb-3">Legal and Compliance Office</h3>
                 <div className="space-y-2 text-slate-600">
-                  <p>Email: legal@singidunum.ac.rs</p>
+                  <p>Email: legal@harvox.ac.rs</p>
                   <p>Phone: +381 11 123 4567</p>
                   <p>Address: Danijelova 32, 11000 Belgrade, Serbia</p>
                   <p>Office Hours: Monday - Friday, 9:00 AM - 5:00 PM</p>
@@ -395,7 +394,7 @@ export default function TermsPage() {
               <div>
                 <h3 className="font-medium text-slate-800 mb-3">Student Affairs Office</h3>
                 <div className="space-y-2 text-slate-600">
-                  <p>Email: student.affairs@singidunum.ac.rs</p>
+                  <p>Email: student.affairs@harvox.ac.rs</p>
                   <p>Phone: +381 11 123 4568</p>
                   <p>Address: Danijelova 32, 11000 Belgrade, Serbia</p>
                   <p>Office Hours: Monday - Friday, 8:00 AM - 6:00 PM</p>
@@ -407,7 +406,7 @@ export default function TermsPage() {
           {/* Footer */}
           <div className="text-center pt-8 border-t border-slate-100">
             <p className="text-slate-500 text-sm mb-6">
-              These Terms of Service are effective as of August 14, 2025 and constitute the complete agreement between users and Singidunum University regarding the use of our Services.
+              These Terms of Service are effective as of August 14, 2025 and constitute the complete agreement between users and Harvox University regarding the use of our Services.
             </p>
             <div className="flex justify-center space-x-4">
               <Link href="/">

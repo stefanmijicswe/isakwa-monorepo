@@ -10,15 +10,13 @@ const programs = {
       name: "BA in English Studies",
       description: "Develop advanced English language skills and cultural understanding for global business communication.",
       duration: "4 years",
-      credits: "240 ECTS",
-      link: "/faculties/business-faculty/english-studies"
+      credits: "240 ECTS"
     },
     {
       name: "Business Economics",
       description: "Master fundamental business principles, economic theory, and analytical skills for modern commerce.",
       duration: "4 years",
-      credits: "240 ECTS",
-      link: "/faculties/business-faculty/business-economics"
+      credits: "240 ECTS"
     }
   ],
   master: [
@@ -26,15 +24,13 @@ const programs = {
       name: "Business Economics",
       description: "Advanced studies in economic analysis, business strategy, and market dynamics for leadership roles.",
       duration: "2 years",
-      credits: "60 ECTS",
-      link: "/faculties/business-faculty/business-economics-master"
+      credits: "60 ECTS"
     },
     {
       name: "MA in Applied English Language Studies",
       description: "Specialized program in English linguistics, business communication, and cross-cultural management.",
       duration: "2 years",
-      credits: "60 ECTS",
-      link: "/faculties/business-faculty/applied-english"
+      credits: "60 ECTS"
     }
   ],
   phd: [
@@ -42,8 +38,7 @@ const programs = {
       name: "Contemporary Business Decision Making",
       description: "Research-focused program exploring modern business strategies, innovation, and organizational leadership.",
       duration: "3-4 years",
-      credits: "180 ECTS",
-      link: "/faculties/business-faculty/contemporary-business"
+      credits: "180 ECTS"
     }
   ]
 }
@@ -51,7 +46,7 @@ const programs = {
 const dean = {
   name: "Prof. Dr. Ana Marković",
   title: "Dean of the Faculty of Business",
-  email: "dean.fb@singidunum.edu",
+  email: "dean.fb@harvox.edu",
   phone: "+381 11 123 4569",
   office: "Room 205, Building B",
   bio: "Professor Marković is a distinguished expert in business economics and international trade with over 18 years of experience in academia and industry. She has published extensively on business strategy and has led numerous research projects in contemporary business practices."
@@ -87,7 +82,7 @@ export default function BusinessFacultyPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <p className="text-slate-600 leading-relaxed text-lg">
-                      The Faculty of Business at Singidunum University is committed to excellence in business education, 
+                      The Faculty of Business at Harvox University is committed to excellence in business education, 
                       research, and innovation. Our programs combine theoretical knowledge with practical applications, preparing 
                       students for successful careers in the dynamic global business environment.
                     </p>
@@ -184,11 +179,9 @@ export default function BusinessFacultyPage() {
                               <span>Duration: {program.duration}</span>
                               <span>{program.credits}</span>
                             </div>
-                            <Link href={program.link}>
-                              <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10">
-                                Learn More
-                              </Button>
-                            </Link>
+                            <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10 cursor-default">
+                              Learn More
+                            </Button>
                           </CardContent>
                         </Card>
                       ))}
@@ -219,11 +212,9 @@ export default function BusinessFacultyPage() {
                               <span>Duration: {program.duration}</span>
                               <span>{program.credits}</span>
                             </div>
-                            <Link href={program.link}>
-                              <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10">
-                                Learn More
-                              </Button>
-                            </Link>
+                            <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10 cursor-default">
+                              Learn More
+                            </Button>
                           </CardContent>
                         </Card>
                       ))}
@@ -254,11 +245,9 @@ export default function BusinessFacultyPage() {
                               <span>Duration: {program.duration}</span>
                               <span>{program.credits}</span>
                             </div>
-                            <Link href={program.link}>
-                              <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10">
-                                Learn More
-                              </Button>
-                            </Link>
+                            <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10 cursor-default">
+                              Learn More
+                            </Button>
                           </CardContent>
                         </Card>
                       ))}

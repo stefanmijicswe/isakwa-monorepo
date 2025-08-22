@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Separator } from "../../components/ui/separator"
 import { Button } from "../../components/ui/button"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function PrivacyPolicyPage() {
   return (
@@ -11,11 +12,9 @@ export default function PrivacyPolicyPage() {
         <div className="container mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="h-8 w-8 rounded-lg bg-slate-900 flex items-center justify-center">
-                <span className="text-white font-semibold text-sm">S</span>
-              </div>
+              <Image src="/logos/logo.svg" alt="Harvox Logo" width={32} height={32} />
               <div>
-                <h1 className="text-lg font-medium text-slate-900">Singidunum</h1>
+                <h1 className="text-lg font-medium text-slate-900">Harvox</h1>
                 <p className="text-xs text-slate-500">University</p>
               </div>
             </div>
@@ -36,14 +35,14 @@ export default function PrivacyPolicyPage() {
           <div className="text-center mb-16">
             <h1 className="text-4xl font-light text-slate-900 mb-4">Privacy Policy</h1>
             <p className="text-slate-500">Last updated: August 14, 2025</p>
-            <p className="text-sm text-slate-400 mt-2">Singidunum University • Belgrade, Serbia</p>
+            <p className="text-sm text-slate-400 mt-2">Harvox University • Belgrade, Serbia</p>
           </div>
           
           {/* Introduction */}
           <Card className="border-0 shadow-none bg-transparent mb-12">
             <CardContent className="p-0">
               <p className="text-lg text-slate-700 leading-relaxed">
-                This Privacy Policy describes how Singidunum University ("the University," "we," "us," or "our") collects, uses, and protects your personal information when you use our digital platforms, including our website, learning management systems, student portals, and related services (collectively, "Services").
+                This Privacy Policy describes how Harvox University ("the University," "we," "us," or "our") collects, uses, and protects your personal information when you use our digital platforms, including our website, learning management systems, student portals, and related services (collectively, "Services").
               </p>
             </CardContent>
           </Card>
@@ -419,7 +418,7 @@ export default function PrivacyPolicyPage() {
               <div>
                 <h3 className="font-medium text-slate-800 mb-3">Data Protection Officer</h3>
                 <div className="space-y-2 text-slate-600">
-                  <p>Email: dpo@singidunum.ac.rs</p>
+                  <p>Email: dpo@harvox.ac.rs</p>
                   <p>Phone: +381 11 123 4569</p>
                   <p>Address: Danijelova 32, 11000 Belgrade, Serbia</p>
                   <p>Office Hours: Monday - Friday, 9:00 AM - 5:00 PM</p>
@@ -428,7 +427,7 @@ export default function PrivacyPolicyPage() {
               <div>
                 <h3 className="font-medium text-slate-800 mb-3">Privacy Office</h3>
                 <div className="space-y-2 text-slate-600">
-                  <p>Email: privacy@singidunum.ac.rs</p>
+                  <p>Email: privacy@harvox.ac.rs</p>
                   <p>Phone: +381 11 123 4570</p>
                   <p>Address: Danijelova 32, 11000 Belgrade, Serbia</p>
                   <p>Office Hours: Monday - Friday, 8:00 AM - 6:00 PM</p>

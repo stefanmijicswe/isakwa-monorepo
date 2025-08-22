@@ -15,13 +15,13 @@ const geistMono = Geist({
 })
 
 export const metadata: Metadata = {
-  title: "Singidunum University - Shape Your Future",
-  description: "Join a community of innovators, thinkers, and leaders at Singidunum University. Discover cutting-edge programs, world-class faculty, and opportunities that will transform your career and life.",
-  keywords: ["university", "education", "Serbia", "academic programs", "higher education", "Singidunum"],
-  authors: [{ name: "Singidunum University" }],
+  title: "Harvox University - Shape Your Future",
+  description: "Join a community of innovators, thinkers, and leaders at Harvox University. Discover cutting-edge programs, world-class faculty, and opportunities that will transform your career and life.",
+  keywords: ["university", "education", "Serbia", "academic programs", "higher education", "Harvox"],
+  authors: [{ name: "Harvox University" }],
   openGraph: {
-    title: "Singidunum University - Shape Your Future",
-    description: "Join a community of innovators, thinkers, and leaders at Singidunum University.",
+    title: "Harvox University - Shape Your Future",
+    description: "Join a community of innovators, thinkers, and leaders at Harvox University.",
     type: "website",
   },
 }

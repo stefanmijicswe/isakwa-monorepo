@@ -6,40 +6,58 @@ import { Button } from "../../components/ui/button"
 export function ProgramsSection() {
   const programs = [
     {
-      title: "Computer Science",
-      description: "Learn cutting-edge technologies and develop innovative solutions for tomorrow's challenges.",
+      title: "Information Technologies",
+      description: "Master modern computing systems, software development, and digital infrastructure for the information age.",
       duration: "4 years",
       level: "Bachelor",
-      features: ["AI & Machine Learning", "Software Engineering", "Cybersecurity"],
+      features: ["Software Development", "Digital Infrastructure", "Modern Computing"],
       badge: "Popular",
       color: "from-blue-500 to-blue-600"
     },
     {
-      title: "Business Administration",
-      description: "Develop leadership skills and business acumen for the global marketplace.",
+      title: "Applied Artificial Intelligence",
+      description: "Learn to develop intelligent systems, machine learning algorithms, and AI-powered applications.",
       duration: "4 years",
       level: "Bachelor",
-      features: ["International Business", "Marketing", "Finance"],
-      badge: "New",
-      color: "from-green-500 to-green-600"
-    },
-    {
-      title: "Data Science",
-      description: "Master the art of extracting insights from data to drive business decisions.",
-      duration: "2 years",
-      level: "Master",
-      features: ["Big Data Analytics", "Statistical Modeling", "Business Intelligence"],
+      features: ["Machine Learning", "AI Systems", "Intelligent Applications"],
       badge: "Trending",
       color: "from-purple-500 to-purple-600"
     },
     {
-      title: "Engineering",
-      description: "Build the future with innovative engineering solutions and sustainable practices.",
+      title: "Business Economics",
+      description: "Master fundamental business principles, economic theory, and analytical skills for modern commerce.",
       duration: "4 years",
       level: "Bachelor",
-      features: ["Civil Engineering", "Mechanical Engineering", "Electrical Engineering"],
+      features: ["Business Principles", "Economic Theory", "Analytical Skills"],
       badge: "Accredited",
+      color: "from-green-500 to-green-600"
+    },
+    {
+      title: "Software & Data Engineering",
+      description: "A comprehensive program that combines software engineering principles with data science fundamentals.",
+      duration: "4 years",
+      level: "Bachelor",
+      features: ["Software Engineering", "Data Science", "System Design"],
+      badge: "New",
       color: "from-orange-500 to-orange-600"
+    },
+    {
+      title: "Tourism & Hospitality",
+      description: "Master the fundamentals of tourism management, hospitality operations, and food service economics.",
+      duration: "4 years",
+      level: "Bachelor",
+      features: ["Tourism Management", "Hospitality Operations", "Food Service"],
+      badge: "Specialized",
+      color: "from-teal-500 to-teal-600"
+    },
+    {
+      title: "Contemporary Information Technologies",
+      description: "Advanced studies in cutting-edge computing, cloud systems, and emerging technologies for digital transformation.",
+      duration: "2 years",
+      level: "Master",
+      features: ["Cloud Systems", "Emerging Tech", "Digital Transformation"],
+      badge: "Advanced",
+      color: "from-indigo-500 to-indigo-600"
     }
   ]
 
@@ -56,7 +74,7 @@ export function ProgramsSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {programs.map((program, index) => (
             <Card key={index} className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-gradient-to-br from-slate-50 to-white shadow-lg hover:shadow-2xl flex flex-col h-full">
               <CardHeader className="pb-4 flex-shrink-0">

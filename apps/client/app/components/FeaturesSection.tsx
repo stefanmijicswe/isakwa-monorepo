@@ -54,12 +54,11 @@ export function FeaturesSection() {
           <Badge variant="secondary" className="mb-6 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border-0 px-4 py-2 text-sm">
             Why Choose Us
           </Badge>
-          <h2 className="text-4xl lg:text-5xl font-bold text-slate-900 mb-6">
-            What Makes Singidunum Special
+          <h2 className="text-3xl font-bold text-slate-900 text-center mb-16">
+            What Makes Harvox Special
           </h2>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-            Discover the unique advantages that set our university apart and create
-            exceptional opportunities for our students.
+          <p className="text-lg text-slate-600 text-center max-w-3xl mx-auto">
+            Join thousands of students who have already discovered their potential at Harvox University.
           </p>
         </div>
 
@@ -92,7 +91,7 @@ export function FeaturesSection() {
               Ready to Start Your Journey?
             </h3>
             <p className="text-lg text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Join thousands of students who have already discovered their potential at Singidunum University.
+              Join thousands of students who have already discovered their potential at Harvox University.
               Your future starts here.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

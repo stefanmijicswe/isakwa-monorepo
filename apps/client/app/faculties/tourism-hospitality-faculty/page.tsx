@@ -10,8 +10,7 @@ const programs = {
       name: "Tourism, Hospitality and Food Economics",
       description: "Master the fundamentals of tourism management, hospitality operations, and food service economics for the global market.",
       duration: "4 years",
-      credits: "240 ECTS",
-      link: "/faculties/tourism-hospitality-faculty/tourism-hospitality-food"
+      credits: "240 ECTS"
     }
   ],
   master: [
@@ -19,8 +18,7 @@ const programs = {
       name: "Business Systems in Tourism and Hospitality",
       description: "Advanced studies in tourism business models, hospitality management systems, and strategic planning for the industry.",
       duration: "2 years",
-      credits: "60 ECTS",
-      link: "/faculties/tourism-hospitality-faculty/business-systems"
+      credits: "60 ECTS"
     }
   ],
   phd: [
@@ -28,8 +26,7 @@ const programs = {
       name: "Tourism Management",
       description: "Research-focused program exploring sustainable tourism, destination management, and innovative hospitality strategies.",
       duration: "3-4 years",
-      credits: "180 ECTS",
-      link: "/faculties/tourism-hospitality-faculty/tourism-management"
+      credits: "180 ECTS"
     }
   ]
 }
@@ -37,7 +34,7 @@ const programs = {
 const dean = {
   name: "Prof. Dr. Jelena Nikolić",
   title: "Dean of the Faculty of Tourism and Hospitality Management",
-  email: "dean.fth@singidunum.edu",
+  email: "dean.fth@harvox.edu",
   phone: "+381 11 123 4571",
   office: "Room 505, Building D",
   bio: "Professor Nikolić is a distinguished expert in tourism management and hospitality economics with over 19 years of experience in academia and industry. She has published extensively on sustainable tourism and has led numerous research projects in hospitality management and destination development."
@@ -73,7 +70,7 @@ export default function TourismHospitalityFacultyPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <p className="text-slate-600 leading-relaxed text-lg">
-                      The Faculty of Tourism and Hospitality Management at Singidunum University is committed to excellence in hospitality education, 
+                      The Faculty of Tourism and Hospitality Management at Harvox University is committed to excellence in hospitality education, 
                       research, and innovation. Our programs combine theoretical knowledge with practical applications, preparing 
                       students for successful careers in the dynamic global tourism and hospitality industry.
                     </p>
@@ -170,11 +167,9 @@ export default function TourismHospitalityFacultyPage() {
                               <span>Duration: {program.duration}</span>
                               <span>{program.credits}</span>
                             </div>
-                            <Link href={program.link}>
-                              <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10">
-                                Learn More
-                              </Button>
-                            </Link>
+                            <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10 cursor-default">
+                              Learn More
+                            </Button>
                           </CardContent>
                         </Card>
                       ))}
@@ -205,11 +200,9 @@ export default function TourismHospitalityFacultyPage() {
                               <span>Duration: {program.duration}</span>
                               <span>{program.credits}</span>
                             </div>
-                            <Link href={program.link}>
-                              <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10">
-                                Learn More
-                              </Button>
-                            </Link>
+                            <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10 cursor-default">
+                              Learn More
+                            </Button>
                           </CardContent>
                         </Card>
                       ))}
@@ -240,11 +233,9 @@ export default function TourismHospitalityFacultyPage() {
                               <span>Duration: {program.duration}</span>
                               <span>{program.credits}</span>
                             </div>
-                            <Link href={program.link}>
-                              <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10">
-                                Learn More
-                              </Button>
-                              </Link>
+                            <Button variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-all duration-300 rounded-lg h-10 cursor-default">
+                              Learn More
+                            </Button>
                           </CardContent>
                         </Card>
                       ))}
