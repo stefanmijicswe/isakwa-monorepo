@@ -13,7 +13,8 @@ import {
   FileText,
   Bell,
   LogOut,
-  Library
+  Library,
+  ChevronRight
 } from "lucide-react"
 import Image from "next/image"
 
@@ -25,6 +26,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarSeparator,
 } from "../../../components/ui/sidebar"
 
 // Navigation items by user role
@@ -34,6 +39,7 @@ const navigationByRole = {
       title: "Dashboard",
       url: "/dashboard",
       icon: Home,
+      isActive: true,
     },
     {
       title: "My Courses",
@@ -66,6 +72,7 @@ const navigationByRole = {
       title: "Dashboard",
       url: "/dashboard",
       icon: Home,
+      isActive: true,
     },
     {
       title: "Teaching Courses",
@@ -113,6 +120,7 @@ const navigationByRole = {
       title: "Dashboard",
       url: "/dashboard",
       icon: Home,
+      isActive: true,
     },
     {
       title: "Student Enrollment",
@@ -155,6 +163,7 @@ const navigationByRole = {
       title: "Dashboard",
       url: "/dashboard",
       icon: Home,
+      isActive: true,
     },
     {
       title: "User Administration",
@@ -218,61 +227,76 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <>
-      <Sidebar collapsible="offcanvas" {...props}>
+      <Sidebar variant="inset" {...props}>
         <SidebarHeader>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                className="data-[slot=sidebar-menu-button]:!p-1.5"
-              >
-                <a href="/dashboard">
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <div className="flex items-center gap-3 p-2">
+                <div className="flex items-center gap-3">
                   <Image src="/logos/logo.svg" alt="Harvox Logo" width={40} height={40} />
-                  <span className="text-base font-semibold">Harvox</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            {data.navMain.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild tooltip={item.title}>
-                  <a href={item.url}>
-                    {item.icon && <item.icon />}
-                    <span>{item.title}</span>
-                    {item.title === "Notifications" && notificationCount > 0 && (
-                      <span className="ml-2 h-5 w-5 bg-red-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
-                        {notificationCount}
-                      </span>
-                    )}
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter>
-          <SidebarMenu>
-            <div className="flex items-center p-2">
-              <div className="flex items-center gap-3 flex-1">
-                <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
-                  <User className="h-4 w-4 text-slate-600" />
-                </div>
-                <div className="text-sm">
-                  <div className="font-medium text-slate-900">John Doe</div>
-                  <div className="text-slate-500 text-xs">Student</div>
+                  <div className="flex flex-col">
+                    <span className="text-lg font-bold text-sidebar-foreground">Harvox</span>
+                    <span className="text-xs text-sidebar-foreground/70">University</span>
+                  </div>
                 </div>
               </div>
-              <button 
-                onClick={handleLogout}
-                className="p-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
-            </div>
-          </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarHeader>
+        
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {data.navMain.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={item.isActive}
+                      size="lg"
+                      className="h-12"
+                    >
+                      <a href={item.url}>
+                        <item.icon className="h-5 w-5" />
+                        <span className="font-medium">{item.title}</span>
+                        {item.title === "Notifications" && notificationCount > 0 && (
+                          <span className="ml-auto h-6 w-6 bg-red-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
+                            {notificationCount}
+                          </span>
+                        )}
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        
+        <SidebarFooter>
+          <SidebarSeparator />
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <div className="flex items-center gap-3 p-2">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="h-10 w-10 rounded-full bg-sidebar-accent flex items-center justify-center">
+                    <User className="h-5 w-5 text-sidebar-accent-foreground" />
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="font-medium text-sidebar-foreground">John Doe</div>
+                    <div className="text-xs text-sidebar-foreground/70">Student</div>
+                  </div>
+                </div>
+                <button 
+                  onClick={handleLogout}
+                  className="p-2 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-md transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+            </SidebarGroupContent>
+          </SidebarGroup>
         </SidebarFooter>
       </Sidebar>
 
