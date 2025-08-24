@@ -37,7 +37,7 @@ import {
   SidebarSeparator,
 } from "../../../components/ui/sidebar"
 
-// Navigation items by user role
+// Navigation items by user role - simplified for clean dashboard
 const navigationByRole = {
   student: [
     {
@@ -52,18 +52,6 @@ const navigationByRole = {
       url: "/dashboard/my-courses",
       icon: BookOpen,
       description: "View enrolled courses"
-    },
-    {
-      title: "Study History",
-      url: "/dashboard/study-history",
-      icon: ChartBar,
-      description: "Academic progress"
-    },
-    {
-      title: "Exam Registration",
-      url: "/dashboard/exam-registration",
-      icon: Calendar,
-      description: "Register for exams"
     },
     {
       title: "Grades",
@@ -104,30 +92,6 @@ const navigationByRole = {
       icon: Users,
       description: "Find students"
     },
-    {
-      title: "Grade Entry",
-      url: "/dashboard/grade-entry",
-      icon: BarChart3,
-      description: "Enter grades"
-    },
-    {
-      title: "Syllabi Management",
-      url: "/dashboard/syllabi",
-      icon: FileText,
-      description: "Course content"
-    },
-    {
-      title: "Schedule Planning",
-      url: "/dashboard/schedule-planning",
-      icon: Calendar,
-      description: "Plan your schedule"
-    },
-    {
-      title: "Assignments",
-      url: "/dashboard/assignments",
-      icon: BookOpen,
-      description: "Manage assignments"
-    },
   ],
   studentService: [
     {
@@ -148,12 +112,6 @@ const navigationByRole = {
       url: "/dashboard/library",
       icon: Library,
       description: "Book management"
-    },
-    {
-      title: "Inventory Management",
-      url: "/dashboard/inventory",
-      icon: Settings,
-      description: "Resource tracking"
     },
   ],
   admin: [
