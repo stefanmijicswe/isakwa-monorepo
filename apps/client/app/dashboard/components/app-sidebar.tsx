@@ -240,36 +240,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         
         <SidebarFooter>
           <SidebarSeparator />
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <div className="p-3">
-                <div className="bg-sidebar-accent/50 rounded-lg p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                      <User className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="flex flex-col flex-1 min-w-0">
-                      <div className="font-medium text-sidebar-foreground text-sm">John Doe</div>
-                      <div className="text-xs text-sidebar-foreground/70 flex items-center gap-1">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        {getCurrentUserRole() === 'student' ? 'Student' : 
-                         getCurrentUserRole() === 'teacher' ? 'Professor' :
-                         getCurrentUserRole() === 'studentService' ? 'Staff' : 'Administrator'}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full mt-3 px-3 py-2 text-xs font-medium text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-md transition-colors flex items-center justify-center gap-2"
-                  >
-                    <LogOut className="h-3 w-3" />
-                    Sign Out
-                  </button>
+          <div className="p-2">
+            <div className="bg-sidebar-accent/30 rounded-lg p-3">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                  <User className="h-4 w-4 text-white" />
                 </div>
+                <div className="flex flex-col flex-1 min-w-0">
+                  <div className="font-medium text-sidebar-foreground text-sm">John Doe</div>
+                  <div className="text-xs text-sidebar-foreground/70 flex items-center gap-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    {getCurrentUserRole() === 'student' ? 'Student' : 
+                     getCurrentUserRole() === 'teacher' ? 'Professor' :
+                     getCurrentUserRole() === 'studentService' ? 'Staff' : 'Administrator'}
+                  </div>
+                </div>
+                <button 
+                  onClick={handleLogout}
+                  className="p-2 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-md transition-colors"
+                  title="Sign Out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
               </div>
-            </SidebarGroupContent>
-          </SidebarGroup>
+            </div>
+          </div>
         </SidebarFooter>
       </Sidebar>
 
