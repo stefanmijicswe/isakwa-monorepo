@@ -41,7 +41,7 @@ interface Personnel {
       id: number
       name: string
     }
-    specialization: string
+  
   }
   studentServiceProfile?: {
     id: number
@@ -83,7 +83,7 @@ export default function PersonnelPage() {
     try {
       setLoading(true)
       setError(null)
-
+      
       let endpoint = ''
       if (role === 'PROFESSOR') {
         endpoint = 'http://localhost:3001/api/users/professors'
@@ -330,23 +330,23 @@ export default function PersonnelPage() {
             <div className="flex items-center space-x-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="Search professors..."
+              <Input
+                placeholder="Search professors..."
                   value={searchTerm || ""}
-                  onChange={(e) => handleSearch(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
                   className="pl-10 w-80 border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                />
-              </div>
+              />
+            </div>
               <Button variant="outline" size="sm" className="border-slate-200">
                 <Filter className="h-4 w-4 mr-2" />
                 Filters
               </Button>
-            </div>
+          </div>
 
             <div className="text-sm text-slate-500">
               {totalPersonnel > 0 && `${totalPersonnel} professor${totalPersonnel === 1 ? '' : 's'}`}
             </div>
-          </div>
+                </div>
 
           {/* Professors Table */}
           <div className="bg-white border border-slate-200 rounded-lg">
@@ -396,9 +396,7 @@ export default function PersonnelPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                           Department
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Specialization
-                        </th>
+
                         <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                           Status
                         </th>
@@ -411,22 +409,22 @@ export default function PersonnelPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-200">
-                      {personnel.map((person) => (
+            {personnel.map((person) => (
                         <tr key={person.id} className="hover:bg-slate-50 transition-colors">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center mr-3">
-                                <span className="text-sm font-medium text-white">
-                                  {person.firstName.charAt(0)}{person.lastName.charAt(0)}
-                                </span>
-                              </div>
-                              <div>
+                        <span className="text-sm font-medium text-white">
+                          {person.firstName.charAt(0)}{person.lastName.charAt(0)}
+                        </span>
+                      </div>
+                      <div>
                                 <div className="text-sm font-medium text-slate-900">
                                   {person.firstName} {person.lastName}
-                                </div>
+                        </div>
                                 <div className="text-sm text-slate-500">{person.email}</div>
-                              </div>
-                            </div>
+                      </div>
+                    </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="text-sm text-slate-900">
@@ -444,9 +442,7 @@ export default function PersonnelPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="text-sm text-slate-900">
-                              {person.professorProfile?.specialization || (
-                                <span className="text-slate-400 italic">No specialization</span>
-                              )}
+                              
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -474,13 +470,13 @@ export default function PersonnelPage() {
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
-                            </div>
+                  </div>
                           </td>
                         </tr>
-                      ))}
+            ))}
                     </tbody>
                   </table>
-                </div>
+          </div>
 
                 {/* Pagination */}
                 <div className="bg-white px-6 py-3 border-t border-slate-200 flex items-center justify-between">
@@ -497,11 +493,11 @@ export default function PersonnelPage() {
                     >
                       <ChevronsLeft className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
                       className="h-8 px-2 border-slate-200"
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -524,16 +520,16 @@ export default function PersonnelPage() {
                               }`}
                           >
                             {page}
-                          </Button>
+              </Button>
                         )
                       })}
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
                       className="h-8 px-2 border-slate-200"
                     >
                       <ChevronRight className="h-4 w-4" />
@@ -546,11 +542,11 @@ export default function PersonnelPage() {
                       className="h-8 px-2 border-slate-200"
                     >
                       <ChevronsRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+              </Button>
+            </div>
                 </div>
               </>
-            )}
+          )}
           </div>
         </TabsContent>
 
@@ -560,23 +556,23 @@ export default function PersonnelPage() {
             <div className="flex items-center space-x-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="Search student service staff..."
+              <Input
+                placeholder="Search student service staff..."
                   value={searchTerm || ""}
-                  onChange={(e) => handleSearch(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
                   className="pl-10 w-80 border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                />
-              </div>
+              />
+            </div>
               <Button variant="outline" size="sm" className="border-slate-200">
                 <Filter className="h-4 w-4 mr-2" />
                 Filters
               </Button>
-            </div>
+          </div>
 
             <div className="text-sm text-slate-500">
               {totalPersonnel > 0 && `${totalPersonnel} staff member${totalPersonnel === 1 ? '' : 's'}`}
             </div>
-          </div>
+                </div>
 
           {/* Student Service Table */}
           <div className="bg-white border border-slate-200 rounded-lg">
@@ -638,22 +634,22 @@ export default function PersonnelPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-200">
-                      {personnel.map((person) => (
+            {personnel.map((person) => (
                         <tr key={person.id} className="hover:bg-slate-50 transition-colors">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center mr-3">
-                                <span className="text-sm font-medium text-white">
-                                  {person.firstName.charAt(0)}{person.lastName.charAt(0)}
-                                </span>
-                              </div>
-                              <div>
+                        <span className="text-sm font-medium text-white">
+                          {person.firstName.charAt(0)}{person.lastName.charAt(0)}
+                        </span>
+                      </div>
+                      <div>
                                 <div className="text-sm font-medium text-slate-900">
                                   {person.firstName} {person.lastName}
-                                </div>
+                        </div>
                                 <div className="text-sm text-slate-500">{person.email}</div>
-                              </div>
-                            </div>
+                      </div>
+                    </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="text-sm text-slate-900">
@@ -694,13 +690,13 @@ export default function PersonnelPage() {
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
-                            </div>
+                  </div>
                           </td>
                         </tr>
-                      ))}
+            ))}
                     </tbody>
                   </table>
-                </div>
+          </div>
 
                 {/* Pagination */}
                 <div className="bg-white px-6 py-3 border-t border-slate-200 flex items-center justify-between">
@@ -717,11 +713,11 @@ export default function PersonnelPage() {
                     >
                       <ChevronsLeft className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
                       className="h-8 px-2 border-slate-200"
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -744,16 +740,16 @@ export default function PersonnelPage() {
                               }`}
                           >
                             {page}
-                          </Button>
+              </Button>
                         )
                       })}
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
                       className="h-8 px-2 border-slate-200"
                     >
                       <ChevronRight className="h-4 w-4" />
@@ -766,11 +762,11 @@ export default function PersonnelPage() {
                       className="h-8 px-2 border-slate-200"
                     >
                       <ChevronsRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+              </Button>
+            </div>
                 </div>
               </>
-            )}
+          )}
           </div>
         </TabsContent>
       </Tabs>

@@ -6,6 +6,7 @@ import { seedState } from './universities/seed-state';
 import { seedTitleTypes } from './universities/seed-title-types';
 import { seedScientificFields } from './universities/seed-scientific-fields';
 import { seedUniversity } from './universities/seed-university';
+import { seedDepartments } from './departments/seed-departments';
 import { seedStudyPrograms } from './study-programs/seed-study-programs';
 import { seedSubjects } from './subjects/seed-subjects';
 import { seedAcademicRecords } from './academic-records/seed-academic-records';
@@ -28,6 +29,7 @@ async function main() {
     await seedTitleTypes(prisma);
     await seedScientificFields(prisma);
     await seedUniversity(prisma);
+    await seedDepartments(prisma);
     await seedStudyPrograms(prisma);
     await seedSubjects(prisma);
     await seedUsers(prisma);

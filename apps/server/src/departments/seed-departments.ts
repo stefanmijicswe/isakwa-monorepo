@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 
-const prisma = new PrismaClient();
-
-async function main() {
+export async function seedDepartments(prisma: PrismaService) {
   console.log('🌱 Seeding departments...');
 
   const departments = [
@@ -30,12 +28,3 @@ async function main() {
 
   console.log('✅ Departments seeded successfully!');
 }
-
-main()
-  .catch((e) => {
-    console.error('❌ Error seeding departments:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });

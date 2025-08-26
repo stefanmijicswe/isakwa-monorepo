@@ -4,21 +4,24 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   UserPlus, 
   GraduationCap, 
   Search, 
   Plus, 
   User, 
+  FileText,
+  Users,
+  CheckCircle,
+  AlertCircle,
+  Filter,
   Calendar, 
   BookOpen,
-  Users,
-  ArrowUp,
-  CheckCircle,
-  AlertCircle
+  Clock,
+  Mail,
+  Phone
 } from "lucide-react";
 
 interface Student {
@@ -38,16 +41,6 @@ interface Student {
   pendingSubjects?: string[];
 }
 
-interface Subject {
-  id: string;
-  name: string;
-  acronym: string;
-  ects: number;
-  semester: "winter" | "summer";
-  mandatory: boolean;
-  year: number;
-}
-
 interface StudyProgram {
   id: string;
   name: string;
@@ -56,7 +49,8 @@ interface StudyProgram {
   duration: number;
   ects: number;
   available: boolean;
-  subjects: Subject[];
+  enrolledCount: number;
+  maxStudents: number;
 }
 
 interface Enrollment {
@@ -68,6 +62,7 @@ interface Enrollment {
   year: number;
   enrollmentDate: string;
   status: "enrolled" | "completed" | "withdrawn";
+  semester: "winter" | "summer";
 }
 
 const existingStudents: Student[] = [
@@ -130,14 +125,8 @@ const studyPrograms: StudyProgram[] = [
     duration: 4,
     ects: 240,
     available: true,
-    subjects: [
-      { id: "CS101", name: "Introduction to Programming", acronym: "ITP", ects: 6, semester: "winter", mandatory: true, year: 1 },
-      { id: "CS102", name: "Mathematics for Computer Science", acronym: "MCS", ects: 6, semester: "winter", mandatory: true, year: 1 },
-      { id: "CS103", name: "Computer Architecture", acronym: "CA", ects: 6, semester: "winter", mandatory: true, year: 1 },
-      { id: "CS104", name: "Data Structures", acronym: "DS", ects: 6, semester: "summer", mandatory: true, year: 1 },
-      { id: "CS105", name: "Algorithms", acronym: "ALG", ects: 6, semester: "summer", mandatory: true, year: 1 },
-      { id: "CS106", name: "English for IT", acronym: "EIT", ects: 3, semester: "summer", mandatory: false, year: 1 }
-    ]
+    enrolledCount: 45,
+    maxStudents: 60
   },
   {
     id: "2",
@@ -147,14 +136,19 @@ const studyPrograms: StudyProgram[] = [
     duration: 4,
     ects: 240,
     available: true,
-    subjects: [
-      { id: "BE101", name: "Introduction to Economics", acronym: "IE", ects: 6, semester: "winter", mandatory: true, year: 1 },
-      { id: "BE102", name: "Business Mathematics", acronym: "BM", ects: 6, semester: "winter", mandatory: true, year: 1 },
-      { id: "BE103", name: "Business Law", acronym: "BL", ects: 6, semester: "winter", mandatory: true, year: 1 },
-      { id: "BE104", name: "Marketing Principles", acronym: "MP", ects: 6, semester: "summer", mandatory: true, year: 1 },
-      { id: "BE105", name: "Financial Accounting", acronym: "FA", ects: 6, semester: "summer", mandatory: true, year: 1 },
-      { id: "BE106", name: "Business English", acronym: "BE", ects: 3, semester: "summer", mandatory: false, year: 1 }
-    ]
+    enrolledCount: 38,
+    maxStudents: 50
+  },
+  {
+    id: "3",
+    name: "Software Engineering",
+    faculty: "Informatics and Computing",
+    level: "BA",
+    duration: 4,
+    ects: 240,
+    available: true,
+    enrolledCount: 32,
+    maxStudents: 45
   }
 ];
 
@@ -167,7 +161,8 @@ const enrollments: Enrollment[] = [
     programName: "Computer Science",
     year: 2,
     enrollmentDate: "2021-09-01",
-    status: "enrolled"
+    status: "enrolled",
+    semester: "winter"
   },
   {
     id: "2",
@@ -177,21 +172,16 @@ const enrollments: Enrollment[] = [
     programName: "Business Economics",
     year: 3,
     enrollmentDate: "2021-09-01",
-    status: "enrolled"
+    status: "enrolled",
+    semester: "winter"
   }
 ];
 
 export default function EnrollPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProgram, setSelectedProgram] = useState("");
-  const [newStudent, setNewStudent] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    dateOfBirth: "",
-    phone: "",
-    address: ""
-  });
+  const [activeTab, setActiveTab] = useState("overview");
+  const [selectedFaculty, setSelectedFaculty] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
 
   const filteredStudents = existingStudents.filter(student =>
     student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -199,57 +189,87 @@ export default function EnrollPage() {
     student.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredPrograms = studyPrograms.filter(program =>
-    selectedProgram === "" || program.id === selectedProgram
-  );
-
-  const handleNewStudentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Here you would typically send the data to your backend
-    console.log("New student data:", newStudent);
-    // Reset form
-    setNewStudent({
-      firstName: "",
-      lastName: "",
-      email: "",
-      dateOfBirth: "",
-      phone: "",
-      address: ""
-    });
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active": return "bg-green-100 text-green-800";
-      case "inactive": return "bg-gray-100 text-gray-800";
-      case "graduated": return "bg-blue-100 text-blue-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "active": return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "inactive": return "bg-slate-50 text-slate-700 border-slate-200";
+      case "graduated": return "bg-blue-50 text-blue-700 border-blue-200";
+      default: return "bg-slate-50 text-slate-700 border-slate-200";
     }
   };
 
   const getEnrollmentStatusColor = (status: string) => {
     switch (status) {
-      case "enrolled": return "bg-green-100 text-green-800";
-      case "completed": return "bg-blue-100 text-blue-800";
-      case "withdrawn": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "enrolled": return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "completed": return "bg-blue-50 text-blue-700 border-blue-200";
+      case "withdrawn": return "bg-red-50 text-red-700 border-red-200";
+      default: return "bg-slate-50 text-slate-700 border-slate-200";
+    }
+  };
+
+  const getSemesterColor = (semester: string) => {
+    switch (semester) {
+      case "winter": return "bg-blue-50 text-blue-700 border-blue-200";
+      case "summer": return "bg-amber-50 text-amber-700 border-amber-200";
+      default: return "bg-slate-50 text-slate-700 border-slate-200";
     }
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-6 py-8">
+      {/* Header */}
+      <div className="mb-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Student Enrollment</h1>
-          <p className="text-gray-600 mt-2">Manage student enrollments and study programs</p>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">
+              Student Enrollment
+            </h1>
+            <p className="text-slate-600">
+              Manage student enrollments, study programs, and academic records
+            </p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="h-4 w-4 mr-2" />
+          <div className="flex items-center space-x-3">
+            <Button variant="outline" size="sm">
+              <FileText className="h-4 w-4 mr-2" />
+              Generate Report
+            </Button>
+            <Button size="sm">
+              <UserPlus className="h-4 w-4 mr-2" />
           New Enrollment
         </Button>
+          </div>
+        </div>
       </div>
 
-      <Tabs defaultValue="overview" className="w-full">
+
+
+      {/* Quick Actions */}
+      <div className="mb-8">
+        <div className="bg-white p-6 rounded-lg border border-slate-200">
+          <h3 className="text-lg font-medium text-slate-900 mb-4">Quick Actions</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button variant="outline" className="h-20 flex-col space-y-2 bg-slate-50 hover:bg-slate-100 border-slate-200">
+              <UserPlus className="h-6 w-6 text-blue-600" />
+              <span className="text-sm font-medium">New Student</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex-col space-y-2 bg-slate-50 hover:bg-slate-100 border-slate-200">
+              <GraduationCap className="h-6 w-6 text-emerald-600" />
+              <span className="text-sm font-medium">Enroll Student</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex-col space-y-2 bg-slate-50 hover:bg-slate-100 border-slate-200">
+              <FileText className="h-6 w-6 text-purple-600" />
+              <span className="text-sm font-medium">Generate Report</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex-col space-y-2 bg-slate-50 hover:bg-slate-100 border-slate-200">
+              <Calendar className="h-6 w-6 text-amber-600" />
+              <span className="text-sm font-medium">Schedule Exam</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
@@ -258,250 +278,395 @@ export default function EnrollPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Enrollments */}
+            <Card className="border-0 shadow-sm bg-white">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold text-slate-900">Recent Enrollments</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{existingStudents.length}</div>
-                <p className="text-xs text-muted-foreground">
-                  <span className="text-green-600">+12%</span> from last month
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Programs</CardTitle>
-                <GraduationCap className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{studyPrograms.filter(p => p.available).length}</div>
-                <p className="text-xs text-muted-foreground">
-                  <span className="text-green-600">+2</span> new programs
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Enrollments</CardTitle>
-                <CheckCircle className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{enrollments.filter(e => e.status === "enrolled").length}</div>
-                <p className="text-xs text-muted-foreground">
-                  <span className="text-green-600">+8%</span> from last month
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending Applications</CardTitle>
-                <AlertCircle className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">5</div>
-                <p className="text-xs text-muted-foreground">
-                  <span className="text-orange-600">3</span> require review
-                </p>
-              </CardContent>
-            </Card>
+              <CardContent className="space-y-4">
+                {enrollments.slice(0, 3).map((enrollment) => (
+                  <div key={enrollment.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-10 w-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                        <User className="h-5 w-5 text-emerald-600" />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Enrollments</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {enrollments.slice(0, 3).map((enrollment) => (
-                    <div key={enrollment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
-                        <p className="font-medium">{enrollment.studentName}</p>
-                        <p className="text-sm text-gray-600">{enrollment.programName}</p>
+                        <div className="font-medium text-slate-900">{enrollment.studentName}</div>
+                        <div className="text-sm text-slate-600">{enrollment.programName}</div>
+                        <div className="text-xs text-slate-500">Year {enrollment.year}</div>
                       </div>
+                      </div>
+                    <div className="text-right">
                       <Badge className={getEnrollmentStatusColor(enrollment.status)}>
                         {enrollment.status}
                       </Badge>
+                      <Badge className={`mt-2 ${getSemesterColor(enrollment.semester)}`}>
+                        {enrollment.semester}
+                      </Badge>
+                    </div>
                     </div>
                   ))}
-                </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Popular Programs</CardTitle>
+            {/* Popular Programs */}
+            <Card className="border-0 shadow-sm bg-white">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold text-slate-900">Popular Programs</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="space-y-4">
                   {studyPrograms.slice(0, 3).map((program) => (
-                    <div key={program.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={program.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <BookOpen className="h-5 w-5 text-blue-600" />
+                      </div>
                       <div>
-                        <p className="font-medium">{program.name}</p>
-                        <p className="text-sm text-gray-600">{program.faculty}</p>
+                        <div className="font-medium text-slate-900">{program.name}</div>
+                        <div className="text-sm text-slate-600">{program.faculty}</div>
+                        <div className="text-xs text-slate-500">{program.level} • {program.duration} years</div>
+                      </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium">{program.level}</p>
-                        <p className="text-xs text-gray-600">{program.duration} years</p>
+                      <div className="text-sm font-medium text-slate-900">{program.enrolledCount}/{program.maxStudents}</div>
+                      <div className="text-xs text-slate-500">students</div>
+                      <div className="w-16 bg-slate-200 rounded-full h-2 mt-1">
+                        <div 
+                          className="bg-emerald-500 h-2 rounded-full" 
+                          style={{ width: `${(program.enrolledCount / program.maxStudents) * 100}%` }}
+                        ></div>
+                      </div>
                       </div>
                     </div>
                   ))}
-                </div>
               </CardContent>
             </Card>
           </div>
+
+          {/* Academic Calendar */}
+          <Card className="border-0 shadow-sm bg-white">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-slate-900">Academic Calendar</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Calendar className="h-5 w-5 text-blue-600" />
+                    <span className="font-medium text-blue-900">Winter Semester</span>
+                  </div>
+                  <p className="text-sm text-blue-700">Registration: Sep 1-15</p>
+                  <p className="text-sm text-blue-700">Classes: Sep 20 - Jan 15</p>
+                </div>
+                <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Clock className="h-5 w-5 text-amber-600" />
+                    <span className="font-medium text-amber-900">Summer Semester</span>
+                  </div>
+                  <p className="text-sm text-amber-700">Registration: Feb 1-15</p>
+                  <p className="text-sm text-amber-700">Classes: Feb 20 - Jun 15</p>
+                </div>
+                <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <CheckCircle className="h-5 w-5 text-emerald-600" />
+                    <span className="font-medium text-emerald-900">Exams</span>
+                  </div>
+                  <p className="text-sm text-emerald-700">Winter: Jan 20-30</p>
+                  <p className="text-sm text-emerald-700">Summer: Jun 20-30</p>
+                </div>
+                </div>
+              </CardContent>
+            </Card>
         </TabsContent>
 
         <TabsContent value="students" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Student Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="flex-1">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search students..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Button>
+          <div className="bg-white rounded-lg border border-slate-200">
+            <div className="p-6 border-b border-slate-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium text-slate-900">Student Management</h3>
+                <Button size="sm">
                   <UserPlus className="h-4 w-4 mr-2" />
                   Add Student
                 </Button>
               </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                      placeholder="Search students by name or email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 border-slate-200"
+                  />
+                </div>
+                </div>
+                <Button variant="outline" size="sm">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filters
+                </Button>
+              </div>
 
-              <div className="space-y-4">
+              <div className="overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Student
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Program
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Contact
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-slate-200">
                 {filteredStudents.map((student) => (
-                  <div key={student.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <tr key={student.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                           <User className="h-5 w-5 text-blue-600" />
                         </div>
                         <div>
-                          <h3 className="font-medium">{student.firstName} {student.lastName}</h3>
-                          <p className="text-sm text-gray-600">{student.email}</p>
-                          <p className="text-sm text-gray-500">{student.phone}</p>
+                              <div className="text-sm font-medium text-slate-900">
+                                {student.firstName} {student.lastName}
+                              </div>
+                              <div className="text-sm text-slate-500">ID: {student.id}</div>
+                              <div className="text-sm text-slate-500">Year {student.currentYear}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm font-medium text-slate-900">{student.currentProgram}</div>
+                            <div className="text-sm text-slate-500">Enrolled: {student.enrollmentDate}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="space-y-1">
+                            <div className="flex items-center text-sm text-slate-600">
+                              <Mail className="h-4 w-4 mr-2" />
+                              {student.email}
+                            </div>
+                            <div className="flex items-center text-sm text-slate-600">
+                              <Phone className="h-4 w-4 mr-2" />
+                              {student.phone}
                         </div>
                       </div>
-                      <div className="text-right">
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                         <Badge className={getStatusColor(student.status)}>
                           {student.status}
                         </Badge>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {student.currentProgram} - Year {student.currentYear}
-                        </p>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center space-x-2">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <UserPlus className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="programs" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Study Programs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="flex-1">
-                  <Label htmlFor="program-filter">Filter by Program</Label>
-                  <select
-                    id="program-filter"
-                    value={selectedProgram}
-                    onChange={(e) => setSelectedProgram(e.target.value)}
-                    className="w-full p-2 border rounded-md"
-                  >
-                    <option value="">All Programs</option>
-                    {studyPrograms.map((program) => (
-                      <option key={program.id} value={program.id}>
-                        {program.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <Button>
+          <div className="bg-white rounded-lg border border-slate-200">
+            <div className="p-6 border-b border-slate-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium text-slate-900">Study Programs</h3>
+                <Button size="sm">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Program
                 </Button>
               </div>
+              </div>
 
-              <div className="space-y-4">
-                {filteredPrograms.map((program) => (
-                  <div key={program.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between">
+            <div className="p-6">
+              <div className="overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Program
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Faculty
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Details
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Enrollment
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-slate-200">
+                    {studyPrograms.map((program) => (
+                      <tr key={program.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="h-10 w-10 bg-emerald-100 rounded-full flex items-center justify-center mr-3">
+                              <GraduationCap className="h-5 w-5 text-emerald-600" />
+                            </div>
                       <div>
-                        <h3 className="font-medium text-lg">{program.name}</h3>
-                        <p className="text-gray-600">{program.faculty}</p>
-                        <div className="flex items-center space-x-4 mt-2">
-                          <Badge variant="outline">{program.level}</Badge>
-                          <Badge variant="outline">{program.duration} years</Badge>
-                          <Badge variant="outline">{program.ects} ECTS</Badge>
+                              <div className="text-sm font-medium text-slate-900">{program.name}</div>
+                              <div className="text-sm text-slate-500">{program.level}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-slate-900">{program.faculty}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="space-y-1">
+                            <div className="text-sm text-slate-900">{program.duration} years</div>
+                            <div className="text-sm text-slate-500">{program.ects} ECTS</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="space-y-2">
+                            <div className="text-sm text-slate-900">
+                              {program.enrolledCount}/{program.maxStudents} students
+                            </div>
+                            <div className="w-24 bg-slate-200 rounded-full h-2">
+                              <div 
+                                className="bg-emerald-500 h-2 rounded-full" 
+                                style={{ width: `${(program.enrolledCount / program.maxStudents) * 100}%` }}
+                              ></div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <Badge className={program.available ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Badge className={program.available ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"}>
                           {program.available ? "Available" : "Not Available"}
                         </Badge>
-                        <p className="text-sm text-gray-600 mt-2">
-                          {program.subjects.length} subjects
-                        </p>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center space-x-2">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <BookOpen className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <UserPlus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="enrollments" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Enrollment Records</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+          <div className="bg-white rounded-lg border border-slate-200">
+            <div className="p-6 border-b border-slate-200">
+              <h3 className="text-lg font-medium text-slate-900">Enrollment Records</h3>
+            </div>
+            
+            <div className="p-6">
+              <div className="overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Student
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Program
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Academic Year
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Semester
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-slate-200">
                 {enrollments.map((enrollment) => (
-                  <div key={enrollment.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
-                          <GraduationCap className="h-5 w-5 text-green-600" />
+                      <tr key={enrollment.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="h-10 w-10 bg-emerald-100 rounded-full flex items-center justify-center mr-3">
+                              <User className="h-5 w-5 text-emerald-600" />
                         </div>
                         <div>
-                          <h3 className="font-medium">{enrollment.studentName}</h3>
-                          <p className="text-sm text-gray-600">{enrollment.programName}</p>
-                          <p className="text-sm text-gray-500">Year {enrollment.year}</p>
+                              <div className="text-sm font-medium text-slate-900">{enrollment.studentName}</div>
+                              <div className="text-sm text-slate-500">ID: {enrollment.studentId}</div>
                         </div>
                       </div>
-                      <div className="text-right">
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-slate-900">{enrollment.programName}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-slate-900">Year {enrollment.year}</div>
+                          <div className="text-sm text-slate-500">{enrollment.enrollmentDate}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Badge className={getSemesterColor(enrollment.semester)}>
+                            {enrollment.semester}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                         <Badge className={getEnrollmentStatusColor(enrollment.status)}>
                           {enrollment.status}
                         </Badge>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {enrollment.enrollmentDate}
-                        </p>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center space-x-2">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <UserPlus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>

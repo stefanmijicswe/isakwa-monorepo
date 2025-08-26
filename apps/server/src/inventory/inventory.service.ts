@@ -4,7 +4,8 @@ import {
   CreateInventoryItemDto, 
   UpdateInventoryItemDto, 
   CreateInventoryRequestDto, 
-  UpdateInventoryRequestDto 
+  UpdateInventoryRequestDto,
+  CreateInventoryIssuanceDto
 } from './dto';
 import { InventoryRequestStatus } from '@prisma/client';
 
@@ -121,6 +122,97 @@ export class InventoryService {
       where: { id },
       data: { isActive: false },
     });
+  }
+
+  // Inventory Issuance Management
+  async createInventoryIssuance(issuedBy: number, data: CreateInventoryIssuanceDto) {
+    // Check if inventory item exists and has enough quantity
+    const inventoryItem = await this.prisma.inventoryItem.findUnique({
+      where: { id: data.inventoryItemId },
+    });
+
+    if (!inventoryItem || !inventoryItem.isActive) {
+      throw new NotFoundException('Inventory item not found or inactive');
+    }
+
+    if (data.quantityIssued > inventoryItem.quantity) {
+      throw new BadRequestException(
+        `Cannot issue ${data.quantityIssued} items. Only ${inventoryItem.quantity} available.`
+      );
+    }
+
+    // Check if student exists
+    const student = await this.prisma.studentProfile.findUnique({
+      where: { id: data.studentId },
+    });
+
+    if (!student || student.status !== 'ACTIVE') {
+      throw new NotFoundException('Student not found or inactive');
+    }
+
+    // Create issuance and update inventory quantity
+    const [issuance] = await this.prisma.$transaction([
+      this.prisma.inventoryIssuance.create({
+        data: {
+          inventoryItemId: data.inventoryItemId,
+          studentId: data.studentId,
+          quantityIssued: data.quantityIssued,
+          issuedBy: issuedBy,
+          notes: data.notes,
+        },
+        include: {
+          inventoryItem: true,
+          student: {
+            include: {
+              user: true,
+            },
+          },
+          issuedByUser: true,
+        },
+      }),
+      this.prisma.inventoryItem.update({
+        where: { id: data.inventoryItemId },
+        data: {
+          quantity: {
+            decrement: data.quantityIssued,
+          },
+        },
+      }),
+    ]);
+
+    return issuance;
+  }
+
+  async findAllInventoryIssuances(page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+    const where = { isActive: true };
+
+    const [issuances, total] = await Promise.all([
+      this.prisma.inventoryIssuance.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { issuedAt: 'desc' },
+        include: {
+          inventoryItem: true,
+          student: {
+            include: {
+              user: true,
+            },
+          },
+          issuedByUser: true,
+        },
+      }),
+      this.prisma.inventoryIssuance.count({ where }),
+    ]);
+
+    return {
+      issuances,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   // Inventory Requests Management
@@ -306,6 +398,47 @@ export class InventoryService {
           },
         },
       },
+    });
+  }
+
+  async markAsReturned(issuanceId: number, returnNotes?: string) {
+    // Find the issuance
+    const issuance = await this.prisma.inventoryIssuance.findUnique({
+      where: { id: issuanceId },
+      include: { inventoryItem: true },
+    });
+
+    if (!issuance) {
+      throw new NotFoundException('Issuance not found');
+    }
+
+    if (!issuance.isActive) {
+      throw new BadRequestException('Item has already been returned');
+    }
+
+    // Use transaction to ensure data consistency
+    return this.prisma.$transaction(async (tx) => {
+      // Mark issuance as inactive (returned)
+      const updatedIssuance = await tx.inventoryIssuance.update({
+        where: { id: issuanceId },
+        data: {
+          isActive: false,
+          returnNotes,
+          returnedAt: new Date(),
+        },
+      });
+
+      // Increase inventory quantity
+      await tx.inventoryItem.update({
+        where: { id: issuance.inventoryItemId },
+        data: {
+          quantity: {
+            increment: issuance.quantityIssued,
+          },
+        },
+      });
+
+      return updatedIssuance;
     });
   }
 }

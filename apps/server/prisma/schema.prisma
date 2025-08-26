@@ -28,6 +28,7 @@ model User {
   createdViolations      StudentViolation[]
   inventoryRequests      InventoryRequest[]
   approvedRequests       InventoryRequest[]      @relation("InventoryApprover")
+  issuedInventory       InventoryIssuance[]
 
   @@map("users")
 }
@@ -276,6 +277,7 @@ model StudentProfile {
   user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   violations            StudentViolation[]
   libraryBorrowings     LibraryBorrowing[]
+  inventoryIssuances    InventoryIssuance[]
 
   @@map("student_profiles")
 }
@@ -677,6 +679,7 @@ model InventoryItem {
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
   requests    InventoryRequest[]
+  issuances   InventoryIssuance[]
 
   @@map("inventory_items")
 }
@@ -700,6 +703,27 @@ model InventoryRequest {
   inventoryItem   InventoryItem          @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
 
   @@map("inventory_requests")
+}
+
+model InventoryIssuance {
+  id              Int       @id @default(autoincrement())
+  inventoryItemId Int
+  studentId       Int
+  quantityIssued  Int
+  issuedBy        Int
+  issuedAt        DateTime  @default(now())
+  notes           String?
+  isActive        Boolean   @default(true)
+  returnNotes     String?
+  returnedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  student         StudentProfile @relation(fields: [studentId], references: [id])
+  issuedByUser    User          @relation(fields: [issuedBy], references: [id])
+
+  @@map("inventory_issuances")
 }
 
 enum LibraryItemType {

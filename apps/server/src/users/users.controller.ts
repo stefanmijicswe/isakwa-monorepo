@@ -52,7 +52,7 @@ export class UsersController {
 
   @Get('students')
   @UseGuards(JwtAuthGuard, RolesGuard)  // Re-enabled authentication and authorization
-  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)  // Re-enabled role-based access control
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT_SERVICE)  // Re-enabled role-based access control
   async getStudents(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',

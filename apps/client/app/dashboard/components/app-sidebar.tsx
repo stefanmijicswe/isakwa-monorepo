@@ -151,12 +151,6 @@ const navigationByRole = {
   ],
   STUDENT_SERVICE: [
     {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: Home,
-      description: "Service overview"
-    },
-    {
       title: "Student Enrollment",
       url: "/dashboard/enroll",
       icon: Users,

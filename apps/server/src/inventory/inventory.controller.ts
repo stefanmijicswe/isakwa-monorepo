@@ -16,7 +16,9 @@ import {
   CreateInventoryItemDto, 
   UpdateInventoryItemDto, 
   CreateInventoryRequestDto, 
-  UpdateInventoryRequestDto 
+  UpdateInventoryRequestDto,
+  CreateInventoryIssuanceDto,
+  MarkAsReturnedDto
 } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -110,5 +112,35 @@ export class InventoryController {
     @Request() req: any,
   ) {
     return this.inventoryService.updateInventoryRequest(id, req.user.id, data);
+  }
+
+  // Inventory Issuance Management
+  @Post('issuances')
+  @Roles(UserRole.STUDENT_SERVICE, UserRole.ADMIN)
+  async createInventoryIssuance(
+    @Body() data: CreateInventoryIssuanceDto,
+    @Request() req: any,
+  ) {
+    return this.inventoryService.createInventoryIssuance(req.user.id, data);
+  }
+
+  @Get('issuances')
+  @Roles(UserRole.STUDENT_SERVICE, UserRole.ADMIN)
+  async findAllInventoryIssuances(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 10;
+    return this.inventoryService.findAllInventoryIssuances(pageNum, limitNum);
+  }
+
+  @Put('issuances/:id/return')
+  @Roles(UserRole.STUDENT_SERVICE, UserRole.ADMIN)
+  async markAsReturned(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: MarkAsReturnedDto,
+  ) {
+    return this.inventoryService.markAsReturned(id, data.returnNotes);
   }
 }
