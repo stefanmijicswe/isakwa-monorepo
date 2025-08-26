@@ -77,13 +77,24 @@ export class UsersService {
   }
 
   async findById(id: number) {
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
         professorProfile: true,
         studentProfile: true,
       },
     });
+    
+    console.log('🔍 UsersService.findById result:', user);
+    return user;
   }
 
   async findAll() {
@@ -95,13 +106,42 @@ export class UsersService {
     });
   }
 
-  async findByRole(role: UserRole) {
-    return this.prisma.user.findMany({
-      where: { role },
+  async findByRole(role: UserRole, page: number = 1, limit: number = 10, search?: string) {
+    const skip = (page - 1) * limit;
+    
+    // Build where clause
+    const where: any = { role };
+    
+    if (search) {
+      where.OR = [
+        { firstName: { contains: search } },
+        { lastName: { contains: search } },
+        { email: { contains: search } },
+        { studentProfile: { studentIndex: { contains: search } } },
+      ];
+    }
+
+    // Get total count for pagination
+    const total = await this.prisma.user.count({ where });
+    
+    // Get paginated results
+    const users = await this.prisma.user.findMany({
+      where,
       include: {
         professorProfile: true,
         studentProfile: true,
       },
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
     });
+
+    return {
+      users,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 }

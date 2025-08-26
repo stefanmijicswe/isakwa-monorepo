@@ -5,34 +5,28 @@ import { Button } from "../../../../components/ui/button"
 import { cn } from "../../../../lib/utils"
 import { Input } from "../../../../components/ui/input"
 import { Label } from "../../../../components/ui/label"
-import { PasswordStrengthMeter } from "./password-strength-meter"
+import { useAuth } from "../../../../contexts/auth-context"
+import { useRouter } from "next/navigation"
+import { UserRole } from "../../../../types/auth"
 
 export function RegisterForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const { register, isLoading } = useAuth()
+  const router = useRouter()
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    role: "STUDENT" as UserRole
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
-  const validatePassword = (password: string) => {
-    const requirements = {
-      length: password.length >= 12,
-      uppercase: /[A-Z]/.test(password),
-      lowercase: /[a-z]/.test(password),
-      number: /\d/.test(password),
-      special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
-    }
-    
-    return Object.values(requirements).every(Boolean)
-  }
+  const [submitError, setSubmitError] = useState("")
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -40,9 +34,19 @@ export function RegisterForm({
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }))
     }
+    if (submitError) {
+      setSubmitError("")
+    }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleRoleChange = (role: UserRole) => {
+    setFormData(prev => ({ ...prev, role }))
+    if (submitError) {
+      setSubmitError("")
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const newErrors: Record<string, string> = {}
 
@@ -59,8 +63,6 @@ export function RegisterForm({
     }
     if (!formData.password) {
       newErrors.password = "Password is required"
-    } else if (!validatePassword(formData.password)) {
-      newErrors.password = "Password does not meet requirements"
     }
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match"
@@ -71,12 +73,45 @@ export function RegisterForm({
       return
     }
 
-    console.log("Form submitted:", formData)
+    try {
+      // Prepare register data based on role
+      const registerData = {
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        role: formData.role,
+        // Add role-specific fields
+        ...(formData.role === "PROFESSOR" && {
+          department: "Computer Science", // Default value, could be made configurable
+          title: "Assistant Professor", // Default value
+          phoneNumber: "+38160123456" // Default value
+        }),
+        ...(formData.role === "STUDENT" && {
+          studentIndex: `2024${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+          year: 1,
+          phoneNumber: "+38160123457" // Default value
+        })
+      }
+
+      await register(registerData)
+      // Redirect to dashboard on successful registration
+      router.push("/dashboard")
+    } catch (error: any) {
+      console.error("Registration failed:", error)
+      setSubmitError(error.message || "Registration failed. Please try again.")
+    }
   }
 
   return (
     <div className={`bg-white rounded-lg border border-slate-200 p-6 ${className}`} {...props}>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {submitError && (
+          <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
+            {submitError}
+          </div>
+        )}
+        
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label htmlFor="firstName" className="text-sm font-medium">First Name</Label>
@@ -87,6 +122,7 @@ export function RegisterForm({
               value={formData.firstName}
               onChange={(e) => handleInputChange("firstName", e.target.value)}
               className={cn("h-9", errors.firstName ? "border-red-500" : "")}
+              disabled={isLoading}
             />
             {errors.firstName && (
               <span className="text-xs text-red-500">{errors.firstName}</span>
@@ -101,6 +137,7 @@ export function RegisterForm({
               value={formData.lastName}
               onChange={(e) => handleInputChange("lastName", e.target.value)}
               className={cn("h-9", errors.lastName ? "border-red-500" : "")}
+              disabled={isLoading}
             />
             {errors.lastName && (
               <span className="text-xs text-red-500">{errors.lastName}</span>
@@ -117,10 +154,30 @@ export function RegisterForm({
             value={formData.email}
             onChange={(e) => handleInputChange("email", e.target.value)}
             className={cn("h-9", errors.email ? "border-red-500" : "")}
+            disabled={isLoading}
           />
           {errors.email && (
             <span className="text-xs text-red-500">{errors.email}</span>
           )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="role" className="text-sm font-medium">Role</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {(["STUDENT", "PROFESSOR", "STUDENT_SERVICE", "ADMIN"] as UserRole[]).map((role) => (
+              <Button
+                key={role}
+                type="button"
+                variant={formData.role === role ? "default" : "outline"}
+                size="sm"
+                className="h-9 text-xs"
+                onClick={() => handleRoleChange(role)}
+                disabled={isLoading}
+              >
+                {role.replace("_", " ")}
+              </Button>
+            ))}
+          </div>
         </div>
         
         <div className="space-y-2">
@@ -136,6 +193,7 @@ export function RegisterForm({
                 errors.password ? "border-red-500" : "",
                 formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword ? "border-orange-500" : ""
               )}
+              disabled={isLoading}
             />
             <Button
               type="button"
@@ -143,6 +201,7 @@ export function RegisterForm({
               size="sm"
               className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-slate-100 rounded"
               onClick={() => setShowPassword(!showPassword)}
+              disabled={isLoading}
             >
               {showPassword ? (
                 <svg className="w-3 h-3 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,7 +218,6 @@ export function RegisterForm({
           {errors.password && (
             <span className="text-xs text-red-500">{errors.password}</span>
           )}
-          <PasswordStrengthMeter password={formData.password} />
         </div>
         
         <div className="space-y-2">
@@ -176,6 +234,7 @@ export function RegisterForm({
                 formData.confirmPassword && formData.password !== formData.confirmPassword ? "border-orange-500" : "",
                 formData.confirmPassword && formData.password === formData.confirmPassword ? "border-green-500" : ""
               )}
+              disabled={isLoading}
             />
             <Button
               type="button"
@@ -183,6 +242,7 @@ export function RegisterForm({
               size="sm"
               className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-slate-100 rounded"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              disabled={isLoading}
             >
               {showConfirmPassword ? (
                 <svg className="w-3 h-3 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,7 +268,7 @@ export function RegisterForm({
               ) : (
                 <div className="flex items-center space-x-2 text-orange-600">
                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0z" />
                   </svg>
                   <span className="text-xs">Passwords do not match</span>
                 </div>
@@ -220,8 +280,8 @@ export function RegisterForm({
           )}
         </div>
         
-        <Button type="submit" className="w-full h-9 mt-6">
-          Create Account
+        <Button type="submit" className="w-full h-9 mt-6" disabled={isLoading}>
+          {isLoading ? "Creating Account..." : "Create Account"}
         </Button>
       </form>
     </div>

@@ -136,22 +136,7 @@ const studyPrograms: StudyProgram[] = [
       { id: "CS103", name: "Computer Architecture", acronym: "CA", ects: 6, semester: "winter", mandatory: true, year: 1 },
       { id: "CS104", name: "Data Structures", acronym: "DS", ects: 6, semester: "summer", mandatory: true, year: 1 },
       { id: "CS105", name: "Algorithms", acronym: "ALG", ects: 6, semester: "summer", mandatory: true, year: 1 },
-      { id: "CS106", name: "English for IT", acronym: "EIT", ects: 3, semester: "summer", mandatory: false, year: 1 },
-      { id: "CS201", name: "Object-Oriented Programming", acronym: "OOP", ects: 6, semester: "winter", mandatory: true, year: 2 },
-      { id: "CS202", name: "Database Systems", acronym: "DBS", ects: 6, semester: "winter", mandatory: true, year: 2 },
-      { id: "CS203", name: "Software Engineering", acronym: "SE", ects: 6, semester: "winter", mandatory: true, year: 2 },
-      { id: "CS204", name: "Web Development", acronym: "WD", ects: 6, semester: "summer", mandatory: true, year: 2 },
-      { id: "CS205", name: "Operating Systems", acronym: "OS", ects: 6, semester: "summer", mandatory: true, year: 2 },
-      { id: "CS206", name: "Business Communication", acronym: "BC", ects: 3, semester: "summer", mandatory: false, year: 2 },
-      { id: "CS301", name: "Computer Networks", acronym: "CN", ects: 6, semester: "winter", mandatory: true, year: 3 },
-      { id: "CS302", name: "Artificial Intelligence", acronym: "AI", ects: 6, semester: "winter", mandatory: true, year: 3 },
-      { id: "CS303", name: "Machine Learning", acronym: "ML", ects: 6, semester: "winter", mandatory: true, year: 3 },
-      { id: "CS304", name: "Software Testing", acronym: "ST", ects: 6, semester: "summer", mandatory: true, year: 3 },
-      { id: "CS305", name: "Project Management", acronym: "PM", ects: 6, semester: "summer", mandatory: true, year: 3 },
-      { id: "CS306", name: "Elective Course", acronym: "EC", ects: 3, semester: "summer", mandatory: false, year: 3 },
-      { id: "CS401", name: "Final Project", acronym: "FP", ects: 12, semester: "winter", mandatory: true, year: 4 },
-      { id: "CS402", name: "Internship", acronym: "INT", ects: 6, semester: "summer", mandatory: true, year: 4 },
-      { id: "CS403", name: "Advanced Topics", acronym: "AT", ects: 6, semester: "summer", mandatory: true, year: 4 }
+      { id: "CS106", name: "English for IT", acronym: "EIT", ects: 3, semester: "summer", mandatory: false, year: 1 }
     ]
   },
   {
@@ -168,94 +153,7 @@ const studyPrograms: StudyProgram[] = [
       { id: "BE103", name: "Business Law", acronym: "BL", ects: 6, semester: "winter", mandatory: true, year: 1 },
       { id: "BE104", name: "Marketing Principles", acronym: "MP", ects: 6, semester: "summer", mandatory: true, year: 1 },
       { id: "BE105", name: "Financial Accounting", acronym: "FA", ects: 6, semester: "summer", mandatory: true, year: 1 },
-      { id: "BE106", name: "Business English", acronym: "BE", ects: 3, semester: "summer", mandatory: false, year: 1 },
-      { id: "BE201", name: "Microeconomics", acronym: "MIC", ects: 6, semester: "winter", mandatory: true, year: 2 },
-      { id: "BE202", name: "Macroeconomics", acronym: "MAC", ects: 6, semester: "winter", mandatory: true, year: 2 },
-      { id: "BE203", name: "Business Statistics", acronym: "BS", ects: 6, semester: "winter", mandatory: true, year: 2 },
-      { id: "BE204", name: "Corporate Finance", acronym: "CF", ects: 6, semester: "summer", mandatory: true, year: 2 },
-      { id: "BE205", name: "Human Resource Management", acronym: "HRM", ects: 6, semester: "summer", mandatory: true, year: 2 },
-      { id: "BE206", name: "Business Ethics", acronym: "BETH", ects: 3, semester: "summer", mandatory: false, year: 2 },
-      { id: "BE301", name: "Strategic Management", acronym: "SM", ects: 6, semester: "winter", mandatory: true, year: 3 },
-      { id: "BE302", name: "International Business", acronym: "IB", ects: 6, semester: "winter", mandatory: true, year: 3 },
-      { id: "BE303", name: "Business Research Methods", acronym: "BRM", ects: 6, semester: "winter", mandatory: true, year: 3 },
-      { id: "BE304", name: "Operations Management", acronym: "OM", ects: 6, semester: "summer", mandatory: true, year: 3 },
-      { id: "BE305", name: "Business Analytics", acronym: "BA", ects: 6, semester: "summer", mandatory: true, year: 3 },
-      { id: "BE306", name: "Elective Course", acronym: "EC", ects: 3, semester: "summer", mandatory: false, year: 3 },
-      { id: "BE401", name: "Final Thesis", acronym: "FT", ects: 12, semester: "winter", mandatory: true, year: 4 },
-      { id: "BE402", name: "Business Internship", acronym: "BI", ects: 6, semester: "summer", mandatory: true, year: 4 },
-      { id: "BE403", name: "Advanced Business Topics", acronym: "ABT", ects: 6, semester: "summer", mandatory: true, year: 4 }
-    ]
-  },
-  {
-    id: "3",
-    name: "Software Engineering",
-    faculty: "Informatics and Computing",
-    level: "BA",
-    duration: 4,
-    ects: 240,
-    available: true,
-    subjects: [
-      { id: "SE101", name: "Programming Fundamentals", acronym: "PF", ects: 6, semester: "winter", mandatory: true, year: 1 },
-      { id: "SE102", name: "Discrete Mathematics", acronym: "DM", ects: 6, semester: "winter", mandatory: true, year: 1 },
-      { id: "SE103", name: "Computer Fundamentals", acronym: "CF", ects: 6, semester: "winter", mandatory: true, year: 1 },
-      { id: "SE104", name: "Data Structures and Algorithms", acronym: "DSA", ects: 6, semester: "summer", mandatory: true, year: 1 },
-      { id: "SE105", name: "Software Design", acronym: "SD", ects: 6, semester: "summer", mandatory: true, year: 1 },
-      { id: "SE106", name: "Technical Writing", acronym: "TW", ects: 3, semester: "summer", mandatory: false, year: 1 },
-      { id: "SE201", name: "Software Architecture", acronym: "SA", ects: 6, semester: "winter", mandatory: true, year: 2 },
-      { id: "SE202", name: "Database Design", acronym: "DD", ects: 6, semester: "winter", mandatory: true, year: 2 },
-      { id: "SE203", name: "Software Testing", acronym: "ST", ects: 6, semester: "winter", mandatory: true, year: 2 },
-      { id: "SE204", name: "Web Technologies", acronym: "WT", ects: 6, semester: "summer", mandatory: true, year: 2 },
-      { id: "SE205", name: "Mobile Development", acronym: "MD", ects: 6, semester: "summer", mandatory: true, year: 2 },
-      { id: "SE206", name: "Professional Skills", acronym: "PS", ects: 3, semester: "summer", mandatory: false, year: 2 },
-      { id: "SE301", name: "Software Project Management", acronym: "SPM", ects: 6, semester: "winter", mandatory: true, year: 3 },
-      { id: "SE302", name: "Software Security", acronym: "SS", ects: 6, semester: "winter", mandatory: true, year: 3 },
-      { id: "SE303", name: "Cloud Computing", acronym: "CC", ects: 6, semester: "winter", mandatory: true, year: 3 },
-      { id: "SE304", name: "DevOps Practices", acronym: "DP", ects: 6, semester: "summer", mandatory: true, year: 3 },
-      { id: "SE305", name: "Software Quality Assurance", acronym: "SQA", ects: 6, semester: "summer", mandatory: true, year: 3 },
-      { id: "SE306", name: "Elective Course", acronym: "EC", ects: 3, semester: "summer", mandatory: false, year: 3 },
-      { id: "SE401", name: "Capstone Project", acronym: "CP", ects: 12, semester: "winter", mandatory: true, year: 4 },
-      { id: "SE402", name: "Industry Internship", acronym: "II", ects: 6, semester: "summer", mandatory: true, year: 4 },
-      { id: "SE403", name: "Advanced Software Topics", acronym: "AST", ects: 6, semester: "summer", mandatory: true, year: 4 }
-    ]
-  },
-  {
-    id: "4",
-    name: "Applied Artificial Intelligence",
-    faculty: "Informatics and Computing",
-    level: "MA",
-    duration: 2,
-    ects: 120,
-    available: true,
-    subjects: [
-      { id: "AI101", name: "Advanced Machine Learning", acronym: "AML", ects: 6, semester: "winter", mandatory: true, year: 1 },
-      { id: "AI102", name: "Deep Learning", acronym: "DL", ects: 6, semester: "winter", mandatory: true, year: 1 },
-      { id: "AI103", name: "Natural Language Processing", acronym: "NLP", ects: 6, semester: "winter", mandatory: true, year: 1 },
-      { id: "AI104", name: "Computer Vision", acronym: "CV", ects: 6, semester: "summer", mandatory: true, year: 1 },
-      { id: "AI105", name: "AI Ethics", acronym: "AIE", ects: 3, semester: "summer", mandatory: true, year: 1 },
-      { id: "AI106", name: "Research Methods", acronym: "RM", ects: 3, semester: "summer", mandatory: false, year: 1 },
-      { id: "AI201", name: "AI Project", acronym: "AIP", ects: 12, semester: "winter", mandatory: true, year: 2 },
-      { id: "AI202", name: "Advanced AI Topics", acronym: "AAT", ects: 6, semester: "summer", mandatory: true, year: 2 },
-      { id: "AI203", name: "AI Internship", acronym: "AIINT", ects: 6, semester: "summer", mandatory: true, year: 2 }
-    ]
-  },
-  {
-    id: "5",
-    name: "Data Science",
-    faculty: "Informatics and Computing",
-    level: "MA",
-    duration: 2,
-    ects: 120,
-    available: true,
-    subjects: [
-      { id: "DS101", name: "Statistical Analysis", acronym: "SA", ects: 6, semester: "winter", mandatory: true, year: 1 },
-      { id: "DS102", name: "Data Mining", acronym: "DM", ects: 6, semester: "winter", mandatory: true, year: 1 },
-      { id: "DS103", name: "Big Data Technologies", acronym: "BDT", ects: 6, semester: "winter", mandatory: true, year: 1 },
-      { id: "DS104", name: "Data Visualization", acronym: "DV", ects: 6, semester: "summer", mandatory: true, year: 1 },
-      { id: "DS105", name: "Data Ethics", acronym: "DE", ects: 3, semester: "summer", mandatory: true, year: 1 },
-      { id: "DS106", name: "Research Methods", acronym: "RM", ects: 3, semester: "summer", mandatory: false, year: 1 },
-      { id: "DS201", name: "Data Science Project", acronym: "DSP", ects: 12, semester: "winter", mandatory: true, year: 2 },
-      { id: "DS202", name: "Advanced Data Topics", acronym: "ADT", ects: 6, semester: "summer", mandatory: true, year: 2 },
-      { id: "DS203", name: "Data Science Internship", acronym: "DSINT", ects: 6, semester: "summer", mandatory: true, year: 2 }
+      { id: "BE106", name: "Business English", acronym: "BE", ects: 3, semester: "summer", mandatory: false, year: 1 }
     ]
   }
 ];
@@ -284,9 +182,328 @@ const enrollments: Enrollment[] = [
 ];
 
 export default function EnrollPage() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProgram, setSelectedProgram] = useState("");
+  const [newStudent, setNewStudent] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    dateOfBirth: "",
+    phone: "",
+    address: ""
+  });
+
+  const filteredStudents = existingStudents.filter(student =>
+    student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredPrograms = studyPrograms.filter(program =>
+    selectedProgram === "" || program.id === selectedProgram
+  );
+
+  const handleNewStudentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Here you would typically send the data to your backend
+    console.log("New student data:", newStudent);
+    // Reset form
+    setNewStudent({
+      firstName: "",
+      lastName: "",
+      email: "",
+      dateOfBirth: "",
+      phone: "",
+      address: ""
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active": return "bg-green-100 text-green-800";
+      case "inactive": return "bg-gray-100 text-gray-800";
+      case "graduated": return "bg-blue-100 text-blue-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getEnrollmentStatusColor = (status: string) => {
+    switch (status) {
+      case "enrolled": return "bg-green-100 text-green-800";
+      case "completed": return "bg-blue-100 text-blue-800";
+      case "withdrawn": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold text-gray-900">Enroll</h1>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Student Enrollment</h1>
+          <p className="text-gray-600 mt-2">Manage student enrollments and study programs</p>
+        </div>
+        <Button className="bg-blue-600 hover:bg-blue-700">
+          <Plus className="h-4 w-4 mr-2" />
+          New Enrollment
+        </Button>
+      </div>
+
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="students">Students</TabsTrigger>
+          <TabsTrigger value="programs">Study Programs</TabsTrigger>
+          <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{existingStudents.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-green-600">+12%</span> from last month
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Programs</CardTitle>
+                <GraduationCap className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{studyPrograms.filter(p => p.available).length}</div>
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-green-600">+2</span> new programs
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Enrollments</CardTitle>
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{enrollments.filter(e => e.status === "enrolled").length}</div>
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-green-600">+8%</span> from last month
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Pending Applications</CardTitle>
+                <AlertCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">5</div>
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-orange-600">3</span> require review
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Enrollments</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {enrollments.slice(0, 3).map((enrollment) => (
+                    <div key={enrollment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium">{enrollment.studentName}</p>
+                        <p className="text-sm text-gray-600">{enrollment.programName}</p>
+                      </div>
+                      <Badge className={getEnrollmentStatusColor(enrollment.status)}>
+                        {enrollment.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Popular Programs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {studyPrograms.slice(0, 3).map((program) => (
+                    <div key={program.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium">{program.name}</p>
+                        <p className="text-sm text-gray-600">{program.faculty}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{program.level}</p>
+                        <p className="text-xs text-gray-600">{program.duration} years</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="students" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Student Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="flex-1">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search students..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Button>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Student
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {filteredStudents.map((student) => (
+                  <div key={student.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <User className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{student.firstName} {student.lastName}</h3>
+                          <p className="text-sm text-gray-600">{student.email}</p>
+                          <p className="text-sm text-gray-500">{student.phone}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Badge className={getStatusColor(student.status)}>
+                          {student.status}
+                        </Badge>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {student.currentProgram} - Year {student.currentYear}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="programs" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Study Programs</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="flex-1">
+                  <Label htmlFor="program-filter">Filter by Program</Label>
+                  <select
+                    id="program-filter"
+                    value={selectedProgram}
+                    onChange={(e) => setSelectedProgram(e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                  >
+                    <option value="">All Programs</option>
+                    {studyPrograms.map((program) => (
+                      <option key={program.id} value={program.id}>
+                        {program.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Program
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {filteredPrograms.map((program) => (
+                  <div key={program.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium text-lg">{program.name}</h3>
+                        <p className="text-gray-600">{program.faculty}</p>
+                        <div className="flex items-center space-x-4 mt-2">
+                          <Badge variant="outline">{program.level}</Badge>
+                          <Badge variant="outline">{program.duration} years</Badge>
+                          <Badge variant="outline">{program.ects} ECTS</Badge>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Badge className={program.available ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                          {program.available ? "Available" : "Not Available"}
+                        </Badge>
+                        <p className="text-sm text-gray-600 mt-2">
+                          {program.subjects.length} subjects
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="enrollments" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Enrollment Records</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {enrollments.map((enrollment) => (
+                  <div key={enrollment.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
+                          <GraduationCap className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{enrollment.studentName}</h3>
+                          <p className="text-sm text-gray-600">{enrollment.programName}</p>
+                          <p className="text-sm text-gray-500">Year {enrollment.year}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Badge className={getEnrollmentStatusColor(enrollment.status)}>
+                          {enrollment.status}
+                        </Badge>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {enrollment.enrollmentDate}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -202,6 +202,19 @@ export class AcademicRecordsController {
     };
   }
 
+  @Get('exam-registrations/:studentId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.STUDENT)
+  async getStudentExamRegistrations(@Param('studentId') studentId: string, @Request() req) {
+    const id = parseInt(studentId);
+    
+    if (req.user.studentProfile?.id !== id) {
+      throw new BadRequestException('Students can only view their own exam registrations');
+    }
+
+    return this.academicRecordsService.getStudentExamRegistrations(id);
+  }
+
   // Syllabus Management Endpoints
   @Post('syllabus')
   @UseGuards(JwtAuthGuard, RolesGuard)

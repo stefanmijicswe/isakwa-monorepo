@@ -542,6 +542,7 @@ export class AcademicRecordsService {
             },
           },
         },
+
         grades: {
           include: {
             exam: {
@@ -591,7 +592,35 @@ export class AcademicRecordsService {
       },
       passedSubjects: passedGrades,
       failedAttempts: failedGrades,
-      currentEnrollments: student.courseEnrollments.filter(e => e.isActive),
+      currentEnrollments: await Promise.all(
+        student.courseEnrollments.filter(e => e.isActive).map(async (enrollment) => {
+          // Find professor for this subject
+          const professorAssignment = await this.prisma.professorAssignment.findFirst({
+            where: {
+              subjectId: enrollment.subjectId,
+              academicYear: enrollment.academicYear,
+              isActive: true,
+            },
+            include: {
+              professor: {
+                select: { firstName: true, lastName: true },
+              },
+            },
+          });
+          
+          // Find grade for this enrollment
+          const grade = student.grades.find(g => g.exam.subjectId === enrollment.subjectId);
+          
+          return {
+            ...enrollment,
+            professor: professorAssignment ? {
+              firstName: professorAssignment.professor.firstName,
+              lastName: professorAssignment.professor.lastName,
+            } : null,
+            finalGrade: grade ? grade.grade : null,
+          };
+        })
+      ),
       examRegistrations: student.examRegistrations,
     };
   }
@@ -656,6 +685,28 @@ export class AcademicRecordsService {
         },
       },
       orderBy: { startDate: 'asc' },
+    });
+  }
+
+  async getStudentExamRegistrations(studentId: number) {
+    return this.prisma.examRegistration.findMany({
+      where: {
+        studentId,
+        isActive: true,
+      },
+      include: {
+        exam: {
+          include: {
+            subject: {
+              select: { name: true, code: true, credits: true },
+            },
+            examPeriod: {
+              select: { name: true },
+            },
+          },
+        },
+      },
+      orderBy: { registrationDate: 'desc' },
     });
   }
 

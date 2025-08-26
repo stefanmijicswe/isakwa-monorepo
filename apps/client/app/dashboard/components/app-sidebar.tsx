@@ -19,9 +19,19 @@ import {
   Target,
   BarChart3,
   Clock,
-  Award
+  Award,
+  ClipboardList,
+  Search,
+  BookMarked,
+  PenTool,
+  Database,
+  Package
 } from "lucide-react"
 import Image from "next/image"
+import { useAuth } from "../../../components/auth"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { getNotifications } from "../../../lib/courses.service"
 
 import {
   Sidebar,
@@ -37,16 +47,9 @@ import {
   SidebarSeparator,
 } from "../../../components/ui/sidebar"
 
-// Navigation items by user role - simplified for clean dashboard
+// Navigation items by user role - mapped to actual routes
 const navigationByRole = {
-  student: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: Home,
-      isActive: true,
-      description: "Overview of your studies"
-    },
+  STUDENT: [
     {
       title: "My Courses",
       url: "/dashboard/my-courses",
@@ -60,18 +63,29 @@ const navigationByRole = {
       description: "View your grades"
     },
     {
+      title: "Exam Registration",
+      url: "/dashboard/exam-registration",
+      icon: ClipboardList,
+      description: "Register for exams"
+    },
+    {
+      title: "Study History",
+      url: "/dashboard/study-history",
+      icon: BarChart3,
+      description: "View academic history"
+    },
+    {
       title: "Notifications",
       url: "/dashboard/notifications",
       icon: Bell,
       description: "Stay updated"
     },
   ],
-  teacher: [
+  PROFESSOR: [
     {
       title: "Dashboard",
       url: "/dashboard",
       icon: Home,
-      isActive: true,
       description: "Teaching overview"
     },
     {
@@ -87,18 +101,59 @@ const navigationByRole = {
       description: "Create assessments"
     },
     {
+      title: "Evaluation Instruments",
+      url: "/dashboard/evaluation-instruments",
+      icon: PenTool,
+      description: "Manage evaluation instruments"
+    },
+    {
+      title: "Assignments",
+      url: "/dashboard/assignments",
+      icon: FileText,
+      description: "Create and manage assignments"
+    },
+    {
+      title: "Grade Entry",
+      url: "/dashboard/grade-entry",
+      icon: Award,
+      description: "Enter student grades"
+    },
+    {
+      title: "Grading",
+      url: "/dashboard/grading",
+      icon: Award,
+      description: "Grade student submissions"
+    },
+    {
       title: "Student Search",
       url: "/dashboard/student-search",
-      icon: Users,
+      icon: Search,
       description: "Find students"
     },
+    {
+      title: "Syllabi",
+      url: "/dashboard/syllabi",
+      icon: BookMarked,
+      description: "Manage course syllabi"
+    },
+    {
+      title: "Schedule Planning",
+      url: "/dashboard/schedule-planning",
+      icon: Clock,
+      description: "Plan course schedules"
+    },
+    {
+      title: "Notifications",
+      url: "/dashboard/notifications",
+      icon: Bell,
+      description: "Stay updated"
+    },
   ],
-  studentService: [
+  STUDENT_SERVICE: [
     {
       title: "Dashboard",
       url: "/dashboard",
       icon: Home,
-      isActive: true,
       description: "Service overview"
     },
     {
@@ -113,15 +168,20 @@ const navigationByRole = {
       icon: Library,
       description: "Book management"
     },
-  ],
-  admin: [
     {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: Home,
-      isActive: true,
-      description: "System overview"
+      title: "Inventory",
+      url: "/dashboard/inventory",
+      icon: Package,
+      description: "Manage inventory items"
     },
+    {
+      title: "Notifications",
+      url: "/dashboard/notifications",
+      icon: Bell,
+      description: "Stay updated"
+    },
+  ],
+  ADMIN: [
     {
       title: "Student Management",
       url: "/dashboard/students",
@@ -129,45 +189,77 @@ const navigationByRole = {
       description: "Manage students"
     },
     {
+      title: "Personnel Management",
+      url: "/dashboard/personnel",
+      icon: Users,
+      description: "Manage professors and staff"
+    },
+    {
       title: "Course Management",
       url: "/dashboard/courses",
       icon: BookOpen,
       description: "Manage courses"
     },
+    {
+      title: "Study Program Management",
+      url: "/dashboard/study-programs",
+      icon: GraduationCap,
+      description: "Manage study programs"
+    },
+    {
+      title: "Notifications",
+      url: "/dashboard/notifications",
+      icon: Bell,
+      description: "Stay updated"
+    },
   ],
 }
 
-// TODO: Replace with actual user role from authentication context
-// For now, showing all items for development purposes
-const getCurrentUserRole = (): keyof typeof navigationByRole => {
-  // This will be replaced with actual authentication logic
-  // For development, you can change this to test different roles:
-  // return "student" | "teacher" | "studentService" | "admin"
-  return "student" // Default to student for better demo
-}
-
-const data = {
-  navMain: navigationByRole[getCurrentUserRole()],
-}
-
-const notificationCount = 6
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user, logout } = useAuth()
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false)
+  const [notificationCount, setNotificationCount] = React.useState(0)
+  const pathname = usePathname()
+
+  // Fetch notifications count when user is logged in
+  React.useEffect(() => {
+    if (user) {
+      const fetchNotifications = async () => {
+        try {
+          const notifications = await getNotifications()
+          setNotificationCount(notifications.length)
+        } catch (error) {
+          console.error('Failed to fetch notifications:', error)
+          setNotificationCount(0)
+        }
+      }
+      
+      fetchNotifications()
+    }
+  }, [user])
 
   const handleLogout = () => {
     setShowLogoutConfirm(true)
   }
 
   const confirmLogout = () => {
-    // TODO: Implement actual logout logic
-    console.log("Logging out...")
+    logout()
     setShowLogoutConfirm(false)
   }
 
+  // Get navigation items based on user role
+  const getNavigationItems = () => {
+    if (!user) return navigationByRole.STUDENT // Default fallback
+    
+    const role = user.role as keyof typeof navigationByRole
+    return navigationByRole[role] || navigationByRole.STUDENT
+  }
+
+  const navigationItems = getNavigationItems()
+
   return (
     <>
-      <Sidebar variant="inset" {...props}>
+      <Sidebar className="w-80 min-w-80 max-w-80 flex-shrink-0 border-r border-border bg-background shadow-sm h-screen overflow-y-auto flex flex-col" {...props}>
         <SidebarHeader>
           <SidebarGroup>
             <SidebarGroupContent>
@@ -181,7 +273,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       height={40}
                       className="rounded-lg"
                     />
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+
                   </div>
                   <div className="flex flex-col">
                     <span className="text-lg font-bold text-sidebar-foreground">Harvox</span>
@@ -198,41 +290,42 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider px-4">
-              Navigation
-            </SidebarGroupLabel>
+
             <SidebarGroupContent>
               <SidebarMenu>
-                {data.navMain.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton 
-                      asChild 
-                      isActive={item.isActive}
-                      size="lg"
-                      className="h-14 px-4 mx-2 rounded-xl hover:bg-sidebar-accent/50 transition-all duration-200"
-                    >
-                      <a href={item.url} className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${
-                          item.isActive 
-                            ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
-                            : 'bg-sidebar-accent text-sidebar-accent-foreground'
-                        }`}>
-                          <item.icon className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1 text-left">
-                          <span className="font-medium text-sidebar-foreground">{item.title}</span>
-                          <p className="text-xs text-sidebar-foreground/60 mt-0.5">{item.description}</p>
-                        </div>
-                        {item.title === "Notifications" && notificationCount > 0 && (
-                          <span className="ml-auto h-6 w-6 bg-red-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
-                            {notificationCount}
-                          </span>
-                        )}
-                        <ChevronRight className="h-4 w-4 text-sidebar-foreground/40 ml-auto" />
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {navigationItems.map((item) => {
+                  const isActive = pathname === item.url
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton 
+                        asChild 
+                        isActive={isActive}
+                        size="lg"
+                        className="h-14 px-4 mx-2 rounded-xl hover:bg-sidebar-accent/50 transition-all duration-200"
+                      >
+                        <Link href={item.url} className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${
+                            isActive 
+                              ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
+                              : 'bg-sidebar-accent text-sidebar-accent-foreground'
+                          }`}>
+                            {item.icon && <item.icon className="h-4 w-4" />}
+                          </div>
+                          <div className="flex-1 text-left">
+                            <span className="font-medium text-sidebar-foreground">{item.title}</span>
+                            <p className="text-xs text-sidebar-foreground/60 mt-0.5">{item.description}</p>
+                          </div>
+                          {item.title === "Notifications" && notificationCount > 0 && (
+                            <span className="ml-auto h-6 w-6 bg-red-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
+                              {notificationCount}
+                            </span>
+                          )}
+                          <ChevronRight className="h-4 w-4 text-sidebar-foreground/40 ml-auto" />
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -244,15 +337,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <div className="bg-sidebar-accent/30 rounded-lg p-3">
               <div className="flex items-center gap-3">
                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                  <User className="h-4 w-4 text-white" />
+                  {user ? (
+                    <span className="text-sm font-medium text-white">
+                      {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                    </span>
+                  ) : (
+                    <User className="h-4 w-4 text-white" />
+                  )}
                 </div>
                 <div className="flex flex-col flex-1 min-w-0">
-                  <div className="font-medium text-sidebar-foreground text-sm">John Doe</div>
+                  <div className="font-medium text-sidebar-foreground text-sm">
+                    {user ? `${user.firstName} ${user.lastName}` : 'Loading...'}
+                  </div>
                   <div className="text-xs text-sidebar-foreground/70 flex items-center gap-1">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    {getCurrentUserRole() === 'student' ? 'Student' : 
-                     getCurrentUserRole() === 'teacher' ? 'Professor' :
-                     getCurrentUserRole() === 'studentService' ? 'Staff' : 'Administrator'}
+                    {user ? user.role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Loading...'}
                   </div>
                 </div>
                 <button 

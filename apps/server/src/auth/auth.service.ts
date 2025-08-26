@@ -88,4 +88,22 @@ export class AuthService {
   async validateUser(userId: number) {
     return this.usersService.findById(userId);
   }
+
+  async getProfile(user: any) {
+    const fullUser = await this.usersService.findById(user.sub);
+    if (!fullUser) {
+      throw new UnauthorizedException('Korisnik nije pronađen');
+    }
+
+    return {
+      id: fullUser.id,
+      email: fullUser.email,
+      firstName: fullUser.firstName,
+      lastName: fullUser.lastName,
+      role: fullUser.role,
+      isActive: fullUser.isActive,
+      createdAt: fullUser.createdAt,
+      updatedAt: fullUser.updatedAt,
+    };
+  }
 }

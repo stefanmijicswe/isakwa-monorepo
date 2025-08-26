@@ -12,17 +12,22 @@ import {
 } from "../../../../components/ui/card"
 import { Input } from "../../../../components/ui/input"
 import { Label } from "../../../../components/ui/label"
+import { useAuth } from "../../../../contexts/auth-context"
+import { useRouter } from "next/navigation"
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const { login, isLoading } = useAuth()
+  const router = useRouter()
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showPassword, setShowPassword] = useState(false)
+  const [submitError, setSubmitError] = useState("")
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -30,9 +35,12 @@ export function LoginForm({
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }))
     }
+    if (submitError) {
+      setSubmitError("")
+    }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const newErrors: Record<string, string> = {}
 
@@ -50,7 +58,14 @@ export function LoginForm({
       return
     }
 
-    console.log("Login form submitted:", formData)
+    try {
+      await login(formData)
+      // Redirect to dashboard on successful login
+      router.push("/dashboard")
+    } catch (error: any) {
+      console.error("Login failed:", error)
+      setSubmitError(error.message || "Login failed. Please try again.")
+    }
   }
 
   return (
@@ -65,6 +80,11 @@ export function LoginForm({
         <CardContent>
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
+              {submitError && (
+                <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
+                  {submitError}
+                </div>
+              )}
               <div className="grid gap-3">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -74,6 +94,7 @@ export function LoginForm({
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   className={errors.email ? "border-red-500" : ""}
+                  disabled={isLoading}
                 />
                 {errors.email && (
                   <span className="text-sm text-red-500">{errors.email}</span>
@@ -99,6 +120,7 @@ export function LoginForm({
                       "pr-12",
                       errors.password ? "border-red-500" : ""
                     )}
+                    disabled={isLoading}
                   />
                   <Button
                     type="button"
@@ -106,6 +128,7 @@ export function LoginForm({
                     size="sm"
                     className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-slate-100 rounded-md"
                     onClick={() => setShowPassword(!showPassword)}
+                    disabled={isLoading}
                   >
                     {showPassword ? (
                       <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,8 +147,8 @@ export function LoginForm({
                 )}
               </div>
               <div className="flex flex-col gap-3">
-                <Button type="submit" className="w-full">
-                  Login
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Logging in..." : "Login"}
                 </Button>
               </div>
             </div>

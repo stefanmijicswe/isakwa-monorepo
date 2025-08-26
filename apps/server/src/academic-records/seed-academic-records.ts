@@ -105,15 +105,23 @@ export async function seedAcademicRecords(prisma: PrismaService) {
     });
   }
 
+  // Create exam periods with current dates (August 2025)
+  const currentDate = new Date();
   const winterExamPeriod = await prisma.examPeriod.upsert({
     where: { id: 1 },
-    update: {},
+    update: {
+      startDate: new Date('2025-09-15'),
+      endDate: new Date('2025-10-15'),
+      registrationStartDate: new Date('2025-08-01'),
+      registrationEndDate: new Date('2025-09-10'), // Registration open until September 10
+      isActive: true,
+    },
     create: {
-      name: 'Winter Exam Period 2024/2025',
-      startDate: new Date('2025-01-15'),
-      endDate: new Date('2025-02-15'),
-      registrationStartDate: new Date('2025-01-01'),
-      registrationEndDate: new Date('2025-01-10'),
+      name: 'Fall Exam Period 2024/2025',
+      startDate: new Date('2025-09-15'),
+      endDate: new Date('2025-10-15'),
+      registrationStartDate: new Date('2025-08-01'),
+      registrationEndDate: new Date('2025-09-10'),
       academicYear: currentAcademicYear,
       semesterType: SemesterType.WINTER,
       isActive: true,
@@ -122,16 +130,22 @@ export async function seedAcademicRecords(prisma: PrismaService) {
 
   const summerExamPeriod = await prisma.examPeriod.upsert({
     where: { id: 2 },
-    update: {},
+    update: {
+      startDate: new Date('2025-12-15'),
+      endDate: new Date('2026-01-15'),
+      registrationStartDate: new Date('2025-11-01'),
+      registrationEndDate: new Date('2025-12-10'),
+      isActive: true,
+    },
     create: {
-      name: 'Summer Exam Period 2024/2025',
-      startDate: new Date('2025-06-15'),
-      endDate: new Date('2025-07-15'),
-      registrationStartDate: new Date('2025-06-01'),
-      registrationEndDate: new Date('2025-06-10'),
+      name: 'Winter Exam Period 2024/2025',
+      startDate: new Date('2025-12-15'),
+      endDate: new Date('2026-01-15'),
+      registrationStartDate: new Date('2025-11-01'),
+      registrationEndDate: new Date('2025-12-10'),
       academicYear: currentAcademicYear,
       semesterType: SemesterType.SUMMER,
-      isActive: false,
+      isActive: true,
     },
   });
 
@@ -139,12 +153,16 @@ export async function seedAcademicRecords(prisma: PrismaService) {
     const subject = subjects[i];
     const examPeriod = subject.semester % 2 === 1 ? winterExamPeriod : summerExamPeriod;
 
+    // Create exam dates in the future (September-October 2025)
     const examDate = new Date(examPeriod.startDate);
-    examDate.setDate(examDate.getDate() + Math.floor(Math.random() * 20));
+    examDate.setDate(examDate.getDate() + Math.floor(Math.random() * 20) + 5); // 5-25 days after start
 
     await prisma.exam.upsert({
       where: { id: i + 1 },
-      update: {},
+      update: {
+        examDate: examDate,
+        status: ExamStatus.SCHEDULED,
+      },
       create: {
         subjectId: subject.id,
         examPeriodId: examPeriod.id,

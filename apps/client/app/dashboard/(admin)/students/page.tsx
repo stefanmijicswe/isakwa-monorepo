@@ -1,399 +1,390 @@
 "use client"
 
 import * as React from "react"
-import { User, BookOpen, Award, AlertTriangle, FileText, GraduationCap, X } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useAuth } from "../../../../components/auth"
+import { 
+  Users, 
+  Search, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Filter
+} from "lucide-react"
+import { Button } from "../../../../components/ui/button"
+import { Input } from "../../../../components/ui/input"
+import { Badge } from "../../../../components/ui/badge"
+
+interface Student {
+  id: number
+  firstName: string
+  lastName: string
+  email: string
+  createdAt: string
+  updatedAt: string
+  studentProfile?: {
+    id: number
+    userId: number
+    studentIndex: string
+    year: number
+    phoneNumber?: string
+    status: 'ACTIVE' | 'INACTIVE' | 'GRADUATED' | 'SUSPENDED'
+    studyProgramId?: number
+    enrollmentYear?: string
+  }
+}
+
+interface StudentsResponse {
+  users: Student[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
 
 export default function StudentsPage() {
-  const [selectedStudent, setSelectedStudent] = React.useState<any>(null)
-  const [showStudentModal, setShowStudentModal] = React.useState(false)
+  const { user } = useAuth()
+  const [students, setStudents] = useState<Student[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalStudents, setTotalStudents] = useState(0)
+  const [limit] = useState(10)
 
-  const students = [
-    {
-      id: "2021001",
-      name: "John Doe",
-      year: 2,
-      program: "Computer Science",
-      status: "Active",
-      averageGrade: 8.5,
-      currentEcts: 78,
-      enrollmentYears: {
-        year1: 1,
-        year2: 1,
-        year3: 0,
-        year4: 0
-      },
-      passedCourses: [
-        { name: "Introduction to IT", grade: 9, points: 85, ects: 6 },
-        { name: "Programming Fundamentals", grade: 8, points: 78, ects: 6 },
-        { name: "Mathematics for IT", grade: 9, points: 88, ects: 6 },
-        { name: "Computer Architecture", grade: 7, points: 72, ects: 6 },
-        { name: "Digital Logic Design", grade: 8, points: 79, ects: 6 },
-        { name: "Data Structures", grade: 9, points: 86, ects: 6 },
-        { name: "Web Technologies", grade: 8, points: 81, ects: 6 },
-        { name: "Database Systems", grade: 9, points: 87, ects: 6 },
-        { name: "Computer Networks", grade: 7, points: 73, ects: 6 },
-        { name: "Software Engineering", grade: 8, points: 76, ects: 6 },
-        { name: "Object-Oriented Programming", grade: 9, points: 89, ects: 6 },
-        { name: "Operating Systems", grade: 8, points: 82, ects: 6 },
-        { name: "Information Security", grade: 9, points: 91, ects: 6 }
-      ],
-      failedExams: [
-        { name: "Advanced Algorithms", grade: 5, points: 48, ects: 6, attempts: 2 },
-        { name: "Machine Learning", grade: 5, points: 45, ects: 6, attempts: 1 }
-      ],
-      misdemeanors: [
-        { date: "2024-06-15", course: "Advanced Algorithms", description: "Unauthorized use of calculator during exam", severity: "Minor" }
-      ],
-      registeredExams: [
-        { name: "Advanced Algorithms", term: "January 2025", status: "Registered" },
-        { name: "Machine Learning", term: "January 2025", status: "Registered" }
-      ],
-      hasAllCoursesPassed: false
-    },
-    {
-      id: "2021002",
-      name: "Jane Smith",
-      year: 3,
-      program: "Computer Science",
-      status: "Active",
-      averageGrade: 9.2,
-      currentEcts: 120,
-      enrollmentYears: {
-        year1: 1,
-        year2: 1,
-        year3: 1,
-        year4: 0
-      },
-      passedCourses: [
-        { name: "Introduction to IT", grade: 10, points: 95, ects: 6 },
-        { name: "Programming Fundamentals", grade: 9, points: 88, ects: 6 },
-        { name: "Mathematics for IT", grade: 10, points: 92, ects: 6 },
-        { name: "Computer Architecture", grade: 9, points: 85, ects: 6 },
-        { name: "Digital Logic Design", grade: 9, points: 87, ects: 6 },
-        { name: "Data Structures", grade: 10, points: 93, ects: 6 },
-        { name: "Web Technologies", grade: 9, points: 89, ects: 6 },
-        { name: "Database Systems", grade: 10, points: 91, ects: 6 },
-        { name: "Computer Networks", grade: 9, points: 86, ects: 6 },
-        { name: "Software Engineering", grade: 9, points: 88, ects: 6 },
-        { name: "Object-Oriented Programming", grade: 10, points: 94, ects: 6 },
-        { name: "Operating Systems", grade: 9, points: 87, ects: 6 },
-        { name: "Information Security", grade: 10, points: 96, ects: 6 },
-        { name: "Advanced Algorithms", grade: 9, points: 89, ects: 6 },
-        { name: "Machine Learning", grade: 9, points: 91, ects: 6 },
-        { name: "Big Data Technologies", grade: 10, points: 93, ects: 6 },
-        { name: "Cloud Computing", grade: 9, points: 88, ects: 6 },
-        { name: "Cybersecurity", grade: 10, points: 95, ects: 6 },
-        { name: "Software Project Management", grade: 9, points: 87, ects: 6 },
-        { name: "Data Visualization", grade: 9, points: 89, ects: 6 },
-        { name: "Deep Learning", grade: 10, points: 92, ects: 6 }
-      ],
-      failedExams: [],
-      misdemeanors: [],
-      registeredExams: [
-        { name: "Final Project", term: "February 2025", status: "Registered" }
-      ],
-      hasAllCoursesPassed: true,
-      finalThesis: {
-        title: "Advanced Machine Learning Applications in Cybersecurity",
-        supervisor: "Dr. John Doe",
-        status: "In Progress",
-        progress: 75
+  // Fetch students from backend API
+  const fetchStudents = async (page: number = 1, search?: string) => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString()
+      })
+      
+      if (search) {
+        params.append('search', search)
       }
-    },
-    {
-      id: "2021003",
-      name: "Mike Johnson",
-      year: 1,
-      program: "Computer Science",
-      status: "New",
-      averageGrade: 7.8,
-      currentEcts: 36,
-      enrollmentYears: {
-        year1: 1,
-        year2: 0,
-        year3: 0,
-        year4: 0
-      },
-      passedCourses: [
-        { name: "Introduction to IT", grade: 8, points: 82, ects: 6 },
-        { name: "Programming Fundamentals", grade: 7, points: 75, ects: 6 },
-        { name: "Mathematics for IT", grade: 8, points: 79, ects: 6 },
-        { name: "Computer Architecture", grade: 7, points: 71, ects: 6 },
-        { name: "Digital Logic Design", grade: 8, points: 78, ects: 6 },
-        { name: "Data Structures", grade: 7, points: 73, ects: 6 }
-      ],
-      failedExams: [
-        { name: "Web Technologies", grade: 5, points: 45, ects: 6, attempts: 1 }
-      ],
-      misdemeanors: [],
-      registeredExams: [
-        { name: "Web Technologies", term: "January 2025", status: "Registered" }
-      ],
-      hasAllCoursesPassed: false
+
+      const response = await fetch(`http://localhost:3001/api/users/students?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch students: ${response.status}`)
+      }
+
+      const data: StudentsResponse = await response.json()
+      
+      setStudents(data.users)
+      setTotalPages(data.totalPages)
+      setTotalStudents(data.total)
+      setCurrentPage(data.page)
+    } catch (err) {
+      console.error('Error fetching students:', err)
+      setError(err instanceof Error ? err.message : 'Failed to fetch students')
+    } finally {
+      setLoading(false)
     }
-  ]
-
-  const handleStudentClick = (student: any) => {
-    setSelectedStudent(student)
-    setShowStudentModal(true)
   }
 
-  const closeModal = () => {
-    setShowStudentModal(false)
-    setSelectedStudent(null)
+  // Initial fetch
+  useEffect(() => {
+    if (user?.role === 'ADMIN') {
+      fetchStudents(1, searchTerm || "")
+    }
+  }, [user])
+
+  // Handle search
+  const handleSearch = (value: string) => {
+    setSearchTerm(value)
+    setCurrentPage(1)
+    fetchStudents(1, value)
   }
 
-  const getStatusColor = (status: string) => {
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    fetchStudents(page, searchTerm || "")
+  }
+
+  // Get status badge color
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case "Active": return "bg-green-100 text-green-800"
-      case "New": return "bg-blue-100 text-blue-800"
-      default: return "bg-slate-100 text-slate-800"
+      case 'ACTIVE':
+        return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">Active</Badge>
+      case 'INACTIVE':
+        return <Badge className="bg-slate-50 text-slate-700 border-slate-200">Inactive</Badge>
+      case 'GRADUATED':
+        return <Badge className="bg-blue-50 text-blue-700 border-blue-200">Graduated</Badge>
+      case 'SUSPENDED':
+        return <Badge className="bg-red-50 text-red-700 border-red-200">Suspended</Badge>
+      default:
+        return <Badge className="bg-slate-50 text-slate-700 border-slate-200">{status}</Badge>
     }
   }
 
-  const getMisdemeanorColor = (severity: string) => {
-    switch (severity) {
-      case "Minor": return "bg-yellow-100 text-yellow-800"
-      case "Major": return "bg-red-100 text-red-800"
-      default: return "bg-slate-100 text-slate-800"
-    }
+  // Format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+
+  if (user?.role !== 'ADMIN') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
+          <p className="text-slate-600 mt-2">You don't have permission to view this page.</p>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Students</h1>
-        <p className="text-slate-600">Manage your student roster and information</p>
+          <h1 className="text-2xl font-semibold text-slate-900">Students</h1>
+          <p className="text-slate-500 text-sm mt-1">
+            Manage your student roster and information
+          </p>
+        </div>
+        <Button size="sm" className="bg-slate-900 hover:bg-slate-800">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Student
+        </Button>
       </div>
 
-      <div className="bg-white p-6 rounded-lg border border-slate-200">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-slate-900">Student List</h2>
+      {/* Search and Filters */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
           <div className="relative">
-            <input
-              type="text"
-              placeholder="Search by name or ID..."
-              className="w-80 pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Search students..."
+              value={searchTerm || ""}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10 w-80 border-slate-200 focus:border-slate-400 focus:ring-slate-400"
             />
-            <svg
-              className="absolute left-3 top-2.5 h-5 w-5 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
           </div>
-        </div>
-        <div className="space-y-3">
-          {students.map((student) => (
-            <div 
-              key={student.id} 
-              className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
-              onClick={() => handleStudentClick(student)}
-            >
-              <div className="flex items-center space-x-3">
-                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
-                  <span className="text-slate-600 font-medium">{student.name.split(' ').map(n => n[0]).join('')}</span>
-                </div>
-                <div>
-                  <h3 className="font-medium text-slate-900">{student.name}</h3>
-                  <p className="text-sm text-slate-600">{student.program} • Year {student.year}</p>
-                </div>
-              </div>
-              <span className={`px-3 py-1 text-sm rounded-full ${getStatusColor(student.status)}`}>
-                {student.status}
-              </span>
-            </div>
-          ))}
-        </div>
+          <Button variant="outline" size="sm" className="border-slate-200">
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+          </Button>
       </div>
 
-      {showStudentModal && selectedStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] mx-4 flex flex-col">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-semibold text-slate-900">Student Profile</h3>
-                <p className="text-sm text-slate-600">ID: {selectedStudent.id}</p>
-              </div>
-              <button
-                onClick={closeModal}
-                className="p-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            
-            <div className="flex-1 p-6 overflow-y-auto">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Basic Information */}
-                <div className="bg-slate-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Basic Information
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div><span className="font-medium">Name:</span> {selectedStudent.name}</div>
-                    <div><span className="font-medium">Student ID:</span> {selectedStudent.id}</div>
-                    <div><span className="font-medium">Program:</span> {selectedStudent.program}</div>
-                    <div><span className="font-medium">Current Year:</span> {selectedStudent.year}</div>
-                    <div><span className="font-medium">Status:</span> {selectedStudent.status}</div>
+        <div className="text-sm text-slate-500">
+          {totalStudents > 0 && `${totalStudents} student${totalStudents === 1 ? '' : 's'}`}
                   </div>
                 </div>
 
-                {/* Academic Summary */}
-                <div className="bg-slate-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                    <Award className="h-4 w-4" />
-                    Academic Summary
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div><span className="font-medium">Average Grade:</span> {selectedStudent.averageGrade}</div>
-                    <div><span className="font-medium">Current ECTS:</span> {selectedStudent.currentEcts}</div>
-                    <div className="space-y-2">
-                      <div><span className="font-medium">Enrollment Count:</span></div>
-                      <div className="space-y-2">
-                        <div className="text-xs">
-                          <span className="font-medium">Year 1:</span> {selectedStudent.enrollmentYears.year1} times
+      {/* Students Table */}
+      <div className="bg-white border border-slate-200 rounded-lg">
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-slate-900"></div>
+            <span className="ml-3 text-slate-600">Loading students...</span>
                         </div>
-                        <div className="text-xs">
-                          <span className="font-medium">Year 2:</span> {selectedStudent.enrollmentYears.year2} times
+        ) : error ? (
+          <div className="text-center py-16">
+            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-6 h-6 bg-red-500 rounded-full"></div>
                         </div>
-                        <div className="text-xs">
-                          <span className="font-medium">Year 3:</span> {selectedStudent.enrollmentYears.year3} times
+            <h3 className="text-lg font-medium text-slate-900 mb-2">Error loading students</h3>
+            <p className="text-slate-600 text-sm mb-4">{error}</p>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => fetchStudents(currentPage, searchTerm || "")}
+              className="border-slate-200"
+            >
+              Try Again
+            </Button>
                         </div>
-                        <div className="text-xs">
-                          <span className="font-medium">Year 4:</span> {selectedStudent.enrollmentYears.year4} times
+        ) : students.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="h-6 w-6 text-slate-400" />
                         </div>
+            <h3 className="text-lg font-medium text-slate-900 mb-2">No students found</h3>
+            <p className="text-slate-600 text-sm">
+              {searchTerm ? `No students match "${searchTerm}"` : 'No students registered yet'}
+            </p>
                       </div>
-                      <div className="text-xs text-slate-600">
-                        Total: {selectedStudent.enrollmentYears.year1 + selectedStudent.enrollmentYears.year2 + selectedStudent.enrollmentYears.year3 + selectedStudent.enrollmentYears.year4}/8
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Passed Courses */}
-                <div className="lg:col-span-2 bg-slate-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                    <BookOpen className="h-4 w-4" />
-                    Passed Courses ({selectedStudent.passedCourses.length})
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {selectedStudent.passedCourses.map((course: any, index: number) => (
-                      <div key={index} className="bg-white p-3 rounded border">
-                        <div className="font-medium text-sm">{course.name}</div>
-                        <div className="text-xs text-slate-600">
-                          Grade: {course.grade} • Points: {course.points} • ECTS: {course.ects}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Failed Exams */}
-                {selectedStudent.failedExams.length > 0 && (
-                  <div className="lg:col-span-2 bg-red-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-red-900 mb-3 flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      Failed Exams ({selectedStudent.failedExams.length})
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {selectedStudent.failedExams.map((exam: any, index: number) => (
-                        <div key={index} className="bg-white p-3 rounded border border-red-200">
-                          <div className="font-medium text-sm">{exam.name}</div>
-                          <div className="text-xs text-red-600">
-                            Grade: {exam.grade} • Points: {exam.points} • Attempts: {exam.attempts}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Misdemeanors */}
-                {selectedStudent.misdemeanors.length > 0 && (
-                  <div className="lg:col-span-2 bg-yellow-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-yellow-900 mb-3 flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      Exam Misdemeanors ({selectedStudent.misdemeanors.length})
-                    </h4>
-                    <div className="space-y-2">
-                      {selectedStudent.misdemeanors.map((misdemeanor: any, index: number) => (
-                        <div key={index} className="bg-white p-3 rounded border border-yellow-200">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="font-medium text-sm">{misdemeanor.course}</div>
-                              <div className="text-xs text-slate-600">{misdemeanor.description}</div>
-                              <div className="text-xs text-slate-500">{misdemeanor.date}</div>
-                            </div>
-                            <span className={`px-2 py-1 text-xs rounded-full ${getMisdemeanorColor(misdemeanor.severity)}`}>
-                              {misdemeanor.severity}
+        ) : (
+          <>
+            <div className="overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Student
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Student Index
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Year
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Contact
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Joined
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-slate-200">
+                  {students.map((student) => (
+                    <tr key={student.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center mr-3">
+                            <span className="text-sm font-medium text-white">
+                              {student.firstName.charAt(0)}{student.lastName.charAt(0)}
                             </span>
                           </div>
-                        </div>
-                      ))}
+                          <div>
+                            <div className="text-sm font-medium text-slate-900">
+                              {student.firstName} {student.lastName}
                     </div>
-                  </div>
-                )}
-
-                {/* Registered Exams */}
-                <div className="bg-slate-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    Registered Exams ({selectedStudent.registeredExams.length})
-                  </h4>
-                  <div className="space-y-2">
-                    {selectedStudent.registeredExams.map((exam: any, index: number) => (
-                      <div key={index} className="bg-white p-3 rounded border">
-                        <div className="font-medium text-sm">{exam.name}</div>
-                        <div className="text-xs text-slate-600">{exam.term} • {exam.status}</div>
-                      </div>
-                    ))}
+                            <div className="text-sm text-slate-500">{student.email}</div>
                   </div>
                 </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <code className="text-sm text-slate-600 bg-slate-50 px-2 py-1 rounded">
+                          {student.studentProfile?.studentIndex}
+                        </code>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm text-slate-900">Year {student.studentProfile?.year}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(student.studentProfile?.status || 'INACTIVE')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-slate-600">
+                          {student.studentProfile?.phoneNumber || (
+                            <span className="text-slate-400 italic">No phone</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        {formatDate(student.createdAt)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-1">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:text-red-700">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                      </div>
+                      </td>
+                    </tr>
+                    ))}
+                </tbody>
+              </table>
+                </div>
 
-                {/* Final Thesis */}
-                {selectedStudent.hasAllCoursesPassed && selectedStudent.finalThesis && (
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
-                      <GraduationCap className="h-4 w-4" />
-                      Final Thesis
-                    </h4>
-                    <div className="bg-white p-3 rounded border border-green-200">
-                      <div className="font-medium text-sm">{selectedStudent.finalThesis.title}</div>
-                      <div className="text-xs text-slate-600">
-                        Supervisor: {selectedStudent.finalThesis.supervisor}
-                      </div>
-                      <div className="text-xs text-slate-600">
-                        Status: {selectedStudent.finalThesis.status}
-                      </div>
-                      <div className="mt-2">
-                        <div className="flex justify-between text-xs text-slate-600 mb-1">
-                          <span>Progress</span>
-                          <span>{selectedStudent.finalThesis.progress}%</span>
+            {/* Pagination */}
+            <div className="bg-white px-6 py-3 border-t border-slate-200 flex items-center justify-between">
+              <div className="text-sm text-slate-700">
+                Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, totalStudents)} of {totalStudents} students
+                          </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(1)}
+                  disabled={currentPage === 1}
+                  className="h-8 px-2 border-slate-200"
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="h-8 px-2 border-slate-200"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i
+                    if (page > totalPages) return null
+                    
+                    return (
+                      <Button
+                        key={page}
+                        variant={page === currentPage ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(page)}
+                        className={`h-8 w-8 p-0 ${
+                          page === currentPage 
+                            ? 'bg-slate-900 hover:bg-slate-800' 
+                            : 'border-slate-200'
+                        }`}
+                      >
+                        {page}
+                      </Button>
+                    )
+                  })}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="h-8 px-2 border-slate-200"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="h-8 px-2 border-slate-200"
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
                         </div>
-                        <div className="w-full bg-slate-200 rounded-full h-2">
-                          <div 
-                            className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${selectedStudent.finalThesis.progress}%` }}
-                          ></div>
-                        </div>
                       </div>
-                    </div>
-                  </div>
+          </>
                 )}
               </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
