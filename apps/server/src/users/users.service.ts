@@ -77,7 +77,11 @@ export class UsersService {
         },
         studentProfile: {
           include: {
-            studyProgram: true,
+            studyProgram: {
+              include: {
+                faculty: true
+              }
+            },
           },
         },
         studentServiceProfile: {
@@ -108,7 +112,11 @@ export class UsersService {
         },
         studentProfile: {
           include: {
-            studyProgram: true,
+            studyProgram: {
+              include: {
+                faculty: true
+              }
+            },
           },
         },
         studentServiceProfile: {
@@ -133,7 +141,11 @@ export class UsersService {
         },
         studentProfile: {
           include: {
-            studyProgram: true,
+            studyProgram: {
+              include: {
+                faculty: true
+              }
+            },
           },
         },
         studentServiceProfile: {
@@ -174,7 +186,11 @@ export class UsersService {
         },
         studentProfile: {
           include: {
-            studyProgram: true,
+            studyProgram: {
+              include: {
+                faculty: true
+              }
+            },
           },
         },
         studentServiceProfile: {
