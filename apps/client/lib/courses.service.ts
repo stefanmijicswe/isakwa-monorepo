@@ -666,12 +666,37 @@ export async function getNotifications(): Promise<Notification[]> {
     const currentUser = await authService.getCurrentUser();
     if (!currentUser) return [];
 
-    // For now, we'll use a mock approach since the notifications endpoint might not be fully implemented
-    // In real implementation, this would call the backend notifications endpoint
-    console.log(`Fetching notifications for user ${currentUser.id}`);
+    const token = localStorage.getItem('auth_token');
+    if (!token) return [];
+
+    const response = await fetch('http://localhost:3001/api/notifications/my', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
     
-    // Return empty array for now - this will be replaced with real API call when backend is ready
-    return [];
+    // Transform the data to match our Notification interface
+    return data.map((item: any) => ({
+      id: item.notification.id,
+      title: item.notification.title,
+      message: item.notification.message,
+      type: item.notification.type || 'INFO',
+      priority: item.notification.priority || 'NORMAL',
+      isRead: item.isRead || false,
+      createdAt: item.notification.createdAt,
+      senderName: item.notification.creator ? 
+        `${item.notification.creator.firstName} ${item.notification.creator.lastName}` : 
+        'System',
+      relatedEntityName: null, // We don't have this in our current schema
+    }));
   } catch (error) {
     console.warn('Failed to fetch notifications from backend:', error);
     // Return empty array if backend fails
@@ -684,10 +709,18 @@ export async function markNotificationAsRead(notificationId: number): Promise<bo
     const currentUser = await authService.getCurrentUser();
     if (!currentUser) return false;
 
-    // Mark notification as read (this would be a PATCH request in real implementation)
-    // For now, we'll just simulate success
-    console.log(`Marking notification ${notificationId} as read for user ${currentUser.id}`);
-    return true;
+    const token = localStorage.getItem('auth_token');
+    if (!token) return false;
+
+    const response = await fetch(`http://localhost:3001/api/notifications/${notificationId}/read`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return response.ok;
   } catch (error) {
     console.error('Failed to mark notification as read:', error);
     return false;
@@ -699,12 +732,43 @@ export async function deleteNotification(notificationId: number): Promise<boolea
     const currentUser = await authService.getCurrentUser();
     if (!currentUser) return false;
 
-    // Delete notification (this would be a DELETE request in real implementation)
-    // For now, we'll just simulate success
-    console.log(`Deleting notification ${notificationId} for user ${currentUser.id}`);
-    return true;
+    const token = localStorage.getItem('auth_token');
+    if (!token) return false;
+
+    const response = await fetch(`http://localhost:3001/api/notifications/${notificationId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return response.ok;
   } catch (error) {
     console.error('Failed to delete notification:', error);
+    return false;
+  }
+}
+
+export async function markAllNotificationsAsRead(): Promise<boolean> {
+  try {
+    const currentUser = await authService.getCurrentUser();
+    if (!currentUser) return false;
+
+    const token = localStorage.getItem('auth_token');
+    if (!token) return false;
+
+    const response = await fetch('http://localhost:3001/api/notifications/mark-all-read', {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return response.ok;
+  } catch (error) {
+    console.error('Failed to mark all notifications as read:', error);
     return false;
   }
 }

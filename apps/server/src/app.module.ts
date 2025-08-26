@@ -16,6 +16,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { CourseSchedulesModule } from './course-schedules/course-schedules.module';
 import { EvaluationInstrumentsModule } from './evaluation-instruments/evaluation-instruments.module';
 import { DepartmentsModule } from './departments/departments.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -35,7 +36,8 @@ import { DepartmentsModule } from './departments/departments.module';
     InventoryModule,
     CourseSchedulesModule,
     EvaluationInstrumentsModule,
-    DepartmentsModule
+    DepartmentsModule,
+    NotificationsModule
   ],
   controllers: [AppController],
   providers: [AppService],

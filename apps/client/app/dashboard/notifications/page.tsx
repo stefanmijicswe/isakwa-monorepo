@@ -9,6 +9,7 @@ import {
   getNotifications, 
   markNotificationAsRead, 
   deleteNotification,
+  markAllNotificationsAsRead,
   type Notification
 } from "@/lib/courses.service"
 
@@ -47,6 +48,8 @@ export default function NotificationsPage() {
               : notif
           )
         )
+        // Emit event to update sidebar notification count
+        window.dispatchEvent(new CustomEvent('notifications-updated'));
       }
     } catch (error) {
       console.error('Failed to mark notification as read:', error)
@@ -63,6 +66,19 @@ export default function NotificationsPage() {
       console.error('Failed to delete notification:', error)
     }
   }
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      const success = await markAllNotificationsAsRead();
+      if (success) {
+        setNotifications(prev => prev.map(notif => ({ ...notif, isRead: true })));
+        // Emit event to update sidebar notification count
+        window.dispatchEvent(new CustomEvent('notifications-updated'));
+      }
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
+  };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -128,22 +144,24 @@ export default function NotificationsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Notifications</h1>
-          <p className="text-slate-600">Overview of notifications for your courses</p>
+          <h1 className="text-xl font-semibold text-gray-900 mb-1">Notifications</h1>
+          <p className="text-sm text-gray-600">Overview of notifications for your courses</p>
         </div>
         
-        <div className="space-y-4">
+        <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-6 bg-gray-200 rounded w-1/2 mb-3"></div>
-                <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-              </CardContent>
-            </Card>
+            <div key={i} className="p-3 rounded-lg border border-gray-200 bg-white animate-pulse">
+              <div className="flex items-start space-x-3">
+                <div className="h-4 w-4 bg-gray-200 rounded-full"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -175,19 +193,19 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Notifications</h1>
-        <p className="text-slate-600">Overview of notifications for your courses</p>
+        <h1 className="text-xl font-semibold text-gray-900 mb-1">Notifications</h1>
+        <p className="text-sm text-gray-600">Overview of notifications for your courses</p>
       </div>
       
       {notifications.length === 0 ? (
-        <Card className="border-dashed border-2 border-slate-200">
-          <CardContent className="p-12">
+        <Card className="border-dashed border-2 border-gray-200">
+          <CardContent className="p-8">
             <div className="text-center">
-              <BellOff className="h-16 w-16 mx-auto mb-4 text-slate-300" />
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">No Notifications</h3>
-              <p className="text-slate-600 mb-4">
+              <BellOff className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+              <h3 className="text-base font-medium text-gray-900 mb-2">No Notifications</h3>
+              <p className="text-sm text-gray-600 mb-4">
                 You currently have no notifications. When professors post important information about your courses, 
                 it will appear here.
               </p>
@@ -195,115 +213,120 @@ export default function NotificationsPage() {
                 onClick={fetchNotifications}
                 variant="outline"
                 size="sm"
+                className="h-8"
               >
-                <Bell className="h-4 w-4 mr-2" />
+                <Bell className="h-3 w-3 mr-2" />
                 Refresh
               </Button>
             </div>
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Bell className="h-5 w-5" />
-              <span>Notifications</span>
-            </CardTitle>
-            <CardDescription>
-              {notifications.length} notification{notifications.length !== 1 ? 's' : ''}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Bell className="h-4 w-4 text-gray-600" />
+              <span className="text-sm font-medium text-gray-900">
+                {notifications.length} notification{notifications.length !== 1 ? 's' : ''}
+              </span>
               {notifications.filter(n => !n.isRead).length > 0 && (
-                <span className="ml-2 text-blue-600">
-                  ({notifications.filter(n => !n.isRead).length} unread)
-                </span>
+                <Badge className="bg-blue-100 text-blue-800 text-xs">
+                  {notifications.filter(n => !n.isRead).length} unread
+                </Badge>
               )}
-            </CardDescription>
-          </CardHeader>
+            </div>
+            
+            {notifications.filter(n => !n.isRead).length > 0 && (
+              <Button
+                onClick={handleMarkAllAsRead}
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+              >
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Mark all as read
+              </Button>
+            )}
+          </div>
           
-          <CardContent>
-            <div className="space-y-4">
-              {notifications.map((notification) => (
-                <div 
-                  key={notification.id} 
-                  className={`p-6 rounded-lg border transition-all ${
-                    notification.isRead 
-                      ? 'bg-slate-50 border-slate-200' 
-                      : 'bg-white border-blue-200 shadow-sm'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-start space-x-3 flex-1">
-                      {getNotificationIcon(notification.type)}
-                      <div className="flex-1">
-                        <h3 className={`font-semibold text-lg ${
-                          notification.isRead ? 'text-slate-600' : 'text-slate-900'
+          <div className="space-y-2">
+            {notifications.map((notification) => (
+              <div 
+                key={notification.id} 
+                className={`p-3 rounded-lg border transition-all hover:shadow-sm ${
+                  notification.isRead 
+                    ? 'bg-gray-50 border-gray-200' 
+                    : 'bg-white border-blue-200 shadow-sm'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start space-x-3 flex-1 min-w-0">
+                    {getNotificationIcon(notification.type)}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h3 className={`font-medium text-sm truncate ${
+                          notification.isRead ? 'text-gray-600' : 'text-gray-900'
                         }`}>
                           {notification.title}
                         </h3>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Badge className={getTypeColor(notification.type)}>
+                        <div className="flex items-center space-x-1">
+                          <Badge className={`text-xs px-2 py-0.5 ${getTypeColor(notification.type)}`}>
                             {notification.type}
                           </Badge>
-                          <Badge className={getPriorityColor(notification.priority)}>
+                          <Badge className={`text-xs px-2 py-0.5 ${getPriorityColor(notification.priority)}`}>
                             {notification.priority}
                           </Badge>
                           {!notification.isRead && (
-                            <Badge className="bg-blue-100 text-blue-800 border-blue-300">
+                            <Badge className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5">
                               New
                             </Badge>
                           )}
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-slate-500">
-                        {formatDate(notification.createdAt)}
-                      </span>
-                      <div className="flex items-center space-x-1">
-                        {!notification.isRead && (
+                      
+                      <p className={`text-sm leading-relaxed mb-2 ${
+                        notification.isRead ? 'text-gray-600' : 'text-gray-700'
+                      }`}>
+                        {notification.message}
+                      </p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3 text-xs text-gray-500">
+                          <span className="flex items-center space-x-1">
+                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                            <span>{notification.senderName}</span>
+                          </span>
+                          <span>{formatDate(notification.createdAt)}</span>
+                        </div>
+                        
+                        <div className="flex items-center space-x-1">
+                          {!notification.isRead && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleMarkAsRead(notification.id)}
+                              className="h-6 w-6 p-0 hover:bg-blue-50"
+                            >
+                              <CheckCircle className="h-3 w-3 text-blue-600" />
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleMarkAsRead(notification.id)}
-                            className="h-8 w-8 p-0"
+                            onClick={() => handleDeleteNotification(notification.id)}
+                            className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                           >
-                            <CheckCircle className="h-4 w-4" />
+                            <Trash2 className="h-3 w-3" />
                           </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteNotification(notification.id)}
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  
-                  <p className={`mb-4 leading-relaxed ${
-                    notification.isRead ? 'text-slate-600' : 'text-slate-700'
-                  }`}>
-                    {notification.message}
-                  </p>
-                  
-                  <div className="flex items-center gap-4 text-sm text-slate-600">
-                    <span className="flex items-center gap-2">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                      {notification.senderName}
-                    </span>
-                    {notification.relatedEntityName && (
-                      <span className="flex items-center gap-2">
-                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                        {notification.relatedEntityName}
-                      </span>
-                    )}
-                  </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )
