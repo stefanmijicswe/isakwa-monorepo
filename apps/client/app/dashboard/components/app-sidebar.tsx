@@ -157,6 +157,12 @@ const navigationByRole = {
       description: "Manage enrollments"
     },
     {
+      title: "Certificate Generator",
+      url: "/dashboard/certificates",
+      icon: FileText,
+      description: "Generate student certificates"
+    },
+    {
       title: "Library Management",
       url: "/dashboard/library",
       icon: Library,
