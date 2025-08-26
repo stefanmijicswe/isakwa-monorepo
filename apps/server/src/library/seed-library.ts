@@ -50,7 +50,7 @@ export async function seedLibrary(prisma: PrismaService) {
       totalCopies: 10,
     },
     {
-      title: 'Diploski rad - AI u obrazovanju',
+      title: 'Diplomski rad - AI u obrazovanju',
       author: 'Jovana Jovanović',
       type: LibraryItemType.THESIS,
       category: 'Diplomski radovi',
@@ -64,7 +64,7 @@ export async function seedLibrary(prisma: PrismaService) {
       type: LibraryItemType.MANUAL,
       category: 'Priručnici',
       description: 'Kompletni priručnik za C++',
-      totalCopies: 2,
+      totalCopies: 3, // Increased from 2 to 3
     },
     {
       title: 'Časopis za poslovnu ekonomiju',
@@ -73,6 +73,24 @@ export async function seedLibrary(prisma: PrismaService) {
       category: 'Naučni časopisi',
       description: 'Kvartalni naučni časopis',
       totalCopies: 8,
+    },
+    {
+      title: 'Python za početnike',
+      author: 'Milan Milanović',
+      isbn: '978-86-123-4572-4',
+      type: LibraryItemType.BOOK,
+      category: 'Informatika',
+      description: 'Učenje Pythona od nule',
+      totalCopies: 4,
+    },
+    {
+      title: 'Machine Learning osnove',
+      author: 'Jelena Jelenić',
+      isbn: '978-86-123-4573-5',
+      type: LibraryItemType.BOOK,
+      category: 'AI/ML',
+      description: 'Uvod u mašinsko učenje',
+      totalCopies: 2,
     },
   ];
 

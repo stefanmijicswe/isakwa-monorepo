@@ -5,232 +5,221 @@ import * as bcrypt from 'bcryptjs';
 export async function seedUsers(prisma: PrismaService) {
   console.log('🌱 Seeding users...');
 
-  // Get Computer Science department ID
+  // Get departments
   const computerScienceDept = await prisma.department.findFirst({
     where: { name: 'Computer Science' }
   });
   
-  if (!computerScienceDept) {
-    throw new Error('Computer Science department not found. Please run departments seed first.');
-  }
-
-  // Check if admin already exists
-  const existingAdmin = await prisma.user.findUnique({
-    where: { email: 'admin@isakwa.edu' }
+  const businessDept = await prisma.department.findFirst({
+    where: { name: 'Business Administration' }
   });
 
-  if (!existingAdmin) {
-    const hashedPassword = await bcrypt.hash('admin123', 10);
-    
-    const admin = await prisma.user.create({
-      data: {
-        email: 'admin@isakwa.edu',
-        password: hashedPassword,
-        firstName: 'Admin',
-        lastName: 'User',
-        role: UserRole.ADMIN,
-        isActive: true,
-      },
-    });
-    console.log('✅ Admin user created:', admin.email);
-  } else {
-    console.log('ℹ️ Admin user already exists');
+  if (!computerScienceDept || !businessDept) {
+    throw new Error('Required departments not found. Please run departments seed first.');
   }
 
-  // Check if professor already exists
-  const existingProfessor = await prisma.user.findUnique({
-    where: { email: 'professor@isakwa.edu' }
+  // Create admin user
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@isakwa.edu' },
+    update: {},
+    create: {
+      email: 'admin@isakwa.edu',
+      password: await bcrypt.hash('admin123', 10),
+      firstName: 'Admin',
+      lastName: 'User',
+      role: UserRole.ADMIN,
+      isActive: true,
+    },
   });
+  console.log('✅ Admin user created:', admin.email);
 
-  if (!existingProfessor) {
-    const hashedPassword = await bcrypt.hash('professor123', 10);
-    
-    const professor = await prisma.user.create({
-      data: {
-        email: 'professor@isakwa.edu',
-        password: hashedPassword,
-        firstName: 'John',
-        lastName: 'Smith',
+  // Create professor users
+  const professors = [
+    {
+      email: 'john.smith@isakwa.edu',
+      firstName: 'John',
+      lastName: 'Smith',
+      title: 'Associate Professor',
+      department: computerScienceDept,
+      phoneNumber: '+381-11-123-4567',
+      officeRoom: 'A-101',
+    },
+    {
+      email: 'sarah.johnson@isakwa.edu',
+      firstName: 'Sarah',
+      lastName: 'Johnson',
+      title: 'Professor',
+      department: businessDept,
+      phoneNumber: '+381-11-123-4568',
+      officeRoom: 'B-101',
+    },
+  ];
+
+  for (const profData of professors) {
+    const professor = await prisma.user.upsert({
+      where: { email: profData.email },
+      update: {},
+      create: {
+        email: profData.email,
+        password: await bcrypt.hash('professor123', 10),
+        firstName: profData.firstName,
+        lastName: profData.lastName,
         role: UserRole.PROFESSOR,
         isActive: true,
       },
     });
 
-    // Create professor profile
-    await prisma.professorProfile.create({
-      data: {
+    await prisma.professorProfile.upsert({
+      where: { userId: professor.id },
+      update: {},
+      create: {
         userId: professor.id,
-        departmentId: computerScienceDept.id,
-        title: 'Associate Professor',
-        phoneNumber: '+381-11-123-4567',
-        officeRoom: 'A-101',
+        departmentId: profData.department.id,
+        title: profData.title,
+        phoneNumber: profData.phoneNumber,
+        officeRoom: profData.officeRoom,
       },
     });
-    console.log('✅ Professor user created:', professor.email);
-  } else {
-    console.log('ℹ️ Professor user already exists');
+    console.log('✅ Professor created:', professor.email);
   }
 
-  // Check if student already exists
-  const existingStudent = await prisma.user.findUnique({
-    where: { email: 'student@isakwa.edu' }
-  });
-
-  if (!existingStudent) {
-    const hashedPassword = await bcrypt.hash('student123', 10);
-    
-    const student = await prisma.user.create({
-      data: {
-        email: 'student@isakwa.edu',
-        password: hashedPassword,
-        firstName: 'Marko',
-        lastName: 'Petrović',
-        role: UserRole.STUDENT,
-        isActive: true,
-      },
-    });
-
-    // Create student profile
-    await prisma.studentProfile.create({
-      data: {
-        userId: student.id,
-        studentIndex: '2023/001',
-        year: 2,
-        phoneNumber: '+381-11-987-6543',
-      },
-    });
-    console.log('✅ Student user created:', student.email);
-  } else {
-    console.log('ℹ️ Student user already exists');
-  }
-
-  // Create additional test students
-  const testStudents = [
+  // Create student users with proper IDs and study programs
+  const students = [
     {
-      email: 'ana.jovanovic@isakwa.edu',
-      firstName: 'Ana',
-      lastName: 'Jovanović',
-      studentIndex: '2023/002',
+      email: 'marija.stankovic@isakwa.edu',
+      firstName: 'Marija',
+      lastName: 'Stanković',
+      studentIndex: '2024/001',
       year: 1,
       phoneNumber: '+381-11-111-1111',
+      studyProgramName: 'Information Technology',
     },
     {
       email: 'petar.mitrovic@isakwa.edu',
       firstName: 'Petar',
       lastName: 'Mitrović',
-      studentIndex: '2023/003',
-      year: 3,
+      studentIndex: '2024/002',
+      year: 1,
       phoneNumber: '+381-11-222-2222',
+      studyProgramName: 'Information Technology',
     },
     {
-      email: 'marija.stankovic@isakwa.edu',
-      firstName: 'Marija',
-      lastName: 'Stanković',
-      studentIndex: '2023/004',
+      email: 'ana.jovanovic@isakwa.edu',
+      firstName: 'Ana',
+      lastName: 'Jovanović',
+      studentIndex: '2024/003',
       year: 2,
       phoneNumber: '+381-11-333-3333',
+      studyProgramName: 'Business Economics',
     },
     {
       email: 'nikola.djordjevic@isakwa.edu',
       firstName: 'Nikola',
       lastName: 'Đorđević',
-      studentIndex: '2023/005',
-      year: 1,
+      studentIndex: '2024/004',
+      year: 2,
       phoneNumber: '+381-11-444-4444',
+      studyProgramName: 'Software Engineering',
+    },
+    {
+      email: 'marko.petrovic@isakwa.edu',
+      firstName: 'Marko',
+      lastName: 'Petrović',
+      studentIndex: '2024/005',
+      year: 3,
+      phoneNumber: '+381-11-555-5555',
+      studyProgramName: 'Software Engineering',
     },
   ];
 
-  for (const studentData of testStudents) {
-    const existingStudent = await prisma.user.findUnique({
-      where: { email: studentData.email }
+  for (const studentData of students) {
+    // Get study program
+    const studyProgram = await prisma.studyProgram.findFirst({
+      where: { name: studentData.studyProgramName }
     });
 
-    if (!existingStudent) {
-      const hashedPassword = await bcrypt.hash('student123', 10);
-      
-      const student = await prisma.user.create({
-        data: {
-          email: studentData.email,
-          password: hashedPassword,
-          firstName: studentData.firstName,
-          lastName: studentData.lastName,
-          role: UserRole.STUDENT,
-          isActive: true,
-        },
-      });
-
-      // Create student profile
-      await prisma.studentProfile.create({
-        data: {
-          userId: student.id,
-          studentIndex: studentData.studentIndex,
-          year: studentData.year,
-          phoneNumber: studentData.phoneNumber,
-        },
-      });
-      console.log('✅ Test student created:', student.email);
+    if (!studyProgram) {
+      console.warn(`Study program ${studentData.studyProgramName} not found for ${studentData.email}`);
+      continue;
     }
+
+    const student = await prisma.user.upsert({
+      where: { email: studentData.email },
+      update: {},
+      create: {
+        email: studentData.email,
+        password: await bcrypt.hash('student123', 10),
+        firstName: studentData.firstName,
+        lastName: studentData.lastName,
+        role: UserRole.STUDENT,
+        isActive: true,
+      },
+    });
+
+    await prisma.studentProfile.upsert({
+      where: { userId: student.id },
+      update: {},
+      create: {
+        userId: student.id,
+        studentIndex: studentData.studentIndex,
+        year: studentData.year,
+        phoneNumber: studentData.phoneNumber,
+        studyProgramId: studyProgram.id,
+        enrollmentYear: '2024',
+        status: 'ACTIVE',
+      },
+    });
+    console.log('✅ Student created:', student.email, `(ID: ${student.id})`);
   }
 
   // Create student service users
   const studentServiceUsers = [
-    {
-      email: 'test@isakwa.edu',
-      firstName: 'Test',
-      lastName: 'User',
-      position: 'Administrative Assistant',
-      phoneNumber: '+381-11-555-5555',
-      officeRoom: 'B-201',
-    },
-    {
-      email: 'test2@isakwa.edu',
-      firstName: 'Test2',
-      lastName: 'User',
-      position: 'Office Manager',
-      phoneNumber: '+381-11-666-6666',
-      officeRoom: 'B-202',
-    },
     {
       email: 'service@isakwa.edu',
       firstName: 'Service',
       lastName: 'Staff',
       position: 'Student Coordinator',
       phoneNumber: '+381-11-777-7777',
-      officeRoom: 'B-203',
+      officeRoom: 'B-201',
+      department: businessDept,
+    },
+    {
+      email: 'coordinator@isakwa.edu',
+      firstName: 'Coordinator',
+      lastName: 'User',
+      position: 'Academic Coordinator',
+      phoneNumber: '+381-11-888-8888',
+      officeRoom: 'B-202',
+      department: computerScienceDept,
     },
   ];
 
   for (const userData of studentServiceUsers) {
-    const existingUser = await prisma.user.findUnique({
-      where: { email: userData.email }
+    const user = await prisma.user.upsert({
+      where: { email: userData.email },
+      update: {},
+      create: {
+        email: userData.email,
+        password: await bcrypt.hash('service123', 10),
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        role: UserRole.STUDENT_SERVICE,
+        isActive: true,
+      },
     });
 
-    if (!existingUser) {
-      const hashedPassword = await bcrypt.hash('student123', 10);
-      
-      const user = await prisma.user.create({
-        data: {
-          email: userData.email,
-          password: hashedPassword,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          role: UserRole.STUDENT_SERVICE,
-          isActive: true,
-        },
-      });
-
-      // Create student service profile
-      await prisma.studentServiceProfile.create({
-        data: {
-          userId: user.id,
-          departmentId: computerScienceDept.id,
-          position: userData.position,
-          phoneNumber: userData.phoneNumber,
-          officeRoom: userData.officeRoom,
-        },
-      });
-      console.log('✅ Student service user created:', user.email);
-    }
+    await prisma.studentServiceProfile.upsert({
+      where: { userId: user.id },
+      update: {},
+      create: {
+        userId: user.id,
+        departmentId: userData.department.id,
+        position: userData.position,
+        phoneNumber: userData.phoneNumber,
+        officeRoom: userData.officeRoom,
+      },
+    });
+    console.log('✅ Student service user created:', user.email);
   }
 
   console.log('✅ Users seeding completed!');

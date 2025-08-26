@@ -151,7 +151,7 @@ export class LibraryService {
 
     // Check if student exists
     const student = await this.prisma.studentProfile.findUnique({
-      where: { id: data.studentId },
+      where: { userId: data.studentId },
     });
 
     if (!student) {
@@ -161,7 +161,7 @@ export class LibraryService {
     // Check if student already has this item borrowed
     const existingBorrowing = await this.prisma.libraryBorrowing.findFirst({
       where: {
-        studentId: data.studentId,
+        studentId: student.id, // Use student.id (StudentProfile.id), not data.studentId (User.id)
         libraryItemId: data.libraryItemId,
         status: BorrowingStatus.BORROWED,
       },
@@ -173,7 +173,7 @@ export class LibraryService {
 
     return this.prisma.libraryBorrowing.create({
       data: {
-        studentId: data.studentId,
+        studentId: student.id, // Use student.id (StudentProfile.id), not data.studentId (User.id)
         libraryItemId: data.libraryItemId,
         dueDate: new Date(data.dueDate),
         notes: data.notes,
@@ -263,6 +263,23 @@ export class LibraryService {
         },
       },
       orderBy: { dueDate: 'asc' },
+    });
+  }
+
+  async getAllBorrowings() {
+    return this.prisma.libraryBorrowing.findMany({
+      where: { isActive: true },
+      include: {
+        student: {
+          include: {
+            user: { select: { firstName: true, lastName: true, email: true } },
+          },
+        },
+        libraryItem: {
+          select: { title: true, author: true, type: true },
+        },
+      },
+      orderBy: { borrowedAt: 'desc' },
     });
   }
 

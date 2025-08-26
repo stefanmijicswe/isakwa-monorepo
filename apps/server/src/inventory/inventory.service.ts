@@ -143,7 +143,7 @@ export class InventoryService {
 
     // Check if student exists
     const student = await this.prisma.studentProfile.findUnique({
-      where: { id: data.studentId },
+      where: { userId: data.studentId },
     });
 
     if (!student || student.status !== 'ACTIVE') {
@@ -155,7 +155,7 @@ export class InventoryService {
       this.prisma.inventoryIssuance.create({
         data: {
           inventoryItemId: data.inventoryItemId,
-          studentId: data.studentId,
+          studentId: student.id, // Use student.id (StudentProfile.id), not data.studentId (User.id)
           quantityIssued: data.quantityIssued,
           issuedBy: issuedBy,
           notes: data.notes,

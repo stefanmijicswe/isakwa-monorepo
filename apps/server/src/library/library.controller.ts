@@ -90,4 +90,10 @@ export class LibraryController {
   async getOverdueItems() {
     return this.libraryService.getOverdueItems();
   }
+
+  @Get('borrowings')
+  @Roles(UserRole.STUDENT_SERVICE, UserRole.ADMIN)
+  async getAllBorrowings() {
+    return this.libraryService.getAllBorrowings();
+  }
 }
