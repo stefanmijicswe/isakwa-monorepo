@@ -15,6 +15,7 @@ import { LibraryModule } from './library/library.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { CourseSchedulesModule } from './course-schedules/course-schedules.module';
 import { EvaluationInstrumentsModule } from './evaluation-instruments/evaluation-instruments.module';
+import { DepartmentsModule } from './departments/departments.module';
 
 @Module({
   imports: [
@@ -33,7 +34,8 @@ import { EvaluationInstrumentsModule } from './evaluation-instruments/evaluation
     LibraryModule,
     InventoryModule,
     CourseSchedulesModule,
-    EvaluationInstrumentsModule
+    EvaluationInstrumentsModule,
+    DepartmentsModule
   ],
   controllers: [AppController],
   providers: [AppService],

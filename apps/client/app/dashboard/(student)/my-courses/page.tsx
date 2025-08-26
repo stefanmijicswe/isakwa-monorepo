@@ -34,9 +34,9 @@ export default function MyCoursesPage() {
 
   const totalCourses = courses.length
   const activeCourses = courses.filter(course => course.status === 'Active').length
-  const totalEcts = courses.reduce((sum, course) => sum + course.ects, 0)
+  const totalEcts = courses.reduce((sum, course) => sum + (course.ects || 0), 0)
   const averageGrade = courses.length > 0 
-    ? (courses.reduce((sum, course) => sum + (course.grade || 0), 0) / courses.length).toFixed(1)
+    ? (courses.reduce((sum, course) => sum + (parseFloat(course.grade || '0') || 0), 0) / courses.length).toFixed(1)
     : '0.0'
 
   const handleDetailsClick = (course: Course) => {

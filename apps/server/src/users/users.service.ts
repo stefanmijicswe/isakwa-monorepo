@@ -9,7 +9,7 @@ export interface CreateUserData {
   lastName: string;
   role: UserRole;
   // Profesor podaci
-  department?: string;
+  departmentId?: number;
   title?: string;
   phoneNumber?: string;
   officeRoom?: string;
@@ -46,7 +46,7 @@ export class UsersService {
       await this.prisma.professorProfile.create({
         data: {
           userId: user.id,
-          department: data.department || '',
+          departmentId: data.departmentId || 1, // Default to first department
           title: data.title || '',
           phoneNumber: data.phoneNumber || data.phone,
           officeRoom: data.officeRoom,
@@ -70,8 +70,17 @@ export class UsersService {
     return this.prisma.user.findUnique({
       where: { email },
       include: {
-        professorProfile: true,
+        professorProfile: {
+          include: {
+            department: true,
+          },
+        },
         studentProfile: true,
+        studentServiceProfile: {
+          include: {
+            department: true,
+          },
+        },
       },
     });
   }
@@ -88,8 +97,17 @@ export class UsersService {
         isActive: true,
         createdAt: true,
         updatedAt: true,
-        professorProfile: true,
+        professorProfile: {
+          include: {
+            department: true,
+          },
+        },
         studentProfile: true,
+        studentServiceProfile: {
+          include: {
+            department: true,
+          },
+        },
       },
     });
     
@@ -100,8 +118,17 @@ export class UsersService {
   async findAll() {
     return this.prisma.user.findMany({
       include: {
-        professorProfile: true,
+        professorProfile: {
+          include: {
+            department: true,
+          },
+        },
         studentProfile: true,
+        studentServiceProfile: {
+          include: {
+            department: true,
+          },
+        },
       },
     });
   }
@@ -128,8 +155,17 @@ export class UsersService {
     const users = await this.prisma.user.findMany({
       where,
       include: {
-        professorProfile: true,
+        professorProfile: {
+          include: {
+            department: true,
+          },
+        },
         studentProfile: true,
+        studentServiceProfile: {
+          include: {
+            department: true,
+          },
+        },
       },
       skip,
       take: limit,
@@ -143,5 +179,101 @@ export class UsersService {
       limit,
       totalPages: Math.ceil(total / limit),
     };
+  }
+
+  async updateUser(id: number, updateData: any) {
+    const { firstName, lastName, email, isActive, title, departmentId, position } = updateData;
+    
+    // Update user basic info
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: {
+        firstName,
+        lastName,
+        email,
+        isActive,
+        updatedAt: new Date(),
+      },
+    });
+
+    // Update profile based on role
+    const user = await this.findById(id);
+    if (user?.role === UserRole.PROFESSOR) {
+      if (user.professorProfile) {
+        // Update existing profile
+        await this.prisma.professorProfile.update({
+          where: { id: user.professorProfile.id },
+          data: {
+            title: title || '',
+            departmentId: departmentId || 1, // Default to first department
+          },
+        });
+      } else {
+        // Create new profile if it doesn't exist
+        await this.prisma.professorProfile.create({
+          data: {
+            userId: id,
+            title: title || '',
+            departmentId: departmentId || 1, // Default to first department
+          },
+        });
+      }
+    } else if (user?.role === UserRole.STUDENT_SERVICE) {
+      if (user.studentServiceProfile) {
+        // Update existing profile
+        await this.prisma.studentServiceProfile.update({
+          where: { id: user.studentServiceProfile.id },
+          data: {
+            position: position || '',
+            departmentId: departmentId || 1, // Default to first department
+          },
+        });
+      } else {
+        // Create new profile if it doesn't exist
+        await this.prisma.studentServiceProfile.create({
+          data: {
+            userId: id,
+            position: position || '',
+            departmentId: departmentId || 1, // Default to first department
+          },
+        });
+      }
+    }
+
+    return this.findById(id);
+  }
+
+  async deleteUser(id: number) {
+    // First check if user exists
+    const user = await this.findById(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Delete related profiles first (due to foreign key constraints)
+    if (user.professorProfile) {
+      await this.prisma.professorProfile.delete({
+        where: { id: user.professorProfile.id },
+      });
+    }
+
+    if (user.studentProfile) {
+      await this.prisma.studentProfile.delete({
+        where: { id: user.studentProfile.id },
+      });
+    }
+
+    if (user.studentServiceProfile) {
+      await this.prisma.studentServiceProfile.delete({
+        where: { id: user.studentServiceProfile.id },
+      });
+    }
+
+    // Finally delete the user
+    await this.prisma.user.delete({
+      where: { id },
+    });
+
+    return { message: 'User deleted successfully' };
   }
 }

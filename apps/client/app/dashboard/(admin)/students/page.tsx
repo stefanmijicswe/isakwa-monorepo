@@ -9,7 +9,6 @@ import {
   Plus, 
   Edit, 
   Trash2, 
-  Eye,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -19,12 +18,17 @@ import {
 import { Button } from "../../../../components/ui/button"
 import { Input } from "../../../../components/ui/input"
 import { Badge } from "../../../../components/ui/badge"
+import { EditStudentModal } from "./components/edit-student-modal"
+import type { StudentFormValues } from "./components/edit-student-modal"
+import { DeleteStudentDialog } from "./components/delete-student-dialog"
 
 interface Student {
   id: number
   firstName: string
   lastName: string
   email: string
+  isActive: boolean
+  dateOfBirth?: string
   createdAt: string
   updatedAt: string
   studentProfile?: {
@@ -33,7 +37,7 @@ interface Student {
     studentIndex: string
     year: number
     phoneNumber?: string
-    status: 'ACTIVE' | 'INACTIVE' | 'GRADUATED' | 'SUSPENDED'
+    status: 'ACTIVE' | 'INACTIVE' | 'GRADUATED' | 'INTERRUPTED'
     studyProgramId?: number
     enrollmentYear?: string
   }
@@ -57,6 +61,10 @@ export default function StudentsPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalStudents, setTotalStudents] = useState(0)
   const [limit] = useState(10)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null)
 
   // Fetch students from backend API
   const fetchStudents = async (page: number = 1, search?: string) => {
@@ -76,7 +84,7 @@ export default function StudentsPage() {
 
       const response = await fetch(`http://localhost:3001/api/users/students?${params}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json'
         }
       })
@@ -119,6 +127,68 @@ export default function StudentsPage() {
     fetchStudents(page, searchTerm || "")
   }
 
+  // Handle edit student
+  const handleEdit = (student: Student) => {
+    setSelectedStudent(student)
+    setIsEditModalOpen(true)
+  }
+
+  // Handle delete student
+  const handleDelete = (student: Student) => {
+    setStudentToDelete(student)
+    setIsDeleteDialogOpen(true)
+  }
+
+  // Handle confirm delete
+  const handleConfirmDelete = async () => {
+    try {
+      if (!studentToDelete) {
+        console.error('No student selected for deletion')
+        return
+      }
+
+      console.log('Deleting student:', studentToDelete)
+      
+      // Make API call to delete student
+      const response = await fetch(`http://localhost:3001/api/users/${studentToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete student: ${response.status}`)
+      }
+
+      console.log('Student deleted successfully')
+      
+      // Close dialog and refresh the list
+      setIsDeleteDialogOpen(false)
+      setStudentToDelete(null)
+      fetchStudents(currentPage, searchTerm || "")
+    } catch (error) {
+      console.error('Error deleting student:', error)
+      // TODO: Show error message to user
+    }
+  }
+
+  // Handle save student
+  const handleSaveStudent = async (data: StudentFormValues) => {
+    try {
+      // TODO: Implement API call to update student
+      console.log('Saving student:', data)
+      
+      // For now, just close the modal and refresh the list
+      setIsEditModalOpen(false)
+      setSelectedStudent(null)
+      fetchStudents(currentPage, searchTerm || "")
+    } catch (error) {
+      console.error('Error saving student:', error)
+    }
+  }
+
   // Get status badge color
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -128,8 +198,8 @@ export default function StudentsPage() {
         return <Badge className="bg-slate-50 text-slate-700 border-slate-200">Inactive</Badge>
       case 'GRADUATED':
         return <Badge className="bg-blue-50 text-blue-700 border-blue-200">Graduated</Badge>
-      case 'SUSPENDED':
-        return <Badge className="bg-red-50 text-red-700 border-red-200">Suspended</Badge>
+      case 'INTERRUPTED':
+        return <Badge className="bg-red-50 text-red-700 border-red-200">Interrupted</Badge>
       default:
         return <Badge className="bg-slate-50 text-slate-700 border-slate-200">{status}</Badge>
     }
@@ -296,17 +366,24 @@ export default function StudentsPage() {
                         {formatDate(student.createdAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end space-x-1">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:text-red-700">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                      </div>
+                                               <div className="flex items-center justify-end space-x-1">
+                         <Button 
+                           variant="ghost" 
+                           size="sm" 
+                           className="h-8 w-8 p-0"
+                           onClick={() => handleEdit(student)}
+                         >
+                           <Edit className="h-4 w-4" />
+                         </Button>
+                         <Button 
+                           variant="ghost" 
+                           size="sm" 
+                           className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                           onClick={() => handleDelete(student)}
+                         >
+                           <Trash2 className="h-4 w-4" />
+                         </Button>
+                       </div>
                       </td>
                     </tr>
                     ))}
@@ -385,6 +462,28 @@ export default function StudentsPage() {
           </>
                 )}
               </div>
+
+      {/* Edit Student Modal */}
+      <EditStudentModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setSelectedStudent(null)
+        }}
+        student={selectedStudent}
+        onSave={handleSaveStudent}
+      />
+
+      {/* Delete Student Dialog */}
+      <DeleteStudentDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => {
+          setIsDeleteDialogOpen(false)
+          setStudentToDelete(null)
+        }}
+        onConfirm={handleConfirmDelete}
+        studentName={studentToDelete ? `${studentToDelete.firstName} ${studentToDelete.lastName}` : ''}
+      />
     </div>
   )
 }

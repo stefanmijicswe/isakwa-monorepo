@@ -19,7 +19,7 @@ import { DeleteSubjectModal } from "./components/delete-subject-modal";
 import { AddSubjectModal } from "./components/add-subject-modal";
 
 export default function AdminCoursesPage() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [filteredSubjects, setFilteredSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -216,7 +216,7 @@ export default function AdminCoursesPage() {
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
         <Input
           placeholder="Search courses..."
-          value={searchTerm}
+          value={searchTerm || ""}
           onChange={handleSearchChange}
           className="pl-10 h-9 text-sm"
         />

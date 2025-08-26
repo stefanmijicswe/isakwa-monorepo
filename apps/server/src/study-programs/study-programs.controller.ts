@@ -24,8 +24,8 @@ export class StudyProgramsController {
   constructor(private readonly studyProgramsService: StudyProgramsService) {}
 
   @Post()
-  // @UseGuards(JwtAuthGuard, RolesGuard)  // Temporarily disabled for testing
-  // @Roles(UserRole.ADMIN)  // Temporarily disabled for testing
+  @UseGuards(JwtAuthGuard, RolesGuard)  // Re-enabled authentication and authorization
+  @Roles(UserRole.ADMIN)  // Re-enabled role-based access control
   create(@Body() createStudyProgramDto: CreateStudyProgramDto) {
     return this.studyProgramsService.create(createStudyProgramDto);
   }
@@ -57,8 +57,8 @@ export class StudyProgramsController {
   }
 
   @Patch(':id')
-  // @UseGuards(JwtAuthGuard, RolesGuard)  // Temporarily disabled for testing
-  // @Roles(UserRole.ADMIN)  // Temporarily disabled for testing
+  @UseGuards(JwtAuthGuard, RolesGuard)  // Re-enabled authentication and authorization
+  @Roles(UserRole.ADMIN)  // Re-enabled role-based access control
   update(
     @Param('id', ParseIntPipe) id: number, 
     @Body() updateStudyProgramDto: UpdateStudyProgramDto
@@ -67,8 +67,8 @@ export class StudyProgramsController {
   }
 
   @Delete(':id')
-  // @UseGuards(JwtAuthGuard, RolesGuard)  // Temporarily disabled for testing
-  // @Roles(UserRole.ADMIN)  // Temporarily disabled for testing
+  @UseGuards(JwtAuthGuard, RolesGuard)  // Re-enabled authentication and authorization
+  @Roles(UserRole.ADMIN)  // Re-enabled role-based access control
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.studyProgramsService.remove(id);
   }

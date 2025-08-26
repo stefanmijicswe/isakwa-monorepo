@@ -24,6 +24,7 @@ model User {
   professorAssignments   ProfessorAssignment[]
   professorProfile       ProfessorProfile?
   studentProfile         StudentProfile?
+  studentServiceProfile  StudentServiceProfile?
   createdViolations      StudentViolation[]
   inventoryRequests      InventoryRequest[]
   approvedRequests       InventoryRequest[]      @relation("InventoryApprover")
@@ -172,14 +173,41 @@ model StudyProgramSubject {
 model ProfessorProfile {
   id          Int     @id @default(autoincrement())
   userId      Int     @unique
-  department  String
+  departmentId Int
   title       String
   phoneNumber String?
   officeRoom  String?
   user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department  Department @relation(fields: [departmentId], references: [id])
   titles      Title[]
 
   @@map("professor_profiles")
+}
+
+model Department {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  description String?
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  professorProfiles ProfessorProfile[]
+  studentServiceProfiles StudentServiceProfile[]
+
+  @@map("departments")
+}
+
+model StudentServiceProfile {
+  id          Int     @id @default(autoincrement())
+  userId      Int     @unique
+  departmentId Int
+  position    String
+  phoneNumber String?
+  officeRoom  String?
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department  Department @relation(fields: [departmentId], references: [id])
+
+  @@map("student_service_profiles")
 }
 
 model TitleType {

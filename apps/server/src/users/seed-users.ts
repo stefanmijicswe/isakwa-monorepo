@@ -5,6 +5,15 @@ import * as bcrypt from 'bcryptjs';
 export async function seedUsers(prisma: PrismaService) {
   console.log('🌱 Seeding users...');
 
+  // Get Computer Science department ID
+  const computerScienceDept = await prisma.department.findFirst({
+    where: { name: 'Computer Science' }
+  });
+  
+  if (!computerScienceDept) {
+    throw new Error('Computer Science department not found. Please run departments seed first.');
+  }
+
   // Check if admin already exists
   const existingAdmin = await prisma.user.findUnique({
     where: { email: 'admin@isakwa.edu' }
@@ -51,7 +60,7 @@ export async function seedUsers(prisma: PrismaService) {
     await prisma.professorProfile.create({
       data: {
         userId: professor.id,
-        department: 'Computer Science',
+        departmentId: computerScienceDept.id,
         title: 'Associate Professor',
         phoneNumber: '+381-11-123-4567',
         officeRoom: 'A-101',
@@ -160,6 +169,67 @@ export async function seedUsers(prisma: PrismaService) {
         },
       });
       console.log('✅ Test student created:', student.email);
+    }
+  }
+
+  // Create student service users
+  const studentServiceUsers = [
+    {
+      email: 'test@isakwa.edu',
+      firstName: 'Test',
+      lastName: 'User',
+      position: 'Administrative Assistant',
+      phoneNumber: '+381-11-555-5555',
+      officeRoom: 'B-201',
+    },
+    {
+      email: 'test2@isakwa.edu',
+      firstName: 'Test2',
+      lastName: 'User',
+      position: 'Office Manager',
+      phoneNumber: '+381-11-666-6666',
+      officeRoom: 'B-202',
+    },
+    {
+      email: 'service@isakwa.edu',
+      firstName: 'Service',
+      lastName: 'Staff',
+      position: 'Student Coordinator',
+      phoneNumber: '+381-11-777-7777',
+      officeRoom: 'B-203',
+    },
+  ];
+
+  for (const userData of studentServiceUsers) {
+    const existingUser = await prisma.user.findUnique({
+      where: { email: userData.email }
+    });
+
+    if (!existingUser) {
+      const hashedPassword = await bcrypt.hash('student123', 10);
+      
+      const user = await prisma.user.create({
+        data: {
+          email: userData.email,
+          password: hashedPassword,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          role: UserRole.STUDENT_SERVICE,
+          isActive: true,
+        },
+      });
+
+      // Create student service profile
+      await prisma.studentServiceProfile.create({
+        data: {
+          userId: user.id,
+          departmentId: computerScienceDept.id,
+          position: userData.position,
+          phoneNumber: userData.phoneNumber,
+          officeRoom: userData.officeRoom,
+        },
+      });
+      console.log('✅ Student service user created:', user.email);
     }
   }
 
