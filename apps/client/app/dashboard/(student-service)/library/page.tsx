@@ -49,6 +49,7 @@ export default function LibraryManagementPage() {
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [selectedBorrowing, setSelectedBorrowing] = useState<LibraryBorrowing | null>(null);
   const [returnNotes, setReturnNotes] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -92,12 +93,20 @@ export default function LibraryManagementPage() {
         notes: borrowForm.notes
       });
 
-      await fetchData();
-      setBorrowForm({ studentId: "", dueDate: "", notes: "" });
-      setSelectedItem(null);
-      setShowBorrowModal(false);
-    } catch (error) {
+             await fetchData();
+       setBorrowForm({ studentId: "", dueDate: "", notes: "" });
+       setSelectedItem(null);
+       setShowBorrowModal(false);
+       setError(null); // Clear any previous errors
+    } catch (error: any) {
       console.error("Error borrowing item:", error);
+      // Extract error message from backend response
+      if (error.message && error.message.includes("HTTP error!")) {
+        // Try to parse the response body for more details
+        setError("Failed to borrow book. Please try again.");
+      } else {
+        setError(error.message || "Failed to borrow book. Please try again.");
+      }
     }
   };
 
@@ -105,7 +114,7 @@ export default function LibraryManagementPage() {
     if (!selectedBorrowing) return;
 
     try {
-      await returnItem(selectedBorrowing.id, { returnNotes });
+      await returnItem(selectedBorrowing.id, { notes: returnNotes });
       await fetchData();
       setReturnNotes("");
       setSelectedBorrowing(null);
@@ -148,6 +157,38 @@ export default function LibraryManagementPage() {
 
   return (
     <div className="space-y-6">
+      {/* Error Alert */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Error</h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>{error}</p>
+              </div>
+            </div>
+            <div className="ml-auto pl-3">
+              <div className="-mx-1.5 -my-1.5">
+                <button
+                  onClick={() => setError(null)}
+                  className="inline-flex rounded-md bg-red-50 p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 focus:ring-offset-red-50"
+                >
+                  <span className="sr-only">Dismiss</span>
+                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414L11.414 12l3.293 3.293a1 1 0 01-1.414 1.414L10 13.414l-3.293 3.293a1 1 0 01-1.414-1.414L8.586 12 5.293 8.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -271,7 +312,7 @@ export default function LibraryManagementPage() {
               <CardContent className="p-8 text-center">
                 <Book className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                 <p className="text-gray-600">No books found</p>
-              </Card>
+              </CardContent>
             </Card>
           )}
         </TabsContent>
@@ -389,10 +430,16 @@ export default function LibraryManagementPage() {
                             <p>{borrowing.libraryItem?.author || 'Unknown'}</p>
                           </div>
                         </div>
-                        {borrowing.returnNotes && (
+                        {borrowing.notes && (
                           <div className="mt-3 p-3 bg-green-50 rounded text-sm border border-green-200">
                             <span className="font-medium text-green-700">Return Notes:</span>
-                            <p className="text-green-600 mt-1">{borrowing.returnNotes}</p>
+                            <p className="text-green-600 mt-1">{borrowing.notes}</p>
+                          </div>
+                        )}
+                        {!borrowing.notes && (
+                          <div className="mt-3 p-3 bg-gray-50 rounded text-sm border border-gray-200">
+                            <span className="font-medium text-gray-700">Return Notes:</span>
+                            <p className="text-gray-600 mt-1">No comment</p>
                           </div>
                         )}
                       </div>
@@ -406,14 +453,33 @@ export default function LibraryManagementPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Borrow Modal */}
-      <Dialog open={showBorrowModal} onOpenChange={setShowBorrowModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Borrow Book</DialogTitle>
-          </DialogHeader>
-          {selectedItem && (
-            <div className="space-y-4">
+             {/* Borrow Modal */}
+       <Dialog open={showBorrowModal} onOpenChange={setShowBorrowModal}>
+         <DialogContent>
+           <DialogHeader>
+             <DialogTitle>Borrow Book</DialogTitle>
+           </DialogHeader>
+           {selectedItem && (
+             <>
+                              {/* Error Alert in Modal */}
+               {error && (
+                 <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+                   <div className="flex">
+                     <div className="flex-shrink-0">
+                       <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                       </svg>
+                     </div>
+                     <div className="ml-3">
+                       <h3 className="text-sm font-medium text-red-800">Error</h3>
+                       <div className="mt-2 text-sm text-red-700">
+                         <p>{error}</p>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               )}
+               <div className="space-y-4">
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h4 className="font-medium text-gray-900 mb-2">{selectedItem.title}</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -484,6 +550,7 @@ export default function LibraryManagementPage() {
                 </Button>
               </div>
             </div>
+            </>
           )}
         </DialogContent>
       </Dialog>

@@ -302,7 +302,7 @@ export default function GradeEntryPage() {
                   </td>
                   
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getGradeColor(parseFloat(calculateAverage(student)))}`}>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getGradeColor(calculateAverage(student))}`}>
                       {calculateAverage(student)}
                     </span>
                   </td>

@@ -1,7 +1,13 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateLibraryItemDto, UpdateLibraryItemDto, BorrowItemDto, ReturnItemDto } from './dto';
-import { BorrowingStatus } from '@prisma/client';
+
+enum BorrowingStatus {
+  BORROWED = 'BORROWED',
+  RETURNED = 'RETURNED',
+  OVERDUE = 'OVERDUE',
+}
+
 
 @Injectable()
 export class LibraryService {
@@ -31,23 +37,23 @@ export class LibraryService {
         skip,
         take: limit,
         include: {
-          borrowings: {
-            where: { status: BorrowingStatus.BORROWED },
-            include: {
-              student: {
-                include: {
-                  user: { select: { firstName: true, lastName: true } },
-                },
-              },
-            },
-          },
-          _count: {
-            select: {
-              borrowings: {
-                where: { status: BorrowingStatus.BORROWED },
-              },
-            },
-          },
+                     borrowings: {
+             where: { isActive: true },
+             include: {
+               student: {
+                 include: {
+                   user: { select: { firstName: true, lastName: true } },
+                 },
+               },
+             },
+           },
+           _count: {
+             select: {
+               borrowings: {
+                 where: { isActive: true },
+               },
+             },
+           },
         },
         orderBy: { title: 'asc' },
       }),
@@ -107,13 +113,13 @@ export class LibraryService {
   async deleteLibraryItem(id: number) {
     await this.findLibraryItemById(id);
 
-    // Check if item has active borrowings
-    const activeBorrowings = await this.prisma.libraryBorrowing.count({
-      where: {
-        libraryItemId: id,
-        status: BorrowingStatus.BORROWED,
-      },
-    });
+         // Check if item has active borrowings
+     const activeBorrowings = await this.prisma.libraryBorrowing.count({
+       where: {
+         libraryItemId: id,
+         isActive: true,
+       },
+     });
 
     if (activeBorrowings > 0) {
       throw new BadRequestException('Cannot delete item with active borrowings');
@@ -134,7 +140,7 @@ export class LibraryService {
         _count: {
           select: {
             borrowings: {
-              where: { status: BorrowingStatus.BORROWED },
+              where: { isActive: true },
             },
           },
         },
@@ -158,14 +164,14 @@ export class LibraryService {
       throw new NotFoundException('Student not found');
     }
 
-    // Check if student already has this item borrowed
-    const existingBorrowing = await this.prisma.libraryBorrowing.findFirst({
-      where: {
-        studentId: student.id, // Use student.id (StudentProfile.id), not data.studentId (User.id)
-        libraryItemId: data.libraryItemId,
-        status: BorrowingStatus.BORROWED,
-      },
-    });
+         // Check if student already has this item borrowed
+     const existingBorrowing = await this.prisma.libraryBorrowing.findFirst({
+       where: {
+         studentId: student.id, // Use student.id (StudentProfile.id), not data.studentId (User.id)
+         libraryItemId: data.libraryItemId,
+         isActive: true,
+       },
+     });
 
     if (existingBorrowing) {
       throw new BadRequestException('Student already has this item borrowed');
@@ -208,7 +214,7 @@ export class LibraryService {
       throw new NotFoundException('Borrowing record not found');
     }
 
-    if (borrowing.status === BorrowingStatus.RETURNED) {
+    if (!borrowing.isActive) {
       throw new BadRequestException('Item already returned');
     }
 
@@ -216,8 +222,8 @@ export class LibraryService {
       where: { id: borrowingId },
       data: {
         returnedAt: new Date(),
-        status: data.status || BorrowingStatus.RETURNED,
-        notes: data.notes ? `${borrowing.notes || ''}\n${data.notes}` : borrowing.notes,
+        isActive: false,
+        notes: data.notes || null,
       },
       include: {
         student: {
@@ -244,14 +250,14 @@ export class LibraryService {
     });
   }
 
-  async getOverdueItems() {
-    const now = new Date();
-    
-    return this.prisma.libraryBorrowing.findMany({
-      where: {
-        status: BorrowingStatus.BORROWED,
-        dueDate: { lt: now },
-      },
+     async getOverdueItems() {
+     const now = new Date();
+     
+     return this.prisma.libraryBorrowing.findMany({
+       where: {
+         isActive: true,
+         dueDate: { lt: now },
+       },
       include: {
         student: {
           include: {
@@ -268,7 +274,7 @@ export class LibraryService {
 
   async getAllBorrowings() {
     return this.prisma.libraryBorrowing.findMany({
-      where: { isActive: true },
+      where: {}, // No filter - get ALL borrowings (active and returned)
       include: {
         student: {
           include: {

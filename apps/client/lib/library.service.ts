@@ -1,6 +1,6 @@
 import { authService } from './auth.service';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export interface LibraryItem {
   id: number;
@@ -61,7 +61,8 @@ export interface BorrowItemDto {
 }
 
 export interface ReturnItemDto {
-  returnNotes?: string;
+  notes?: string;
+  status?: 'BORROWED' | 'RETURNED' | 'OVERDUE';
 }
 
 // Library Items
@@ -181,7 +182,7 @@ export async function borrowItem(data: BorrowItemDto): Promise<LibraryBorrowing>
 export async function returnItem(borrowingId: number, data: ReturnItemDto): Promise<LibraryBorrowing> {
   try {
     const response = await fetch(`${API_BASE_URL}/library/return/${borrowingId}`, {
-      method: 'PUT',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${authService.getToken()}`,
