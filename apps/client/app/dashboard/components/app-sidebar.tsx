@@ -151,28 +151,16 @@ const navigationByRole = {
   ],
   STUDENT_SERVICE: [
     {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: Home,
+      description: "Service overview"
+    },
+    {
       title: "Student Enrollment",
       url: "/dashboard/enroll",
       icon: Users,
       description: "Manage enrollments"
-    },
-    {
-      title: "Certificate Generator",
-      url: "/dashboard/certificates",
-      icon: FileText,
-      description: "Generate student certificates"
-    },
-    {
-      title: "Create Notification",
-      url: "/dashboard/create-notification",
-      icon: Bell,
-      description: "Send announcements to all users"
-    },
-    {
-      title: "Schedule Management",
-      url: "/dashboard/schedule-management",
-      icon: Calendar,
-      description: "Manage course and exam schedules"
     },
     {
       title: "Library Management",
@@ -233,38 +221,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [notificationCount, setNotificationCount] = React.useState(0)
   const pathname = usePathname()
 
-  // Function to refresh notification count
-  const refreshNotificationCount = React.useCallback(async () => {
-    if (user) {
-      try {
-        const notifications = await getNotifications()
-        const unreadCount = notifications.filter(n => !n.isRead).length
-        setNotificationCount(unreadCount)
-      } catch (error) {
-        console.error('Failed to refresh notification count:', error)
-        setNotificationCount(0)
-      }
-    }
-  }, [user])
-
   // Fetch notifications count when user is logged in
   React.useEffect(() => {
-    refreshNotificationCount()
-  }, [refreshNotificationCount])
-
-  // Listen for notification updates from other components
-  React.useEffect(() => {
-    const handleNotificationUpdate = () => {
-      refreshNotificationCount()
+    if (user) {
+      const fetchNotifications = async () => {
+        try {
+          const notifications = await getNotifications()
+          setNotificationCount(notifications.length)
+        } catch (error) {
+          console.error('Failed to fetch notifications:', error)
+          setNotificationCount(0)
+        }
+      }
+      
+      fetchNotifications()
     }
-
-    // Listen for custom event when notifications are updated
-    window.addEventListener('notifications-updated', handleNotificationUpdate)
-    
-    return () => {
-      window.removeEventListener('notifications-updated', handleNotificationUpdate)
-    }
-  }, [refreshNotificationCount])
+  }, [user])
 
   const handleLogout = () => {
     setShowLogoutConfirm(true)

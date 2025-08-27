@@ -18,7 +18,7 @@ const personnelFormSchema = z.object({
   email: z.string().email("Invalid email address"),
   title: z.string().min(1, "Title is required"),
   departmentId: z.number().min(1, "Department is required"),
-
+  specialization: z.string().optional(),
   isActive: z.boolean()
 })
 
@@ -67,6 +67,7 @@ export function EditPersonnelModal({ isOpen, onClose, personnel, onSave }: EditP
       email: "",
       title: "",
       departmentId: 1,
+      specialization: "",
       isActive: true
     }
   })
@@ -118,7 +119,7 @@ export function EditPersonnelModal({ isOpen, onClose, personnel, onSave }: EditP
           email: personnel.email,
           title: personnel.professorProfile.title || "",
           departmentId: personnel.professorProfile.department?.id || 1,
-
+          specialization: personnel.professorProfile.specialization || "",
           isActive: personnel.isActive
         })
       } else if (!isProfessor && personnel.studentServiceProfile) {
@@ -128,7 +129,7 @@ export function EditPersonnelModal({ isOpen, onClose, personnel, onSave }: EditP
           email: personnel.email,
           title: personnel.studentServiceProfile.position || "",
           departmentId: personnel.studentServiceProfile.department?.id || 1,
-
+          specialization: "",
           isActive: personnel.isActive
         })
       }
@@ -260,7 +261,21 @@ export function EditPersonnelModal({ isOpen, onClose, personnel, onSave }: EditP
               />
             </div>
 
-
+            {isProfessor && (
+              <FormField
+                control={form.control}
+                name="specialization"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Specialization</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter specialization (optional)" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}

@@ -1,494 +1,452 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import { 
   Package, 
-  User, 
-  CheckCircle
+  Plus, 
+  Search, 
+  Calendar, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clock,
+  FileText,
+  PenTool,
+  Printer,
+  Monitor,
+  BookOpen
 } from "lucide-react";
 
-interface InventoryItem {
-  id: number;
-  name: string;
+interface SupplyRequest {
+  id: string;
+  itemName: string;
   category: string;
   quantity: number;
-  unit: string;
-}
-
-interface Student {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  studentProfile?: {
-    year: number;
-    studyProgram?: {
-      name: string;
-    };
-  };
-}
-
-interface InventoryIssuance {
-  id: number;
-  inventoryItem: {
-    name: string;
-    category: string;
-  };
-  student: {
-    user: {
-      firstName: string;
-      lastName: string;
-    };
-  };
-  quantityIssued: number;
-  issuedAt: string;
+  priority: "low" | "medium" | "high" | "urgent";
+  status: "pending" | "approved" | "rejected" | "delivered";
+  requestedBy: string;
+  requestDate: string;
   notes?: string;
-  isActive: boolean;
+  estimatedCost?: number;
+  approvedBy?: string;
+  approvedDate?: string;
+  deliveryDate?: string;
 }
+
+const supplyCategories = [
+  { id: "stationery", name: "Stationery", icon: PenTool, color: "bg-blue-100 text-blue-800" },
+  { id: "paper", name: "Paper & Printing", icon: Printer, color: "bg-green-100 text-green-800" },
+  { id: "electronics", name: "Electronics", icon: Monitor, color: "bg-purple-100 text-purple-800" },
+  { id: "furniture", name: "Furniture", icon: Package, color: "bg-orange-100 text-orange-800" },
+  { id: "books", name: "Books & Manuals", icon: BookOpen, color: "bg-red-100 text-red-800" },
+  { id: "other", name: "Other Supplies", icon: FileText, color: "bg-gray-100 text-gray-800" }
+];
+
+const commonSupplies = {
+  stationery: ["Pens", "Pencils", "Markers", "Highlighters", "Staplers", "Paper Clips", "Sticky Notes", "Tape", "Scissors", "Rulers"],
+  paper: ["A4 Paper", "Printer Ink", "Toner Cartridges", "Notebooks", "Folders", "Envelopes", "Labels", "Cardstock"],
+  electronics: ["USB Cables", "Power Adapters", "Mouse Pads", "Webcams", "Microphones", "Speakers", "Extension Cords"],
+  furniture: ["Desk Chairs", "Filing Cabinets", "Bookshelves", "Desk Organizers", "Whiteboards", "Notice Boards"],
+  books: ["Office Manuals", "Reference Books", "Training Materials", "Procedure Guides"],
+  other: ["First Aid Kits", "Cleaning Supplies", "Storage Boxes", "Cable Organizers"]
+};
+
+const mockRequests: SupplyRequest[] = [
+  {
+    id: "1",
+    itemName: "A4 Paper",
+    category: "paper",
+    quantity: 50,
+    priority: "high",
+    status: "pending",
+    requestedBy: "John Doe",
+    requestDate: "2025-01-15",
+    notes: "Running low on paper, need for upcoming exams",
+    estimatedCost: 25.00
+  },
+  {
+    id: "2",
+    itemName: "Office Chairs",
+    category: "furniture",
+    quantity: 5,
+    priority: "medium",
+    status: "approved",
+    requestedBy: "Jane Smith",
+    requestDate: "2025-01-10",
+    notes: "New staff members need proper seating",
+    estimatedCost: 750.00,
+    approvedBy: "Admin Manager",
+    approvedDate: "2025-01-12"
+  },
+  {
+    id: "3",
+    itemName: "Printer Ink",
+    category: "paper",
+    quantity: 10,
+    priority: "urgent",
+    status: "delivered",
+    requestedBy: "Mike Johnson",
+    requestDate: "2025-01-05",
+    notes: "Printer completely out of ink",
+    estimatedCost: 120.00,
+    approvedBy: "Admin Manager",
+    approvedDate: "2025-01-06",
+    deliveryDate: "2025-01-08"
+  }
+];
 
 export default function InventoryPage() {
-  const [activeTab, setActiveTab] = useState("issue");
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [issuances, setIssuances] = useState<InventoryIssuance[]>([]);
-  const [loading, setLoading] = useState(false);
-  
-  // Form state
-  const [selectedItem, setSelectedItem] = useState<number | null>(null);
-  const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
-  const [quantity, setQuantity] = useState<number>(1);
-  const [notes, setNotes] = useState<string>("");
+  const [activeTab, setActiveTab] = useState("new-request");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [showNewRequestModal, setShowNewRequestModal] = useState(false);
+  const [newRequest, setNewRequest] = useState({
+    itemName: "",
+    category: "",
+    quantity: "",
+    priority: "medium" as const,
+    notes: ""
+  });
 
-  // Fetch inventory items
-  useEffect(() => {
-    const fetchInventoryItems = async () => {
-      try {
-        const response = await fetch('http://localhost:3001/api/inventory/items', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setInventoryItems(data.data || data);
-        }
-      } catch (error) {
-        console.error('Error fetching inventory items:', error);
-      }
+  const filteredRequests = mockRequests.filter(request => {
+    const matchesSearch = request.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         request.requestedBy.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = !selectedCategory || request.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const handleSubmitRequest = () => {
+    if (!newRequest.itemName || !newRequest.category || !newRequest.quantity) return;
+
+    const request: SupplyRequest = {
+      id: Date.now().toString(),
+      itemName: newRequest.itemName,
+      category: newRequest.category,
+      quantity: parseInt(newRequest.quantity),
+      priority: newRequest.priority,
+      status: "pending",
+      requestedBy: "John Doe",
+      requestDate: new Date().toISOString().split('T')[0],
+      notes: newRequest.notes,
+      estimatedCost: Math.random() * 100 + 10
     };
 
-    fetchInventoryItems();
-  }, []);
-
-  // Fetch students
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const response = await fetch('http://localhost:3001/api/users/students', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Students data:', data);
-          setStudents(data.users || data);
-        } else {
-          console.error('Failed to fetch students:', response.status, response.statusText);
-        }
-      } catch (error) {
-        console.error('Error fetching students:', error);
-      }
-    };
-
-    fetchStudents();
-  }, []);
-
-  // Fetch issuances
-  useEffect(() => {
-    const fetchIssuances = async () => {
-      try {
-        const response = await fetch('http://localhost:3001/api/inventory/issuances', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setIssuances(data.issuances || data);
-        }
-      } catch (error) {
-        console.error('Error fetching issuances:', error);
-      }
-    };
-
-    fetchIssuances();
-  }, []);
-
-  // Handle issuance
-  const handleIssue = async () => {
-    if (!selectedItem || !selectedStudent || quantity < 1) {
-      alert('Please select item, student and enter quantity');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await fetch('http://localhost:3001/api/inventory/issuances', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          inventoryItemId: selectedItem,
-          studentId: selectedStudent,
-          quantityIssued: quantity,
-          notes: notes || undefined,
-        }),
-      });
-
-      if (response.ok) {
-        // Reset form
-        setSelectedItem(null);
-        setSelectedStudent(null);
-        setQuantity(1);
-        setNotes("");
-        
-        // Refresh issuances
-        const data = await response.json();
-        setIssuances(prev => [data, ...prev]);
-        
-        alert('Item issued successfully!');
-      } else {
-        const error = await response.json();
-        alert(`Error: ${error.message || 'Failed to issue item'}`);
-      }
-    } catch (error) {
-      console.error('Error issuing item:', error);
-      alert('Error issuing item');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMarkAsReturned = async (issuanceId: number) => {
-    if (!confirm('Are you sure you want to mark this item as returned?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`http://localhost:3001/api/inventory/issuances/${issuanceId}/return`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          returnNotes: 'Item returned by student service',
-        }),
-      });
-
-      if (response.ok) {
-        // Refresh issuances to show updated status
-        const updatedIssuances = issuances.map(issuance => 
-          issuance.id === issuanceId 
-            ? { ...issuance, isActive: false }
-            : issuance
-        );
-        setIssuances(updatedIssuances);
-        
-        alert('Item marked as returned successfully!');
-      } else {
-        const error = await response.json();
-        alert(`Error: ${error.message || 'Failed to mark item as returned'}`);
-      }
-    } catch (error) {
-      console.error('Error marking item as returned:', error);
-      alert('Error marking item as returned');
-    }
-  };
-
-  const filteredStudents = students.filter(student =>
-    student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    mockRequests.unshift(request);
+    
+    setNewRequest({
+      itemName: "",
+      category: "",
+      quantity: "",
+      priority: "medium",
+      notes: ""
     });
+    setShowNewRequestModal(false);
   };
 
-  const formatCategory = (category: string) => {
-    return category
-      .split('_')
-      .map(word => word.charAt(0) + word.slice(1).toLowerCase())
-      .join(' ');
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "low": return "bg-gray-100 text-gray-800";
+      case "medium": return "bg-blue-100 text-blue-800";
+      case "high": return "bg-orange-100 text-orange-800";
+      case "urgent": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "pending": return "bg-yellow-100 text-yellow-800";
+      case "approved": return "bg-blue-100 text-blue-800";
+      case "rejected": return "bg-red-100 text-red-800";
+      case "delivered": return "bg-green-100 text-green-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "pending": return <Clock className="h-4 w-4" />;
+      case "approved": return <CheckCircle className="h-4 w-4" />;
+      case "rejected": return <AlertTriangle className="h-4 w-4" />;
+      case "delivered": return <CheckCircle className="h-4 w-4" />;
+      default: return <Clock className="h-4 w-4" />;
+    }
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-6 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">
-              Inventory Management
-            </h1>
-            <p className="text-slate-600">
-              Issue office supplies and track inventory
-            </p>
-          </div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Office Supplies Management</h1>
+          <p className="text-gray-600">Request and track office supplies for student services</p>
         </div>
+        <Button onClick={() => setShowNewRequestModal(true)} className="flex items-center space-x-2">
+          <Plus className="h-4 w-4" />
+          <span>New Request</span>
+        </Button>
       </div>
 
-                           {/* Main Content */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6 min-w-full">
-            <TabsTrigger value="issue" className="flex-1">Issue Items</TabsTrigger>
-            <TabsTrigger value="history" className="flex-1">Issue History</TabsTrigger>
-          </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="new-request">New Request</TabsTrigger>
+          <TabsTrigger value="my-requests">My Requests</TabsTrigger>
+          <TabsTrigger value="all-requests">All Requests</TabsTrigger>
+          <TabsTrigger value="categories">Categories</TabsTrigger>
+        </TabsList>
 
-                                                                                                           <TabsContent value="issue" className="space-y-6 min-h-[600px] w-full">
-             <Card className="border-0 shadow-sm bg-white w-full">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-slate-900">Issue Inventory Item</CardTitle>
-                <p className="text-sm text-slate-600 mt-2">Select items, choose students, and issue inventory</p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                             {/* Step 1: Select Item */}
-               <div>
-                 <h3 className="text-md font-medium text-slate-900 mb-3">1. Select Item</h3>
-                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                   {inventoryItems.map((item) => (
-                     <div
-                       key={item.id}
-                       className={`p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                         selectedItem === item.id
-                           ? 'border-blue-500 bg-blue-50 shadow-md'
-                           : 'border-slate-200 hover:border-slate-300'
-                       }`}
-                       onClick={() => setSelectedItem(item.id)}
-                     >
-                       <div className="text-center">
-                         <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-                           <Package className="h-4 w-4 text-blue-600" />
-                         </div>
-                         <div className="font-medium text-slate-900 text-sm truncate">{item.name}</div>
-                         <div className="text-xs text-slate-500 truncate">{formatCategory(item.category)}</div>
-                         <div className="text-xs font-medium text-slate-700 mt-1">
-                           {item.quantity} {item.unit}
-                         </div>
-                       </div>
-                     </div>
-                   ))}
-                 </div>
-               </div>
-
-                             {/* Step 2: Select Student */}
-               <div>
-                 <h3 className="text-md font-medium text-slate-900 mb-3">2. Select Student</h3>
-                 <div className="mb-4">
-                   <Command className="rounded-lg border border-slate-200">
-                     <CommandInput 
-                       placeholder="Search students by name or email..." 
-                       value={searchTerm}
-                       onValueChange={setSearchTerm}
-                     />
-                     <CommandList>
-                       <CommandEmpty>No students found.</CommandEmpty>
-                       <CommandGroup>
-                         {filteredStudents.map((student) => (
-                           <CommandItem
-                             key={student.id}
-                             value={`${student.firstName} ${student.lastName} ${student.email}`}
-                             onSelect={() => setSelectedStudent(student.id)}
-                             className="cursor-pointer"
-                           >
-                             <div className="flex items-center space-x-3 w-full">
-                               <div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center">
-                                 <User className="h-4 w-4 text-green-600" />
-                               </div>
-                               <div className="flex-1">
-                                 <div className="font-medium text-slate-900">
-                                   {student.firstName} {student.lastName}
-                                 </div>
-                                 <div className="text-sm text-slate-500">{student.email}</div>
-                                 <div className="text-sm text-slate-500">
-                                   Year {student.studentProfile?.year || 'N/A'} • {student.studentProfile?.studyProgram?.name || 'N/A'}
-                                 </div>
-                               </div>
-                               {selectedStudent === student.id && (
-                                 <div className="h-4 w-4 bg-green-500 rounded-full flex items-center justify-center">
-                                   <CheckCircle className="h-3 w-3 text-white" />
-                                 </div>
-                               )}
-                             </div>
-                           </CommandItem>
-                         ))}
-                       </CommandGroup>
-                     </CommandList>
-                   </Command>
-                 </div>
-                 
-                 {/* Selected Student Display */}
-                 {selectedStudent && (
-                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                     <div className="flex items-center space-x-3">
-                       <div className="h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center">
-                         <User className="h-5 w-5 text-green-600" />
-                       </div>
-                       <div>
-                         <div className="font-medium text-slate-900">
-                           {students.find(s => s.id === selectedStudent)?.firstName} {students.find(s => s.id === selectedStudent)?.lastName}
-                         </div>
-                         <div className="text-sm text-slate-600">
-                           {students.find(s => s.id === selectedStudent)?.email}
-                         </div>
-                       </div>
-                     </div>
-                   </div>
-                 )}
-               </div>
-
-              {/* Step 3: Quantity and Notes */}
-              <div>
-                <h3 className="text-md font-medium text-slate-900 mb-3">3. Quantity & Notes</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Quantity
-                    </label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={quantity}
-                      onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                      className="border-slate-200"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Notes (optional)
-                    </label>
-                    <Input
-                      placeholder="e.g., Student took scissors for project"
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      className="border-slate-200"
-                    />
-                  </div>
+        <TabsContent value="new-request" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Package className="h-5 w-5" />
+                <span>Request New Supplies</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="itemName">Item Name *</Label>
+                  <Input
+                    id="itemName"
+                    placeholder="Enter item name"
+                    value={newRequest.itemName}
+                    onChange={(e) => setNewRequest({ ...newRequest, itemName: e.target.value })}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category *</Label>
+                  <select
+                    id="category"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={newRequest.category}
+                    onChange={(e) => setNewRequest({ ...newRequest, category: e.target.value })}
+                  >
+                    <option value="">Select category</option>
+                    {supplyCategories.map(category => (
+                      <option key={category.id} value={category.id}>{category.name}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Quantity *</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="1"
+                    placeholder="Enter quantity"
+                    value={newRequest.quantity}
+                    onChange={(e) => setNewRequest({ ...newRequest, quantity: e.target.value })}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="priority">Priority Level</Label>
+                  <select
+                    id="priority"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={newRequest.priority}
+                    onChange={(e) => setNewRequest({ ...newRequest, priority: e.target.value as any })}
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
                 </div>
               </div>
-
-              {/* Issue Button */}
-              <div className="pt-4">
+              
+              <div className="space-y-2">
+                <Label htmlFor="notes">Additional Notes</Label>
+                <textarea
+                  id="notes"
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Any additional details about your request..."
+                  value={newRequest.notes}
+                  onChange={(e) => setNewRequest({ ...newRequest, notes: e.target.value })}
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-3">
                 <Button
-                  onClick={handleIssue}
-                  disabled={loading || !selectedItem || !selectedStudent}
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  onClick={handleSubmitRequest}
+                  disabled={!newRequest.itemName || !newRequest.category || !newRequest.quantity}
+                  className="px-6"
                 >
-                  {loading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  ) : (
-                    <Package className="h-4 w-4 mr-2" />
-                  )}
-                  Issue Item
+                  Submit Request
                 </Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-                                                                       <TabsContent value="history" className="space-y-6 min-h-[600px] w-full">
-            <Card className="border-0 shadow-sm bg-white w-full">
-             <CardHeader>
-               <CardTitle className="text-lg font-semibold text-slate-900">Recent Issues</CardTitle>
-               <p className="text-sm text-slate-600 mt-2">Track all inventory items issued to students</p>
-             </CardHeader>
-                           <CardContent className="space-y-6">
-                {/* Issues List */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium text-slate-900">Issue History</h3>
-                    <div className="text-sm text-slate-500">
-                      Showing {issuances.length} recent issues
-                    </div>
-                  </div>
-                 
-                 {issuances.length === 0 ? (
-                   <div className="text-center py-12">
-                     <Package className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-                     <p className="text-lg text-slate-600 mb-2">No items have been issued yet</p>
-                     <p className="text-sm text-slate-500">Start by issuing items from the Issue Items tab</p>
-                   </div>
-                 ) : (
-                   issuances.map((issuance) => (
-                     <div key={issuance.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors">
-                       <div className="flex items-center space-x-3">
-                         <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                           <Package className="h-5 w-5 text-blue-600" />
-                         </div>
-                         <div className="flex-1">
-                           <div className="font-medium text-slate-900">
-                             {issuance.inventoryItem.name}
-                           </div>
-                           <div className="text-sm text-slate-600">
-                             Issued to: {issuance.student.user.firstName} {issuance.student.user.lastName}
-                           </div>
-                           {issuance.notes && (
-                             <div className="text-sm text-slate-500 italic mt-1">
-                               &ldquo;{issuance.notes}&rdquo;
-                             </div>
-                           )}
-                         </div>
-                       </div>
-                                               <div className="text-right ml-4">
-                          <div className="text-sm font-medium text-slate-900">
-                            {issuance.quantityIssued} items
-                          </div>
-                          <div className="text-sm text-slate-500">
-                            {formatDate(issuance.issuedAt)}
-                          </div>
-                          {issuance.isActive && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="mt-2 text-xs"
-                              onClick={() => handleMarkAsReturned(issuance.id)}
-                            >
-                              Mark as Returned
-                            </Button>
-                          )}
+        <TabsContent value="my-requests" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>My Supply Requests</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {mockRequests.filter(r => r.requestedBy === "John Doe").map((request) => (
+                  <div key={request.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="font-medium">{request.itemName}</h3>
+                        <div className="text-sm text-gray-600 space-y-1">
+                          <p>Category: {supplyCategories.find(c => c.id === request.category)?.name}</p>
+                          <p>Quantity: {request.quantity}</p>
+                          <p>Requested: {request.requestDate}</p>
+                          {request.notes && <p>Notes: {request.notes}</p>}
                         </div>
-                     </div>
-                   ))
-                 )}
-               </div>
-             </CardContent>
-           </Card>
-         </TabsContent>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge className={getPriorityColor(request.priority)}>
+                          {request.priority.charAt(0).toUpperCase() + request.priority.slice(1)}
+                        </Badge>
+                        <Badge className={getStatusColor(request.status)}>
+                          {getStatusIcon(request.status)}
+                          <span className="ml-1">{request.status.charAt(0).toUpperCase() + request.status.slice(1)}</span>
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    {request.status === "approved" && (
+                      <div className="border-t pt-3 text-sm text-gray-600">
+                        <p>Approved by: {request.approvedBy} on {request.approvedDate}</p>
+                        {request.estimatedCost && <p>Estimated cost: ${request.estimatedCost.toFixed(2)}</p>}
+                      </div>
+                    )}
+                    
+                    {request.status === "delivered" && (
+                      <div className="border-t pt-3 text-sm text-gray-600">
+                        <p>Delivered on: {request.deliveryDate}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="all-requests" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>All Supply Requests</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex space-x-4 mb-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Search requests..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <select
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                  >
+                    <option value="">All Categories</option>
+                    {supplyCategories.map(category => (
+                      <option key={category.id} value={category.id}>{category.name}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="space-y-3">
+                  {filteredRequests.map((request) => (
+                    <div key={request.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-medium">{request.itemName}</h3>
+                          <div className="text-sm text-gray-600 space-y-1">
+                            <p>Requested by: {request.requestedBy}</p>
+                            <p>Category: {supplyCategories.find(c => c.id === request.category)?.name}</p>
+                            <p>Quantity: {request.quantity}</p>
+                            <p>Requested: {request.requestDate}</p>
+                            {request.notes && <p>Notes: {request.notes}</p>}
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge className={getPriorityColor(request.priority)}>
+                            {request.priority.charAt(0).toUpperCase() + request.priority.slice(1)}
+                          </Badge>
+                          <Badge className={getStatusColor(request.status)}>
+                            {getStatusIcon(request.status)}
+                            <span className="ml-1">{request.status.charAt(0).toUpperCase() + request.status.slice(1)}</span>
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      {request.status === "approved" && (
+                        <div className="border-t pt-3 text-sm text-gray-600">
+                          <p>Approved by: {request.approvedBy} on {request.approvedDate}</p>
+                          {request.estimatedCost && <p>Estimated cost: ${request.estimatedCost.toFixed(2)}</p>}
+                        </div>
+                      )}
+                      
+                      {request.status === "delivered" && (
+                        <div className="border-t pt-3 text-sm text-gray-600">
+                          <p>Delivered on: {request.deliveryDate}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {filteredRequests.length === 0 && (
+                    <p className="text-center text-gray-500 py-8">
+                      {searchTerm || selectedCategory ? "No requests found matching your criteria" : "No requests found"}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="categories" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {supplyCategories.map((category) => {
+              const IconComponent = category.icon;
+              const categorySupplies = commonSupplies[category.id as keyof typeof commonSupplies] || [];
+              
+              return (
+                <Card key={category.id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <div className={`p-2 rounded-lg ${category.color}`}>
+                        <IconComponent className="h-5 w-5" />
+                      </div>
+                      <span>{category.name}</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {categorySupplies.map((supply, index) => (
+                        <div key={index} className="text-sm text-gray-600 flex items-center space-x-2">
+                          <Package className="h-3 w-3 text-gray-400" />
+                          <span>{supply}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );

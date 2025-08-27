@@ -1,377 +1,509 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Check, ChevronsUpDown, Search } from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-interface StudyProgram {
-  id: number;
-  name: string;
-  description: string;
-  duration: number;
-  faculty: {
-    name: string;
-  };
-}
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { 
+  UserPlus, 
+  GraduationCap, 
+  Search, 
+  Plus, 
+  User, 
+  Calendar, 
+  BookOpen,
+  Users,
+  ArrowUp,
+  CheckCircle,
+  AlertCircle
+} from "lucide-react";
 
 interface Student {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
-  studentProfile?: {
-    id: number;
-    year: number;
-    studyProgram?: {
-      name: string;
-    };
-  };
+  dateOfBirth: string;
+  phone: string;
+  address: string;
+  currentYear?: number;
+  currentProgram?: string;
+  enrollmentDate?: string;
+  status: "active" | "inactive" | "graduated";
+  failedSubjects?: string[];
+  enrolledSubjects?: string[];
+  pendingSubjects?: string[];
 }
 
+interface Subject {
+  id: string;
+  name: string;
+  acronym: string;
+  ects: number;
+  semester: "winter" | "summer";
+  mandatory: boolean;
+  year: number;
+}
+
+interface StudyProgram {
+  id: string;
+  name: string;
+  faculty: string;
+  level: "BA" | "MA" | "PhD";
+  duration: number;
+  ects: number;
+  available: boolean;
+  subjects: Subject[];
+}
+
+interface Enrollment {
+  id: string;
+  studentId: string;
+  studentName: string;
+  programId: string;
+  programName: string;
+  year: number;
+  enrollmentDate: string;
+  status: "enrolled" | "completed" | "withdrawn";
+}
+
+const existingStudents: Student[] = [
+  {
+    id: "2021001",
+    firstName: "John",
+    lastName: "Doe",
+    email: "john.doe@student.edu",
+    dateOfBirth: "2000-05-15",
+    phone: "+381 60 123 4567",
+    address: "Belgrade, Serbia",
+    currentYear: 2,
+    currentProgram: "Computer Science",
+    enrollmentDate: "2021-09-01",
+    status: "active",
+    failedSubjects: ["CS101", "CS102"],
+    enrolledSubjects: ["CS201", "CS202", "CS203", "CS204", "CS205", "CS206"],
+    pendingSubjects: ["CS301", "CS302", "CS303", "CS304", "CS305", "CS306"]
+  },
+  {
+    id: "2021002",
+    firstName: "Jane",
+    lastName: "Smith",
+    email: "jane.smith@student.edu",
+    dateOfBirth: "1999-08-22",
+    phone: "+381 60 234 5678",
+    address: "Novi Sad, Serbia",
+    currentYear: 3,
+    currentProgram: "Business Economics",
+    enrollmentDate: "2021-09-01",
+    status: "active",
+    failedSubjects: ["BE201"],
+    enrolledSubjects: ["BE301", "BE302", "BE303", "BE304", "BE305", "BE306"],
+    pendingSubjects: ["BE401", "BE402", "BE403"]
+  },
+  {
+    id: "2020001",
+    firstName: "Michael",
+    lastName: "Brown",
+    email: "michael.brown@student.edu",
+    dateOfBirth: "1998-12-10",
+    phone: "+381 60 345 6789",
+    address: "Niš, Serbia",
+    currentYear: 4,
+    currentProgram: "Software Engineering",
+    enrollmentDate: "2020-09-01",
+    status: "active",
+    failedSubjects: [],
+    enrolledSubjects: ["SE401", "SE402", "SE403"],
+    pendingSubjects: []
+  }
+];
+
+const studyPrograms: StudyProgram[] = [
+  {
+    id: "1",
+    name: "Computer Science",
+    faculty: "Informatics and Computing",
+    level: "BA",
+    duration: 4,
+    ects: 240,
+    available: true,
+    subjects: [
+      { id: "CS101", name: "Introduction to Programming", acronym: "ITP", ects: 6, semester: "winter", mandatory: true, year: 1 },
+      { id: "CS102", name: "Mathematics for Computer Science", acronym: "MCS", ects: 6, semester: "winter", mandatory: true, year: 1 },
+      { id: "CS103", name: "Computer Architecture", acronym: "CA", ects: 6, semester: "winter", mandatory: true, year: 1 },
+      { id: "CS104", name: "Data Structures", acronym: "DS", ects: 6, semester: "summer", mandatory: true, year: 1 },
+      { id: "CS105", name: "Algorithms", acronym: "ALG", ects: 6, semester: "summer", mandatory: true, year: 1 },
+      { id: "CS106", name: "English for IT", acronym: "EIT", ects: 3, semester: "summer", mandatory: false, year: 1 }
+    ]
+  },
+  {
+    id: "2",
+    name: "Business Economics",
+    faculty: "Business",
+    level: "BA",
+    duration: 4,
+    ects: 240,
+    available: true,
+    subjects: [
+      { id: "BE101", name: "Introduction to Economics", acronym: "IE", ects: 6, semester: "winter", mandatory: true, year: 1 },
+      { id: "BE102", name: "Business Mathematics", acronym: "BM", ects: 6, semester: "winter", mandatory: true, year: 1 },
+      { id: "BE103", name: "Business Law", acronym: "BL", ects: 6, semester: "winter", mandatory: true, year: 1 },
+      { id: "BE104", name: "Marketing Principles", acronym: "MP", ects: 6, semester: "summer", mandatory: true, year: 1 },
+      { id: "BE105", name: "Financial Accounting", acronym: "FA", ects: 6, semester: "summer", mandatory: true, year: 1 },
+      { id: "BE106", name: "Business English", acronym: "BE", ects: 3, semester: "summer", mandatory: false, year: 1 }
+    ]
+  }
+];
+
+const enrollments: Enrollment[] = [
+  {
+    id: "1",
+    studentId: "2021001",
+    studentName: "John Doe",
+    programId: "1",
+    programName: "Computer Science",
+    year: 2,
+    enrollmentDate: "2021-09-01",
+    status: "enrolled"
+  },
+  {
+    id: "2",
+    studentId: "2021002",
+    studentName: "Jane Smith",
+    programId: "2",
+    programName: "Business Economics",
+    year: 3,
+    enrollmentDate: "2021-09-01",
+    status: "enrolled"
+  }
+];
+
 export default function EnrollPage() {
-  const [studyPrograms, setStudyPrograms] = useState<StudyProgram[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProgram, setSelectedProgram] = useState("");
+  const [newStudent, setNewStudent] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    dateOfBirth: "",
+    phone: "",
+    address: ""
+  });
 
-  // Form state
-  const [selectedStudent, setSelectedStudent] = useState<string>('');
-  const [selectedProgram, setSelectedProgram] = useState<string>('');
-  const [academicYear, setAcademicYear] = useState<string>('2024/2025');
-  const [year, setYear] = useState<string>('1');
+  const filteredStudents = existingStudents.filter(student =>
+    student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  // Dialog states
-  const [studentDialogOpen, setStudentDialogOpen] = useState(false);
-  const [programDialogOpen, setProgramDialogOpen] = useState(false);
+  const filteredPrograms = studyPrograms.filter(program =>
+    selectedProgram === "" || program.id === selectedProgram
+  );
 
-  // Fetch study programs
-  useEffect(() => {
-    const fetchStudyPrograms = async () => {
-      try {
-        const response = await fetch('http://localhost:3001/api/study-programs');
-        if (response.ok) {
-          const data = await response.json();
-          setStudyPrograms(data.data || []);
-        }
-      } catch (error) {
-        console.error('Error fetching study programs:', error);
-      }
-    };
+  const handleNewStudentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Here you would typically send the data to your backend
+    console.log("New student data:", newStudent);
+    // Reset form
+    setNewStudent({
+      firstName: "",
+      lastName: "",
+      email: "",
+      dateOfBirth: "",
+      phone: "",
+      address: ""
+    });
+  };
 
-    fetchStudyPrograms();
-  }, []);
-
-  // Fetch students
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const response = await fetch('http://localhost:3001/api/users/students', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setStudents(data.users || []);
-        }
-      } catch (error) {
-        console.error('Error fetching students:', error);
-      }
-    };
-
-    fetchStudents();
-  }, []);
-
-  // Handle enrollment
-  const handleEnroll = async () => {
-    if (!selectedStudent || !selectedProgram || !academicYear || !year) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Find the student profile ID for the selected user
-      const student = students.find(s => s.id.toString() === selectedStudent);
-      if (!student?.studentProfile?.id) {
-        setError('Selected student does not have a profile. Please create a student profile first.');
-        return;
-      }
-
-      const response = await fetch('http://localhost:3001/api/academic-records/enroll-student', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify({
-          studentId: student.studentProfile.id, // Use StudentProfile.id, not User.id
-          studyProgramId: parseInt(selectedProgram),
-          academicYear,
-          year: parseInt(year),
-        }),
-      });
-
-      if (response.ok) {
-        setSuccess(true);
-        // Reset form
-        setSelectedStudent('');
-        setSelectedProgram('');
-        setYear('1');
-        // Hide success message after 3 seconds
-        setTimeout(() => setSuccess(false), 3000);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to enroll student');
-      }
-    } catch (error) {
-      setError('Network error occurred');
-    } finally {
-      setLoading(false);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active": return "bg-green-100 text-green-800";
+      case "inactive": return "bg-gray-100 text-gray-800";
+      case "graduated": return "bg-blue-100 text-blue-800";
+      default: return "bg-gray-100 text-gray-800";
     }
   };
 
-  // Get current academic year
-  const currentYear = new Date().getFullYear();
-  const academicYears = [
-    `${currentYear}/${currentYear + 1}`,
-    `${currentYear + 1}/${currentYear + 2}`,
-    `${currentYear + 2}/${currentYear + 3}`,
-  ];
-
-  // Get selected student display name
-  const getSelectedStudentName = () => {
-    if (!selectedStudent) return 'Choose a student...';
-    const student = students.find(s => s.id.toString() === selectedStudent);
-    if (!student) return 'Choose a student...';
-    return `${student.firstName} ${student.lastName}`;
-  };
-
-  // Get selected program display name
-  const getSelectedProgramName = () => {
-    if (!selectedProgram) return 'Choose a study program...';
-    const program = studyPrograms.find(p => p.id.toString() === selectedProgram);
-    if (!program) return 'Choose a study program...';
-    return program.name;
+  const getEnrollmentStatusColor = (status: string) => {
+    switch (status) {
+      case "enrolled": return "bg-green-100 text-green-800";
+      case "completed": return "bg-blue-100 text-blue-800";
+      case "withdrawn": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Student Enrollment</h1>
-          <p className="text-gray-600">Enroll students in study programs for the academic year</p>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Student Enrollment</h1>
+          <p className="text-gray-600 mt-2">Manage student enrollments and study programs</p>
         </div>
+        <Button className="bg-blue-600 hover:bg-blue-700">
+          <Plus className="h-4 w-4 mr-2" />
+          New Enrollment
+        </Button>
+      </div>
 
-        {/* Main Form Card */}
-        <div className="max-w-2xl mx-auto">
-          <Card className="shadow-sm border-0 bg-white">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl font-semibold text-gray-900">Enrollment Form</CardTitle>
-              <CardDescription>
-                Select a student and study program to complete the enrollment process
-              </CardDescription>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="students">Students</TabsTrigger>
+          <TabsTrigger value="programs">Study Programs</TabsTrigger>
+          <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{existingStudents.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-green-600">+12%</span> from last month
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Programs</CardTitle>
+                <GraduationCap className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{studyPrograms.filter(p => p.available).length}</div>
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-green-600">+2</span> new programs
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Enrollments</CardTitle>
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{enrollments.filter(e => e.status === "enrolled").length}</div>
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-green-600">+8%</span> from last month
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Pending Applications</CardTitle>
+                <AlertCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">5</div>
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-orange-600">3</span> require review
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Enrollments</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {enrollments.slice(0, 3).map((enrollment) => (
+                    <div key={enrollment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium">{enrollment.studentName}</p>
+                        <p className="text-sm text-gray-600">{enrollment.programName}</p>
+                      </div>
+                      <Badge className={getEnrollmentStatusColor(enrollment.status)}>
+                        {enrollment.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Popular Programs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {studyPrograms.slice(0, 3).map((program) => (
+                    <div key={program.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium">{program.name}</p>
+                        <p className="text-sm text-gray-600">{program.faculty}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{program.level}</p>
+                        <p className="text-xs text-gray-600">{program.duration} years</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="students" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Student Management</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Student Selection with Search */}
-              <div className="space-y-2">
-                <Label htmlFor="student" className="text-sm font-medium text-gray-700">
-                  Student
-                </Label>
-                <Dialog open={studentDialogOpen} onOpenChange={setStudentDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={studentDialogOpen}
-                      className="w-full justify-between"
-                    >
-                      {getSelectedStudentName()}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Select a student</DialogTitle>
-                    </DialogHeader>
-                    <Command>
-                      <CommandInput placeholder="Search students..." />
-                      <CommandList>
-                        <CommandEmpty>No student found.</CommandEmpty>
-                        <CommandGroup>
-                          {students.map((student) => (
-                            <CommandItem
-                              key={student.id}
-                              value={student.id.toString()}
-                              onSelect={() => {
-                                setSelectedStudent(student.id.toString());
-                                setStudentDialogOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedStudent === student.id.toString() ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              <div className="flex flex-col">
-                                <span className="font-medium">
-                                  {student.firstName} {student.lastName}
-                                </span>
-                                <span className="text-sm text-gray-500">{student.email}</span>
-                                {student.studentProfile?.studyProgram && (
-                                  <span className="text-xs text-gray-400">
-                                    Currently: {student.studentProfile.studyProgram.name}
-                                  </span>
-                                )}
-                              </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </DialogContent>
-                </Dialog>
+            <CardContent>
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="flex-1">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search students..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Button>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Student
+                </Button>
               </div>
 
-              {/* Study Program Selection with Search */}
-              <div className="space-y-2">
-                <Label htmlFor="program" className="text-sm font-medium text-gray-700">
-                  Study Program
-                </Label>
-                <Dialog open={programDialogOpen} onOpenChange={setProgramDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={programDialogOpen}
-                      className="w-full justify-between"
-                    >
-                      {getSelectedProgramName()}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Select a study program</DialogTitle>
-                    </DialogHeader>
-                    <Command>
-                      <CommandInput placeholder="Search study programs..." />
-                      <CommandList>
-                        <CommandEmpty>No study program found.</CommandEmpty>
-                        <CommandGroup>
-                          {studyPrograms.map((program) => (
-                            <CommandItem
-                              key={program.id}
-                              value={program.id.toString()}
-                              onSelect={() => {
-                                setSelectedProgram(program.id.toString());
-                                setProgramDialogOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedProgram === program.id.toString() ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              <div className="flex flex-col">
-                                <span className="font-medium">{program.name}</span>
-                                <span className="text-sm text-gray-500">
-                                  {program.faculty.name} • {program.duration} years
-                                </span>
-                              </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </DialogContent>
-                </Dialog>
+              <div className="space-y-4">
+                {filteredStudents.map((student) => (
+                  <div key={student.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <User className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{student.firstName} {student.lastName}</h3>
+                          <p className="text-sm text-gray-600">{student.email}</p>
+                          <p className="text-sm text-gray-500">{student.phone}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Badge className={getStatusColor(student.status)}>
+                          {student.status}
+                        </Badge>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {student.currentProgram} - Year {student.currentYear}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-
-              {/* Academic Year and Year */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="academicYear" className="text-sm font-medium text-gray-700">
-                    Academic Year
-                  </Label>
-                  <Select value={academicYear} onValueChange={setAcademicYear}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {academicYears.map((year) => (
-                        <SelectItem key={year} value={year}>
-                          {year}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="year" className="text-sm font-medium text-gray-700">
-                    Year of Study
-                  </Label>
-                  <Select value={year} onValueChange={setYear}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[1, 2, 3, 4, 5].map((y) => (
-                        <SelectItem key={y} value={y.toString()}>
-                          Year {y}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Submit Button */}
-              <Button
-                onClick={handleEnroll}
-                disabled={loading || !selectedStudent || !selectedProgram}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3"
-              >
-                {loading ? 'Enrolling...' : 'Enroll Student'}
-              </Button>
-
-              {/* Success/Error Messages */}
-              {success && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-green-800 font-medium">
-                    ✅ Student enrolled successfully!
-                  </p>
-                </div>
-              )}
-
-              {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-800 font-medium">
-                    ❌ {error}
-                  </p>
-                </div>
-              )}
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="programs" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Study Programs</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="flex-1">
+                  <Label htmlFor="program-filter">Filter by Program</Label>
+                  <select
+                    id="program-filter"
+                    value={selectedProgram}
+                    onChange={(e) => setSelectedProgram(e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                  >
+                    <option value="">All Programs</option>
+                    {studyPrograms.map((program) => (
+                      <option key={program.id} value={program.id}>
+                        {program.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Program
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {filteredPrograms.map((program) => (
+                  <div key={program.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium text-lg">{program.name}</h3>
+                        <p className="text-gray-600">{program.faculty}</p>
+                        <div className="flex items-center space-x-4 mt-2">
+                          <Badge variant="outline">{program.level}</Badge>
+                          <Badge variant="outline">{program.duration} years</Badge>
+                          <Badge variant="outline">{program.ects} ECTS</Badge>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Badge className={program.available ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                          {program.available ? "Available" : "Not Available"}
+                        </Badge>
+                        <p className="text-sm text-gray-600 mt-2">
+                          {program.subjects.length} subjects
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="enrollments" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Enrollment Records</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {enrollments.map((enrollment) => (
+                  <div key={enrollment.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
+                          <GraduationCap className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{enrollment.studentName}</h3>
+                          <p className="text-sm text-gray-600">{enrollment.programName}</p>
+                          <p className="text-sm text-gray-500">Year {enrollment.year}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Badge className={getEnrollmentStatusColor(enrollment.status)}>
+                          {enrollment.status}
+                        </Badge>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {enrollment.enrollmentDate}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
