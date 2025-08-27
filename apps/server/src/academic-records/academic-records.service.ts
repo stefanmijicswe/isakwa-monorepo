@@ -280,6 +280,22 @@ export class AcademicRecordsService {
     });
   }
 
+  async getExams() {
+    return this.prisma.exam.findMany({
+      include: {
+        subject: {
+          select: { name: true, code: true },
+        },
+        examPeriod: {
+          select: { name: true, startDate: true, endDate: true },
+        },
+      },
+      orderBy: {
+        examDate: 'asc',
+      },
+    });
+  }
+
   async registerForExam(dto: RegisterExamDto) {
     const exam = await this.prisma.exam.findUnique({
       where: { id: dto.examId },

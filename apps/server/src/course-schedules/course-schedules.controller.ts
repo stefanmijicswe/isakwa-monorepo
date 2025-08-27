@@ -29,12 +29,12 @@ export class CourseSchedulesController {
   // Course Schedule Management Endpoints
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.PROFESSOR)
+  @Roles(UserRole.PROFESSOR, UserRole.STUDENT_SERVICE)
   async createCourseSchedule(
     @Body() dto: CreateCourseScheduleDto,
     @Request() req: any,
   ) {
-    return this.courseSchedulesService.createCourseSchedule(dto, req.user.id);
+    return this.courseSchedulesService.createCourseSchedule(dto, req.user.id, req.user.role);
   }
 
   @Get()
@@ -43,8 +43,7 @@ export class CourseSchedulesController {
     @Query() filters: any,
     @Request() req: any,
   ) {
-    const professorId = req.user.role === UserRole.PROFESSOR ? req.user.id : undefined;
-    return this.courseSchedulesService.getCourseSchedules(filters, professorId);
+    return this.courseSchedulesService.getCourseSchedules(filters, req.user.id, req.user.role);
   }
 
   @Get(':id')
@@ -53,40 +52,39 @@ export class CourseSchedulesController {
     @Param('id') id: string,
     @Request() req: any,
   ) {
-    const professorId = req.user.role === UserRole.PROFESSOR ? req.user.id : undefined;
-    return this.courseSchedulesService.getCourseScheduleById(parseInt(id), professorId);
+    return this.courseSchedulesService.getCourseScheduleById(parseInt(id), req.user.id, req.user.role);
   }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.PROFESSOR)
+  @Roles(UserRole.PROFESSOR, UserRole.STUDENT_SERVICE)
   async updateCourseSchedule(
     @Param('id') id: string,
     @Body() dto: UpdateCourseScheduleDto,
     @Request() req: any,
   ) {
-    return this.courseSchedulesService.updateCourseSchedule(parseInt(id), dto, req.user.id);
+    return this.courseSchedulesService.updateCourseSchedule(parseInt(id), dto, req.user.id, req.user.role);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.PROFESSOR)
+  @Roles(UserRole.PROFESSOR, UserRole.STUDENT_SERVICE)
   async deleteCourseSchedule(
     @Param('id') id: string,
     @Request() req: any,
   ) {
-    return this.courseSchedulesService.deleteCourseSchedule(parseInt(id), req.user.id);
+    return this.courseSchedulesService.deleteCourseSchedule(parseInt(id), req.user.id, req.user.role);
   }
 
   // Course Session Management Endpoints
   @Post('sessions')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.PROFESSOR)
+  @Roles(UserRole.PROFESSOR, UserRole.STUDENT_SERVICE)
   async createCourseSession(
     @Body() dto: CreateCourseSessionDto,
     @Request() req: any,
   ) {
-    return this.courseSchedulesService.createCourseSession(dto, req.user.id);
+    return this.courseSchedulesService.createCourseSession(dto, req.user.id, req.user.role);
   }
 
   @Get('schedules/:scheduleId/sessions')
@@ -95,8 +93,7 @@ export class CourseSchedulesController {
     @Param('scheduleId') scheduleId: string,
     @Request() req: any,
   ) {
-    const professorId = req.user.role === UserRole.PROFESSOR ? req.user.id : undefined;
-    return this.courseSchedulesService.getCourseSessions(parseInt(scheduleId), professorId);
+    return this.courseSchedulesService.getCourseSessions(parseInt(scheduleId), req.user.id, req.user.role);
   }
 
   @Get('sessions/:id')
@@ -105,8 +102,7 @@ export class CourseSchedulesController {
     @Param('id') id: string,
     @Request() req: any,
   ) {
-    const professorId = req.user.role === UserRole.PROFESSOR ? req.user.id : undefined;
-    return this.courseSchedulesService.getCourseSessionById(parseInt(id), professorId);
+    return this.courseSchedulesService.getCourseSessionById(parseInt(id), req.user.id, req.user.role);
   }
 
   @Put('sessions/:id')

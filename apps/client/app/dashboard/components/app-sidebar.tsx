@@ -169,6 +169,12 @@ const navigationByRole = {
       description: "Send announcements to all users"
     },
     {
+      title: "Schedule Management",
+      url: "/dashboard/schedule-management",
+      icon: Calendar,
+      description: "Manage course and exam schedules"
+    },
+    {
       title: "Library Management",
       url: "/dashboard/library",
       icon: Library,

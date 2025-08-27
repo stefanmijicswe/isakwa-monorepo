@@ -80,6 +80,13 @@ export class AcademicRecordsController {
     return this.academicRecordsService.createExam(createExamDto);
   }
 
+  @Get('exams')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.STUDENT_SERVICE, UserRole.ADMIN, UserRole.PROFESSOR)
+  getExams() {
+    return this.academicRecordsService.getExams();
+  }
+
   @Post('register-exam')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.STUDENT)

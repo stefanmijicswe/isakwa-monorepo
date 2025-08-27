@@ -127,7 +127,7 @@ export default function GradeEntryPage() {
     if (final === 0) return 0
     
     // Weighted average: attendance 10%, assignments 20%, midterm 30%, final 40%
-    return (attendance * 0.1 + assignments * 0.2 + midterm * 0.3 + final * 0.4).toFixed(1)
+    return parseFloat((attendance * 0.1 + assignments * 0.2 + midterm * 0.3 + final * 0.4).toFixed(1))
   }
 
   const filteredStudents = students.filter(student => {
@@ -302,7 +302,7 @@ export default function GradeEntryPage() {
                   </td>
                   
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getGradeColor(parseFloat(calculateAverage(student)))}`}>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getGradeColor(calculateAverage(student))}`}>
                       {calculateAverage(student)}
                     </span>
                   </td>

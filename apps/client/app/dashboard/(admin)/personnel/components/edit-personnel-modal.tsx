@@ -67,7 +67,6 @@ export function EditPersonnelModal({ isOpen, onClose, personnel, onSave }: EditP
       email: "",
       title: "",
       departmentId: 1,
-      specialization: "",
       isActive: true
     }
   })

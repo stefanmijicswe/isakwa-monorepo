@@ -13,19 +13,22 @@ export class CourseSchedulesService {
   constructor(private prisma: PrismaService) {}
 
   // Course Schedule Management
-  async createCourseSchedule(dto: CreateCourseScheduleDto, professorId: number) {
-    // Verify professor is assigned to this subject
-    const assignment = await this.prisma.professorAssignment.findFirst({
-      where: {
-        professorId,
-        subjectId: dto.subjectId,
-        academicYear: dto.academicYear,
-        isActive: true,
-      },
-    });
+  async createCourseSchedule(dto: CreateCourseScheduleDto, userId: number, userRole: string) {
+    // For STUDENT_SERVICE, skip professor assignment check
+    if (userRole === 'PROFESSOR') {
+      // Verify professor is assigned to this subject
+      const assignment = await this.prisma.professorAssignment.findFirst({
+        where: {
+          professorId: userId,
+          subjectId: dto.subjectId,
+          academicYear: dto.academicYear,
+          isActive: true,
+        },
+      });
 
-    if (!assignment) {
-      throw new ForbiddenException('Professor not assigned to this subject');
+      if (!assignment) {
+        throw new ForbiddenException('Professor not assigned to this subject');
+      }
     }
 
     // Check if schedule already exists
@@ -60,7 +63,7 @@ export class CourseSchedulesService {
     });
   }
 
-  async getCourseSchedules(filters: any, professorId?: number) {
+  async getCourseSchedules(filters: any, userId?: number, userRole?: string) {
     const where: any = { isActive: true };
 
     if (filters.subjectId) {
@@ -76,16 +79,17 @@ export class CourseSchedulesService {
     }
 
     // If professor ID provided, only show schedules for subjects they teach
-    if (professorId) {
+    if (userRole === 'PROFESSOR' && userId) {
       where.subject = {
         ProfessorAssignment: {
           some: {
-            professorId,
+            professorId: userId,
             isActive: true,
           },
         },
       };
     }
+    // For STUDENT_SERVICE, show all schedules (no filtering)
 
     return this.prisma.courseSchedule.findMany({
       where,
@@ -102,19 +106,20 @@ export class CourseSchedulesService {
     });
   }
 
-  async getCourseScheduleById(scheduleId: number, professorId?: number) {
+  async getCourseScheduleById(scheduleId: number, userId?: number, userRole?: string) {
     const where: any = { id: scheduleId, isActive: true };
 
-    if (professorId) {
+    if (userRole === 'PROFESSOR' && userId) {
       where.subject = {
         ProfessorAssignment: {
           some: {
-            professorId,
+            professorId: userId,
             isActive: true,
           },
         },
       };
     }
+    // For STUDENT_SERVICE, show all schedules (no filtering)
 
     const schedule = await this.prisma.courseSchedule.findFirst({
       where,
@@ -136,29 +141,40 @@ export class CourseSchedulesService {
     return schedule;
   }
 
-  async updateCourseSchedule(scheduleId: number, dto: UpdateCourseScheduleDto, professorId: number) {
-    const schedule = await this.prisma.courseSchedule.findUnique({
-      where: { id: scheduleId },
-      include: {
-        subject: {
-          include: {
-            ProfessorAssignment: {
-              where: {
-                professorId,
-                isActive: true,
+  async updateCourseSchedule(scheduleId: number, dto: UpdateCourseScheduleDto, userId: number, userRole?: string) {
+    if (userRole === 'PROFESSOR') {
+      const schedule = await this.prisma.courseSchedule.findUnique({
+        where: { id: scheduleId },
+        include: {
+          subject: {
+            include: {
+              ProfessorAssignment: {
+                where: {
+                  professorId: userId,
+                  isActive: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    if (!schedule) {
-      throw new NotFoundException('Course schedule not found');
-    }
+      if (!schedule) {
+        throw new NotFoundException('Course schedule not found');
+      }
 
-    if (schedule.subject.ProfessorAssignment.length === 0) {
-      throw new ForbiddenException('Professor not assigned to this subject');
+      if (schedule.subject.ProfessorAssignment.length === 0) {
+        throw new ForbiddenException('Professor not assigned to this subject');
+      }
+    } else {
+      // For STUDENT_SERVICE, just verify schedule exists
+      const schedule = await this.prisma.courseSchedule.findUnique({
+        where: { id: scheduleId },
+      });
+
+      if (!schedule) {
+        throw new NotFoundException('Course schedule not found');
+      }
     }
 
     return this.prisma.courseSchedule.update({
@@ -176,29 +192,40 @@ export class CourseSchedulesService {
     });
   }
 
-  async deleteCourseSchedule(scheduleId: number, professorId: number) {
-    const schedule = await this.prisma.courseSchedule.findUnique({
-      where: { id: scheduleId },
-      include: {
-        subject: {
-          include: {
-            ProfessorAssignment: {
-              where: {
-                professorId,
-                isActive: true,
+  async deleteCourseSchedule(scheduleId: number, userId: number, userRole?: string) {
+    if (userRole === 'PROFESSOR') {
+      const schedule = await this.prisma.courseSchedule.findUnique({
+        where: { id: scheduleId },
+        include: {
+          subject: {
+            include: {
+              ProfessorAssignment: {
+                where: {
+                  professorId: userId,
+                  isActive: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    if (!schedule) {
-      throw new NotFoundException('Course schedule not found');
-    }
+      if (!schedule) {
+        throw new NotFoundException('Course schedule not found');
+      }
 
-    if (schedule.subject.ProfessorAssignment.length === 0) {
-      throw new ForbiddenException('Professor not assigned to this subject');
+      if (schedule.subject.ProfessorAssignment.length === 0) {
+        throw new ForbiddenException('Professor not assigned to this subject');
+      }
+    } else {
+      // For STUDENT_SERVICE, just verify schedule exists
+      const schedule = await this.prisma.courseSchedule.findUnique({
+        where: { id: scheduleId },
+      });
+
+      if (!schedule) {
+        throw new NotFoundException('Course schedule not found');
+      }
     }
 
     // Soft delete - set isActive to false
@@ -209,30 +236,42 @@ export class CourseSchedulesService {
   }
 
   // Course Session Management
-  async createCourseSession(dto: CreateCourseSessionDto, professorId: number) {
-    // Verify professor has access to this schedule
-    const schedule = await this.prisma.courseSchedule.findUnique({
-      where: { id: dto.scheduleId },
-      include: {
-        subject: {
-          include: {
-            ProfessorAssignment: {
-              where: {
-                professorId,
-                isActive: true,
+  async createCourseSession(dto: CreateCourseSessionDto, userId: number, userRole: string) {
+    // For STUDENT_SERVICE, skip professor assignment check
+    if (userRole === 'PROFESSOR') {
+      // Verify professor has access to this schedule
+      const schedule = await this.prisma.courseSchedule.findUnique({
+        where: { id: dto.scheduleId },
+        include: {
+          subject: {
+            include: {
+              ProfessorAssignment: {
+                where: {
+                  professorId: userId,
+                  isActive: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    if (!schedule) {
-      throw new NotFoundException('Course schedule not found');
-    }
+      if (!schedule) {
+        throw new NotFoundException('Course schedule not found');
+      }
 
-    if (schedule.subject.ProfessorAssignment.length === 0) {
-      throw new ForbiddenException('Professor not assigned to this subject');
+      if (schedule.subject.ProfessorAssignment.length === 0) {
+        throw new ForbiddenException('Professor not assigned to this subject');
+      }
+    } else {
+      // For STUDENT_SERVICE, just verify schedule exists
+      const schedule = await this.prisma.courseSchedule.findUnique({
+        where: { id: dto.scheduleId },
+      });
+
+      if (!schedule) {
+        throw new NotFoundException('Course schedule not found');
+      }
     }
 
     // Validate time format
@@ -265,9 +304,9 @@ export class CourseSchedulesService {
     });
   }
 
-  async getCourseSessions(scheduleId: number, professorId?: number) {
+  async getCourseSessions(scheduleId: number, userId?: number, userRole?: string) {
     // Verify access to schedule
-    if (professorId) {
+    if (userRole === 'PROFESSOR' && userId) {
       const schedule = await this.prisma.courseSchedule.findUnique({
         where: { id: scheduleId },
         include: {
@@ -275,7 +314,7 @@ export class CourseSchedulesService {
             include: {
               ProfessorAssignment: {
                 where: {
-                  professorId,
+                  professorId: userId,
                   isActive: true,
                 },
               },
@@ -286,6 +325,15 @@ export class CourseSchedulesService {
 
       if (!schedule || schedule.subject.ProfessorAssignment.length === 0) {
         throw new ForbiddenException('Access denied to this course schedule');
+      }
+    } else if (userRole === 'STUDENT_SERVICE') {
+      // For STUDENT_SERVICE, just verify schedule exists
+      const schedule = await this.prisma.courseSchedule.findUnique({
+        where: { id: scheduleId },
+      });
+
+      if (!schedule) {
+        throw new NotFoundException('Course schedule not found');
       }
     }
 
@@ -303,21 +351,22 @@ export class CourseSchedulesService {
     });
   }
 
-  async getCourseSessionById(sessionId: number, professorId?: number) {
+  async getCourseSessionById(sessionId: number, userId?: number, userRole?: string) {
     const where: any = { id: sessionId, isActive: true };
 
-    if (professorId) {
+    if (userRole === 'PROFESSOR' && userId) {
       where.schedule = {
         subject: {
           ProfessorAssignment: {
             some: {
-              professorId,
+              professorId: userId,
               isActive: true,
             },
           },
         },
       };
     }
+    // For STUDENT_SERVICE, show all sessions (no filtering)
 
     const session = await this.prisma.courseSession.findFirst({
       where,

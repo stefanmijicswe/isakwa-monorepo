@@ -772,3 +772,293 @@ export async function markAllNotificationsAsRead(): Promise<boolean> {
     return false;
   }
 }
+
+// Subject interface for course schedules
+export interface Subject {
+  id: number;
+  name: string;
+  code: string;
+  credits: number;
+  semester: number;
+  studyProgramId: number;
+  studyProgram?: {
+    id: number;
+    name: string;
+    faculty?: {
+      id: number;
+      name: string;
+    };
+  };
+}
+
+// Fetch subjects from backend
+export async function getSubjects(): Promise<Subject[]> {
+  try {
+    const response = await fetch('http://localhost:3001/api/subjects', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    // Transform the data to match our Subject interface
+    return data.data.map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      code: item.code,
+      credits: item.credits,
+      semester: item.semester,
+      studyProgramId: item.studyProgramId,
+      studyProgram: item.studyProgram ? {
+        id: item.studyProgram.id,
+        name: item.studyProgram.name,
+        faculty: item.studyProgram.faculty ? {
+          id: item.studyProgram.faculty.id,
+          name: item.studyProgram.faculty.name,
+        } : undefined,
+      } : undefined,
+    }));
+  } catch (error) {
+    console.error('Failed to fetch subjects:', error);
+    // Return empty array if backend fails
+    return [];
+  }
+}
+
+// Create course schedule
+export async function createCourseSchedule(scheduleData: {
+  subjectId: string;
+  academicYear: string;
+  semesterType: string;
+}): Promise<any> {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch('http://localhost:3001/api/course-schedules', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        subjectId: parseInt(scheduleData.subjectId),
+        academicYear: scheduleData.academicYear,
+        semesterType: scheduleData.semesterType,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to create course schedule:', error);
+    throw error;
+  }
+}
+
+// Fetch course schedules
+export async function getCourseSchedules(): Promise<any[]> {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch('http://localhost:3001/api/course-schedules', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    // Backend returns array directly, not wrapped in data property
+    return Array.isArray(data) ? data : (data.data || []);
+  } catch (error) {
+    console.error('Failed to fetch course schedules:', error);
+    return [];
+  }
+}
+
+// Create course session
+export async function createCourseSession(sessionData: {
+  scheduleId: number;
+  title: string;
+  description?: string;
+  sessionDate: string;
+  startTime: string;
+  endTime: string;
+  room: string;
+  sessionType: string;
+}): Promise<any> {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch('http://localhost:3001/api/course-schedules/sessions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(sessionData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to create course session:', error);
+    throw error;
+  }
+}
+
+export async function createExamPeriod(periodData: {
+  name: string;
+  startDate: string;
+  endDate: string;
+  registrationStartDate: string;
+  registrationEndDate: string;
+  academicYear: string;
+  semesterType: string;
+}): Promise<any> {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch('http://localhost:3001/api/academic-records/exam-periods', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(periodData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to create exam period:', error);
+    throw error;
+  }
+}
+
+export async function createExam(examData: {
+  subjectId: number;
+  examPeriodId: number;
+  examDate: string;
+  examTime: string;
+  duration: number;
+  location?: string;
+  maxPoints?: number;
+  status?: string;
+}): Promise<any> {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch('http://localhost:3001/api/academic-records/exams', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(examData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to create exam:', error);
+    throw error;
+  }
+}
+
+export async function getExams(): Promise<any[]> {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch('http://localhost:3001/api/academic-records/exams', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  } catch (error) {
+    console.error('Failed to fetch exams:', error);
+    return [];
+  }
+}
+
+export async function getExamPeriods(): Promise<any[]> {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch('http://localhost:3001/api/academic-records/exam-periods', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  } catch (error) {
+    console.error('Failed to fetch exam periods:', error);
+    return [];
+  }
+}
