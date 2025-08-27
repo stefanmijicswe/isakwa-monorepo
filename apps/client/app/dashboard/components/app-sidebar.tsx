@@ -157,6 +157,12 @@ const navigationByRole = {
       description: "Manage enrollments"
     },
     {
+      title: "Schedule Management",
+      url: "/dashboard/schedule-management",
+      icon: Calendar,
+      description: "Manage schedules and exams"
+    },
+    {
       title: "Certificate Generator",
       url: "/dashboard/certificates",
       icon: FileText,

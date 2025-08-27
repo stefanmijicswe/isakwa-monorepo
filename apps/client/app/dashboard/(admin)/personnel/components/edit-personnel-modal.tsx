@@ -119,7 +119,6 @@ export function EditPersonnelModal({ isOpen, onClose, personnel, onSave }: EditP
           email: personnel.email,
           title: personnel.professorProfile.title || "",
           departmentId: personnel.professorProfile.department?.id || 1,
-          specialization: personnel.professorProfile.specialization || "",
           isActive: personnel.isActive
         })
       } else if (!isProfessor && personnel.studentServiceProfile) {
@@ -129,7 +128,6 @@ export function EditPersonnelModal({ isOpen, onClose, personnel, onSave }: EditP
           email: personnel.email,
           title: personnel.studentServiceProfile.position || "",
           departmentId: personnel.studentServiceProfile.department?.id || 1,
-          specialization: "",
           isActive: personnel.isActive
         })
       }

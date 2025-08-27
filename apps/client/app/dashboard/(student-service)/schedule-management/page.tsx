@@ -90,6 +90,7 @@ export default function ScheduleManagementPage() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [evaluationInstruments, setEvaluationInstruments] = useState<EvaluationInstrument[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [subjectsLoading, setSubjectsLoading] = useState(true);
   
   // Modal states
   const [showCreateSchedule, setShowCreateSchedule] = useState(false);
@@ -109,12 +110,14 @@ export default function ScheduleManagementPage() {
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
-        console.log('Fetching subjects...');
+        setSubjectsLoading(true); 
         const subjectsData = await getSubjects();
-        console.log('Subjects fetched:', subjectsData);
-        setSubjects(subjectsData);
+        setSubjects(subjectsData || []);
       } catch (error) {
         console.error('Failed to fetch subjects:', error);
+        setSubjects([]);
+      } finally {
+        setSubjectsLoading(false);
       }
     };
 
@@ -123,26 +126,22 @@ export default function ScheduleManagementPage() {
 
   // Fetch schedules after subjects are loaded
   useEffect(() => {
-    console.log('Subjects changed, length:', subjects.length);
     if (subjects.length > 0) {
       const fetchSchedules = async () => {
         try {
-          console.log('Fetching schedules...');
           const schedulesData = await getCourseSchedules();
-          console.log('Schedules fetched:', schedulesData);
           setSchedules(schedulesData.map((schedule: any) => ({
             id: schedule.id,
             subjectId: schedule.subjectId,
             academicYear: schedule.academicYear,
             semesterType: schedule.semesterType,
             isActive: schedule.isActive,
-            // Use subject data directly from backend response
             subject: schedule.subject ? {
               id: schedule.subjectId,
               name: schedule.subject.name,
               code: schedule.subject.code
             } : undefined,
-            sessions: schedule.sessions // Assuming sessions are part of the schedule object
+            sessions: schedule.sessions || []
           })));
         } catch (error) {
           console.error('Failed to fetch schedules:', error);
@@ -158,16 +157,10 @@ export default function ScheduleManagementPage() {
     if (activeTab === 'exam-schedules') {
       const fetchData = async () => {
         try {
-          // Fetch exam periods
-          console.log('Fetching exam periods...');
           const periodsData = await getExamPeriods();
-          console.log('Exam periods fetched:', periodsData);
           setExamPeriods(periodsData);
 
-          // Fetch exams
-          console.log('Fetching exams...');
           const examsData = await getExams();
-          console.log('Exams fetched:', examsData);
           setExams(examsData);
         } catch (error) {
           console.error('Failed to fetch data:', error);
@@ -319,7 +312,19 @@ export default function ScheduleManagementPage() {
       
       // Refresh schedules to show new session
       const updatedSchedules = await getCourseSchedules();
-      setSchedules(updatedSchedules);
+      setSchedules(updatedSchedules.map((schedule: any) => ({
+        id: schedule.id,
+        subjectId: schedule.subjectId,
+        academicYear: schedule.academicYear,
+        semesterType: schedule.semesterType,
+        isActive: schedule.isActive,
+        subject: schedule.subject ? {
+          id: schedule.subjectId,
+          name: schedule.subject.name,
+          code: schedule.subject.code
+        } : undefined,
+        sessions: schedule.sessions || []
+      })));
     } catch (error) {
       console.error('Failed to create course session:', error);
       alert(`Failed to create session: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -383,13 +388,14 @@ export default function ScheduleManagementPage() {
 
       // Create exam via API
       const newExam = await createExam({
-        subjectId: parseInt(examForm.subjectId),
-        examPeriodId: selectedExamPeriodId,
+        subjectId: examForm.subjectId,
+        examPeriodId: selectedExamPeriodId.toString(),
         examDate: examForm.examDate,
         examTime: examForm.examTime,
         duration: parseInt(examForm.duration),
         location: examForm.location || undefined,
         maxPoints: parseInt(examForm.maxPoints),
+        status: examForm.status,
       });
       
       // Close modal and reset form
@@ -417,28 +423,33 @@ export default function ScheduleManagementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <div className="container mx-auto px-6 py-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+              <div className="container mx-auto px-8 py-8">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Schedule Management</h1>
-          <p className="text-sm text-gray-600">Manage course schedules, exam periods, and evaluation tools</p>
+        <div className="mb-8">
+          <div className="flex items-center space-x-3 mb-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Calendar className="h-6 w-6 text-blue-600" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">Schedule Management</h1>
+          </div>
+          <p className="text-lg text-gray-600 ml-11">Manage course schedules, exam periods, and evaluation tools for academic planning</p>
         </div>
 
         {/* Tabs */}
-        <div className="mb-6">
-          <div className="flex space-x-1 bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
+        <div className="mb-8">
+          <div className="flex space-x-2 bg-white p-2 rounded-xl border border-gray-200 shadow-lg">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-lg text-sm font-semibold transition-all duration-300 ${
                   activeTab === tab.id
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg transform scale-105'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:shadow-md'
                 }`}
               >
-                <tab.icon className="h-4 w-4" />
+                <tab.icon className={`h-5 w-5 ${activeTab === tab.id ? 'text-white' : 'text-gray-500'}`} />
                 {tab.title}
               </button>
             ))}
@@ -446,15 +457,20 @@ export default function ScheduleManagementPage() {
         </div>
 
         {/* Content based on active tab */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {activeTab === 'course-schedules' && (
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-gray-900">Course Schedules</h2>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <BookOpen className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900">Course Schedules</h2>
+                </div>
                 <Dialog open={showCreateSchedule} onOpenChange={setShowCreateSchedule}>
                   <DialogTrigger asChild>
-                    <Button size="sm" className="h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700">
-                      <Plus className="h-3 w-3 mr-1" />
+                    <Button size="sm" className="h-9 px-4 text-sm bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md">
+                      <Plus className="h-4 w-4 mr-2" />
                       New Schedule
                     </Button>
                   </DialogTrigger>
@@ -465,19 +481,29 @@ export default function ScheduleManagementPage() {
                         Set up a new schedule for the academic period
                       </DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={handleCreateSchedule} className="space-y-4">
+                    <form onSubmit={handleCreateSchedule} className="space-y-5">
                                                    <div>
                                <Label htmlFor="subjectId" className="text-sm font-medium">Subject</Label>
                                <Select value={scheduleForm.subjectId} onValueChange={(value) => setScheduleForm(prev => ({ ...prev, subjectId: value }))}>
-                                 <SelectTrigger className="h-9">
+                                 <SelectTrigger className="h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
                                    <SelectValue placeholder="Select a subject" />
                                  </SelectTrigger>
                                  <SelectContent>
-                                   {subjects.map((subject) => (
-                                     <SelectItem key={subject.id} value={subject.id.toString()}>
-                                       {subject.name} ({subject.code})
+                                   {subjectsLoading ? (
+                                     <SelectItem value="" disabled>
+                                       Loading subjects...
                                      </SelectItem>
-                                   ))}
+                                   ) : subjects && subjects.length > 0 ? (
+                                     subjects.map((subject) => (
+                                       <SelectItem key={subject.id} value={subject.id.toString()}>
+                                         {subject.name} ({subject.code})
+                                       </SelectItem>
+                                     ))
+                                   ) : (
+                                     <SelectItem value="" disabled>
+                                       No subjects available
+                                     </SelectItem>
+                                   )}
                                  </SelectContent>
                                </Select>
                              </div>
@@ -489,13 +515,13 @@ export default function ScheduleManagementPage() {
                           placeholder="2024/2025"
                           value={scheduleForm.academicYear}
                           onChange={(e) => setScheduleForm(prev => ({ ...prev, academicYear: e.target.value }))}
-                          className="h-9"
+                          className="h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                         />
                       </div>
                       <div>
                         <Label htmlFor="semesterType" className="text-sm font-medium">Semester</Label>
-                        <Select value={scheduleForm.semesterType} onValueChange={(value) => setScheduleForm(prev => ({ ...prev, semesterType: value }))}>
-                          <SelectTrigger className="h-9">
+                                                 <Select value={scheduleForm.semesterType} onValueChange={(value) => setScheduleForm(prev => ({ ...prev, semesterType: value }))}>
+                           <SelectTrigger className="h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -504,11 +530,11 @@ export default function ScheduleManagementPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="flex gap-3 pt-2">
-                        <Button type="submit" className="flex-1 h-9 bg-blue-600 hover:bg-blue-700">
+                      <div className="flex gap-3 pt-4">
+                        <Button type="submit" className="flex-1 h-10 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md">
                           Create Schedule
                         </Button>
-                        <Button type="button" variant="outline" className="flex-1 h-9" onClick={() => setShowCreateSchedule(false)}>
+                        <Button type="button" variant="outline" className="flex-1 h-10" onClick={() => setShowCreateSchedule(false)}>
                           Cancel
                         </Button>
                       </div>
@@ -527,34 +553,40 @@ export default function ScheduleManagementPage() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   {schedules.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                      <p className="text-sm">No course schedules created yet</p>
-                      <p className="text-xs text-gray-400 mt-1">Create your first schedule to get started</p>
+                    <div className="text-center py-12 text-gray-500">
+                      <Calendar className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                      <p className="text-base font-medium">No course schedules created yet</p>
+                      <p className="text-sm text-gray-400 mt-2">Create your first schedule to get started</p>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                        {schedules.map((schedule) => (
-                         <div key={schedule.id} className="border rounded-lg p-4 bg-card">
-                           <div className="flex items-center justify-between mb-3">
-                             <div className="flex items-center space-x-3">
-                               <div className="p-2 bg-primary/10 rounded-lg">
-                                 <BookOpen className="h-5 w-5 text-primary" />
+                         <div key={schedule.id} className="border border-gray-200 rounded-lg p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200">
+                           <div className="flex items-center justify-between mb-4">
+                             <div className="flex items-center space-x-4">
+                               <div className="p-3 bg-blue-100 rounded-lg">
+                                 <BookOpen className="h-6 w-6 text-blue-600" />
                                </div>
                                <div>
-                                 <h4 className="font-medium">{schedule.subject?.name || 'Unknown Subject'}</h4>
-                                 <p className="text-sm text-muted-foreground">
-                                   {schedule.academicYear} • {schedule.semesterType}
-                                 </p>
+                                 <h4 className="text-lg font-semibold text-gray-900">{schedule.subject?.name || 'Unknown Subject'}</h4>
+                                 <div className="flex items-center space-x-3 text-sm text-gray-500 mt-1">
+                                   <span className="flex items-center">
+                                     <Calendar className="h-4 w-4 mr-1" />
+                                     {schedule.academicYear}
+                                   </span>
+                                   <span className="text-gray-300">•</span>
+                                   <span className="font-medium text-blue-600">{schedule.semesterType}</span>
+                                 </div>
                                </div>
                              </div>
-                             <div className="flex items-center space-x-2">
-                               <Badge variant="secondary" className="text-xs">
+                             <div className="flex items-center space-x-3">
+                               <Badge variant="secondary" className="text-xs font-medium bg-blue-50 text-blue-700 border-blue-200">
                                  {schedule.sessions?.length || 0} sessions
                                </Badge>
                                <Button
                                  variant="outline"
                                  size="sm"
+                                 className="border-blue-200 text-blue-700 hover:bg-blue-50"
                                  onClick={() => {
                                    setSelectedScheduleId(schedule.id);
                                    setSelectedSchedule(schedule);
@@ -569,9 +601,12 @@ export default function ScheduleManagementPage() {
 
                            {/* Sessions List - Collapsible */}
                            {schedule.sessions && schedule.sessions.length > 0 && (
-                             <div className="border-t pt-3">
-                               <div className="flex items-center justify-between mb-2">
-                                 <span className="text-sm font-medium text-muted-foreground">Sessions</span>
+                             <div className="border-t border-gray-100 pt-4">
+                               <div className="flex items-center justify-between mb-3">
+                                 <span className="text-sm font-medium text-gray-700 flex items-center">
+                                   <Users className="h-4 w-4 mr-2 text-gray-500" />
+                                   Sessions ({schedule.sessions.length})
+                                 </span>
                                  <Button
                                    variant="ghost"
                                    size="sm"
@@ -579,28 +614,37 @@ export default function ScheduleManagementPage() {
                                      ...prev,
                                      [schedule.id]: !prev[schedule.id]
                                    }))}
-                                   className="h-6 px-2 text-xs"
+                                   className="h-7 px-3 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                                  >
                                    {expandedSchedules[schedule.id] ? 'Hide' : 'Show'} sessions
                                  </Button>
                                </div>
                                
                                {expandedSchedules[schedule.id] && (
-                                 <div className="space-y-2">
+                                 <div className="space-y-3">
                                    {schedule.sessions.map((session) => (
-                                     <div key={session.id} className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm">
-                                       <div className="flex items-center space-x-3">
-                                         <div className="w-2 h-2 bg-primary rounded-full"></div>
-                                         <span className="font-medium">{session.title}</span>
-                                         <span className="text-muted-foreground">
-                                           {new Date(session.sessionDate).toLocaleDateString()}
-                                         </span>
-                                         <span className="text-muted-foreground">
-                                           {session.startTime} - {session.endTime}
-                                         </span>
-                                         <span className="text-muted-foreground">{session.room}</span>
+                                     <div key={session.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                       <div className="flex items-center space-x-4">
+                                         <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                         <div className="flex flex-col">
+                                           <span className="font-medium text-gray-900">{session.title}</span>
+                                           <div className="flex items-center space-x-4 text-xs text-gray-500 mt-1">
+                                             <span className="flex items-center">
+                                               <Calendar className="h-3 w-3 mr-1" />
+                                               {new Date(session.sessionDate).toLocaleDateString()}
+                                             </span>
+                                             <span className="flex items-center">
+                                               <Clock className="h-3 w-3 mr-1" />
+                                               {session.startTime} - {session.endTime}
+                                             </span>
+                                             <span className="flex items-center">
+                                               <MapPin className="h-3 w-3 mr-1" />
+                                               {session.room}
+                                             </span>
+                                           </div>
+                                         </div>
                                        </div>
-                                       <Badge variant="outline" className="text-xs">
+                                       <Badge variant="secondary" className="text-xs font-medium">
                                          {session.sessionType}
                                        </Badge>
                                      </div>
@@ -625,28 +669,28 @@ export default function ScheduleManagementPage() {
                       Schedule a new session for this course
                     </DialogDescription>
                   </DialogHeader>
-                  <form onSubmit={handleAddSession} className="space-y-4">
+                  <form onSubmit={handleAddSession} className="space-y-5">
                     <div>
                       <Label htmlFor="title" className="text-sm font-medium">Session Title</Label>
-                      <Input
-                        id="title"
-                        type="text"
-                        placeholder="e.g., Introduction to Calculus"
-                        value={sessionForm.title}
-                        onChange={(e) => setSessionForm(prev => ({ ...prev, title: e.target.value }))}
-                        className="h-9"
-                      />
+                                              <Input
+                          id="title"
+                          type="text"
+                          placeholder="e.g., Introduction to Calculus"
+                          value={sessionForm.title}
+                          onChange={(e) => setSessionForm(prev => ({ ...prev, title: e.target.value }))}
+                          className="h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                        />
                     </div>
                     <div>
                       <Label htmlFor="description" className="text-sm font-medium">Description</Label>
-                      <Input
-                        id="description"
-                        type="text"
-                        placeholder="Session description"
-                        value={sessionForm.description}
-                        onChange={(e) => setSessionForm(prev => ({ ...prev, description: e.target.value }))}
-                        className="h-9"
-                      />
+                                              <Input
+                          id="description"
+                          type="text"
+                          placeholder="Session description"
+                          value={sessionForm.description}
+                          onChange={(e) => setSessionForm(prev => ({ ...prev, description: e.target.value }))}
+                          className="h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                        />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -656,47 +700,47 @@ export default function ScheduleManagementPage() {
                           type="date"
                           value={sessionForm.sessionDate}
                           onChange={(e) => setSessionForm(prev => ({ ...prev, sessionDate: e.target.value }))}
-                          className="h-9"
+                          className="h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                         />
                       </div>
                       <div>
                         <Label htmlFor="startTime" className="text-sm font-medium">Start Time</Label>
-                        <Input
-                          id="startTime"
-                          type="time"
-                          value={sessionForm.startTime}
-                          onChange={(e) => setSessionForm(prev => ({ ...prev, startTime: e.target.value }))}
-                          className="h-9"
-                        />
+                                                 <Input
+                           id="startTime"
+                           type="time"
+                           value={sessionForm.startTime}
+                           onChange={(e) => setSessionForm(prev => ({ ...prev, startTime: e.target.value }))}
+                           className="h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                         />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label htmlFor="endTime" className="text-sm font-medium">End Time</Label>
-                        <Input
-                          id="endTime"
-                          type="time"
-                          value={sessionForm.endTime}
-                          onChange={(e) => setSessionForm(prev => ({ ...prev, endTime: e.target.value }))}
-                          className="h-9"
-                        />
+                                                 <Input
+                           id="endTime"
+                           type="time"
+                           value={sessionForm.endTime}
+                           onChange={(e) => setSessionForm(prev => ({ ...prev, endTime: e.target.value }))}
+                           className="h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                         />
                       </div>
                       <div>
                         <Label htmlFor="room" className="text-sm font-medium">Room</Label>
-                        <Input
-                          id="room"
-                          type="text"
-                          placeholder="A101"
-                          value={sessionForm.room}
-                          onChange={(e) => setSessionForm(prev => ({ ...prev, room: e.target.value }))}
-                          className="h-9"
-                        />
+                                                 <Input
+                           id="room"
+                           type="text"
+                           placeholder="A101"
+                           value={sessionForm.room}
+                           onChange={(e) => setSessionForm(prev => ({ ...prev, room: e.target.value }))}
+                           className="h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                         />
                       </div>
                     </div>
                     <div>
                       <Label htmlFor="sessionType" className="text-sm font-medium">Session Type</Label>
-                      <Select value={sessionForm.sessionType} onValueChange={(value) => setSessionForm(prev => ({ ...prev, sessionType: value as 'LECTURE' | 'EXERCISE' | 'LABORATORY' | 'SEMINAR' }))}>
-                        <SelectTrigger className="h-9">
+                                             <Select value={sessionForm.sessionType} onValueChange={(value) => setSessionForm(prev => ({ ...prev, sessionType: value as 'LECTURE' | 'EXERCISE' | 'LABORATORY' | 'SEMINAR' }))}>
+                         <SelectTrigger className="h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -707,11 +751,11 @@ export default function ScheduleManagementPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="flex gap-3 pt-2">
-                      <Button type="submit" className="flex-1 h-9 bg-blue-600 hover:bg-blue-700">
+                    <div className="flex gap-3 pt-4">
+                      <Button type="submit" className="flex-1 h-10 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md">
                         Add Session
                       </Button>
-                      <Button type="button" variant="outline" className="flex-1 h-9" onClick={() => setShowAddSession(false)}>
+                      <Button type="button" variant="outline" className="flex-1 h-10" onClick={() => setShowAddSession(false)}>
                         Cancel
                       </Button>
                     </div>
@@ -723,12 +767,17 @@ export default function ScheduleManagementPage() {
 
           {activeTab === 'exam-schedules' && (
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-gray-900">Exam Schedules</h2>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <Clock className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900">Exam Schedules</h2>
+                </div>
                 <Dialog open={showCreateExamPeriod} onOpenChange={setShowCreateExamPeriod}>
                   <DialogTrigger asChild>
-                    <Button size="sm" className="h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700">
-                      <Plus className="h-3 w-3 mr-1" />
+                    <Button size="sm" className="h-9 px-4 text-sm bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 shadow-md">
+                      <Plus className="h-4 w-4 mr-2" />
                       New Exam Period
                     </Button>
                   </DialogTrigger>
@@ -739,7 +788,7 @@ export default function ScheduleManagementPage() {
                         Set up a new exam period for student assessments
                       </DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={handleCreateExamPeriod} className="space-y-4">
+                    <form onSubmit={handleCreateExamPeriod} className="space-y-5">
                       <div>
                         <Label htmlFor="name" className="text-sm font-medium">Period Name</Label>
                         <Input
@@ -748,7 +797,7 @@ export default function ScheduleManagementPage() {
                           placeholder="e.g., January 2024"
                           value={examPeriodForm.name}
                           onChange={(e) => setExamPeriodForm(prev => ({ ...prev, name: e.target.value }))}
-                          className="h-9"
+                          className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
@@ -759,7 +808,7 @@ export default function ScheduleManagementPage() {
                             type="date"
                             value={examPeriodForm.startDate}
                             onChange={(e) => setExamPeriodForm(prev => ({ ...prev, startDate: e.target.value }))}
-                            className="h-9"
+                            className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                           />
                         </div>
                         <div>
@@ -769,7 +818,7 @@ export default function ScheduleManagementPage() {
                             type="date"
                             value={examPeriodForm.endDate}
                             onChange={(e) => setExamPeriodForm(prev => ({ ...prev, endDate: e.target.value }))}
-                            className="h-9"
+                            className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                           />
                         </div>
                       </div>
@@ -781,7 +830,7 @@ export default function ScheduleManagementPage() {
                             type="date"
                             value={examPeriodForm.registrationStartDate}
                             onChange={(e) => setExamPeriodForm(prev => ({ ...prev, registrationStartDate: e.target.value }))}
-                            className="h-9"
+                            className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                           />
                         </div>
                         <div>
@@ -791,7 +840,7 @@ export default function ScheduleManagementPage() {
                             type="date"
                             value={examPeriodForm.registrationEndDate}
                             onChange={(e) => setExamPeriodForm(prev => ({ ...prev, registrationEndDate: e.target.value }))}
-                            className="h-9"
+                            className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                           />
                         </div>
                       </div>
@@ -804,13 +853,13 @@ export default function ScheduleManagementPage() {
                             placeholder="2024/2025"
                             value={examPeriodForm.academicYear}
                             onChange={(e) => setExamPeriodForm(prev => ({ ...prev, academicYear: e.target.value }))}
-                            className="h-9"
+                            className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                           />
                         </div>
                         <div>
                           <Label htmlFor="semesterType" className="text-sm font-medium">Semester</Label>
                           <Select value={examPeriodForm.semesterType} onValueChange={(value) => setExamPeriodForm(prev => ({ ...prev, semesterType: value }))}>
-                            <SelectTrigger className="h-9">
+                            <SelectTrigger className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -820,11 +869,11 @@ export default function ScheduleManagementPage() {
                           </Select>
                         </div>
                       </div>
-                      <div className="flex gap-3 pt-2">
-                        <Button type="submit" className="flex-1 h-9 bg-blue-600 hover:bg-blue-700">
+                      <div className="flex gap-3 pt-4">
+                        <Button type="submit" className="flex-1 h-10 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 shadow-md">
                           Create Period
                         </Button>
-                        <Button type="button" variant="outline" className="flex-1 h-9" onClick={() => setShowCreateExamPeriod(false)}>
+                        <Button type="button" variant="outline" className="flex-1 h-10" onClick={() => setShowCreateExamPeriod(false)}>
                           Cancel
                         </Button>
                       </div>
@@ -843,29 +892,36 @@ export default function ScheduleManagementPage() {
                  </CardHeader>
                  <CardContent className="pt-0">
                    {examPeriods.length === 0 ? (
-                     <div className="text-center py-8 text-gray-500">
-                       <Clock className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                       <p className="text-sm">No exam periods configured yet</p>
-                       <p className="text-xs text-gray-400 mt-1">Set up exam periods to organize student assessments</p>
+                     <div className="text-center py-12 text-gray-500">
+                       <Clock className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                       <p className="text-base font-medium">No exam periods configured yet</p>
+                       <p className="text-sm text-gray-400 mt-2">Set up exam periods to organize student assessments</p>
                      </div>
                    ) : (
-                     <div className="space-y-3">
+                     <div className="space-y-4">
                        {examPeriods.map((period) => (
-                         <div key={period.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors">
-                           <div className="flex items-center gap-3">
-                             <div className="p-2 rounded-lg bg-orange-50 text-orange-600">
-                               <Clock className="h-4 w-4" />
+                         <div key={period.id} className="flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-white hover:border-gray-300 transition-all duration-200 shadow-sm">
+                           <div className="flex items-center gap-4">
+                             <div className="p-3 rounded-lg bg-orange-100 text-orange-600">
+                               <Clock className="h-5 w-5" />
                              </div>
                              <div>
-                               <p className="text-sm font-medium text-gray-900">{period.name}</p>
-                               <p className="text-xs text-gray-500">{period.startDate} - {period.endDate} • {period.academicYear}</p>
+                               <h4 className="text-sm font-semibold text-gray-900">{period.name}</h4>
+                               <div className="flex items-center space-x-3 text-xs text-gray-500 mt-1">
+                                 <span className="flex items-center">
+                                   <Calendar className="h-3 w-3 mr-1" />
+                                   {new Date(period.startDate).toLocaleDateString()} - {new Date(period.endDate).toLocaleDateString()}
+                                 </span>
+                                 <span className="text-gray-400">•</span>
+                                 <span>{period.academicYear}</span>
+                               </div>
                              </div>
                            </div>
                            <div className="flex items-center gap-2">
                              <Button
                                size="sm"
                                variant="outline"
-                               className="h-7 px-2 text-xs"
+                               className="h-8 px-3 text-xs border-orange-200 text-orange-700 hover:bg-orange-50"
                                onClick={() => {
                                  setSelectedExamPeriodId(period.id);
                                  setShowAddExam(true);
@@ -892,29 +948,49 @@ export default function ScheduleManagementPage() {
                  </CardHeader>
                  <CardContent className="pt-0">
                    {exams.length === 0 ? (
-                     <div className="text-center py-8 text-gray-500">
-                       <FileText className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                       <p className="text-sm">No exams scheduled yet</p>
-                       <p className="text-xs text-gray-400 mt-1">Add exams to exam periods to get started</p>
+                     <div className="text-center py-12 text-gray-500">
+                       <FileText className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                       <p className="text-base font-medium">No exams scheduled yet</p>
+                       <p className="text-sm text-gray-400 mt-2">Add exams to exam periods to get started</p>
                      </div>
                    ) : (
-                     <div className="space-y-3">
+                     <div className="space-y-4">
                        {exams.map((exam) => (
-                         <div key={exam.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors">
-                           <div className="flex items-center gap-3">
-                             <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
-                               <FileText className="h-4 w-4" />
+                         <div key={exam.id} className="flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-white hover:border-gray-300 transition-all duration-200 shadow-sm">
+                           <div className="flex items-center gap-4">
+                             <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
+                               <FileText className="h-5 w-5" />
                              </div>
                              <div>
-                               <p className="text-sm font-medium text-gray-900">{exam.subject?.name || 'Unknown Subject'}</p>
-                               <p className="text-xs text-gray-500">
-                                 {new Date(exam.examDate).toLocaleDateString()} • {exam.examTime} • {exam.duration}min • {exam.location || 'TBD'}
-                               </p>
-                               <p className="text-xs text-gray-400">{exam.examPeriod?.name} • {exam.maxPoints} points</p>
+                               <h4 className="text-sm font-semibold text-gray-900">{exam.subject?.name || 'Unknown Subject'}</h4>
+                               <div className="flex items-center space-x-3 text-xs text-gray-500 mt-1">
+                                 <span className="flex items-center">
+                                   <Calendar className="h-3 w-3 mr-1" />
+                                   {new Date(exam.examDate).toLocaleDateString()}
+                                 </span>
+                                 <span className="flex items-center">
+                                   <Clock className="h-3 w-3 mr-1" />
+                                   {exam.examTime}
+                                 </span>
+                                 <span>{exam.duration}min</span>
+                                 <span className="text-gray-400">•</span>
+                                 <span className="flex items-center">
+                                   <MapPin className="h-3 w-3 mr-1" />
+                                   {exam.location || 'TBD'}
+                                 </span>
+                               </div>
+                               <div className="flex items-center space-x-2 text-xs text-gray-400 mt-1">
+                                 <span>{exam.examPeriod?.name}</span>
+                                 <span className="text-gray-300">•</span>
+                                 <span className="font-medium text-blue-600">{exam.maxPoints} points</span>
+                               </div>
                              </div>
                            </div>
                            <div className="flex items-center gap-2">
-                             <Badge variant="outline" className="text-xs">
+                             <Badge 
+                               variant={exam.status === 'COMPLETED' ? 'default' : exam.status === 'CANCELLED' ? 'destructive' : 'secondary'} 
+                               className="text-xs font-medium"
+                             >
                                {exam.status}
                              </Badge>
                            </div>
@@ -934,11 +1010,11 @@ export default function ScheduleManagementPage() {
                       Schedule a new exam in this period
                     </DialogDescription>
                   </DialogHeader>
-                  <form onSubmit={handleAddExam} className="space-y-4">
+                  <form onSubmit={handleAddExam} className="space-y-5">
                                          <div>
                        <Label htmlFor="subjectId" className="text-sm font-medium">Subject</Label>
                        <Select value={examForm.subjectId} onValueChange={(value) => setExamForm(prev => ({ ...prev, subjectId: value }))}>
-                         <SelectTrigger className="h-9">
+                         <SelectTrigger className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500">
                            <SelectValue placeholder="Select a subject" />
                          </SelectTrigger>
                          <SelectContent>
@@ -953,13 +1029,13 @@ export default function ScheduleManagementPage() {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label htmlFor="examDate" className="text-sm font-medium">Exam Date</Label>
-                        <Input
-                          id="examDate"
-                          type="date"
-                          value={examForm.examDate}
-                          onChange={(e) => setExamForm(prev => ({ ...prev, examDate: e.target.value }))}
-                          className="h-9"
-                        />
+                                                 <Input
+                           id="examDate"
+                           type="date"
+                           value={examForm.examDate}
+                           onChange={(e) => setExamForm(prev => ({ ...prev, examDate: e.target.value }))}
+                           className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                         />
                       </div>
                                              <div>
                          <Label htmlFor="examTime" className="text-sm font-medium">Exam Time</Label>
@@ -968,7 +1044,7 @@ export default function ScheduleManagementPage() {
                            type="time"
                            value={examForm.examTime}
                            onChange={(e) => setExamForm(prev => ({ ...prev, examTime: e.target.value }))}
-                           className="h-9"
+                           className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                          />
                        </div>
                     </div>
@@ -981,7 +1057,7 @@ export default function ScheduleManagementPage() {
                            placeholder="90"
                            value={examForm.duration}
                            onChange={(e) => setExamForm(prev => ({ ...prev, duration: e.target.value }))}
-                           className="h-9"
+                           className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                          />
                        </div>
                                              <div>
@@ -992,7 +1068,7 @@ export default function ScheduleManagementPage() {
                            placeholder="A101"
                            value={examForm.location}
                            onChange={(e) => setExamForm(prev => ({ ...prev, location: e.target.value }))}
-                           className="h-9"
+                           className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                          />
                        </div>
                     </div>
@@ -1005,13 +1081,13 @@ export default function ScheduleManagementPage() {
                            placeholder="100"
                            value={examForm.maxPoints}
                            onChange={(e) => setExamForm(prev => ({ ...prev, maxPoints: e.target.value }))}
-                           className="h-9"
+                           className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                          />
                        </div>
                                              <div>
                          <Label htmlFor="status" className="text-sm font-medium">Status</Label>
                          <Select value={examForm.status || 'SCHEDULED'} onValueChange={(value) => setExamForm(prev => ({ ...prev, status: value }))}>
-                           <SelectTrigger className="h-9">
+                           <SelectTrigger className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500">
                              <SelectValue />
                            </SelectTrigger>
                            <SelectContent>
@@ -1022,11 +1098,11 @@ export default function ScheduleManagementPage() {
                          </Select>
                        </div>
                     </div>
-                    <div className="flex gap-3 pt-2">
-                      <Button type="submit" className="flex-1 h-9 bg-blue-600 hover:bg-blue-700">
+                    <div className="flex gap-3 pt-4">
+                      <Button type="submit" className="flex-1 h-10 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 shadow-md">
                         Add Exam
                       </Button>
-                      <Button type="button" variant="outline" className="flex-1 h-9" onClick={() => setShowAddExam(false)}>
+                      <Button type="button" variant="outline" className="flex-1 h-10" onClick={() => setShowAddExam(false)}>
                         Cancel
                       </Button>
                     </div>
@@ -1038,12 +1114,17 @@ export default function ScheduleManagementPage() {
 
           {activeTab === 'evaluation-tools' && (
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-gray-900">Evaluation Tools</h2>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <Target className="h-5 w-5 text-green-600" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900">Evaluation Tools</h2>
+                </div>
                 <Dialog open={showCreateEvaluation} onOpenChange={setShowCreateEvaluation}>
                   <DialogTrigger asChild>
-                    <Button size="sm" className="h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700">
-                      <Plus className="h-3 w-3 mr-1" />
+                    <Button size="sm" className="h-9 px-4 text-sm bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md">
+                      <Plus className="h-4 w-4 mr-2" />
                       New Tool
                     </Button>
                   </DialogTrigger>
@@ -1054,7 +1135,7 @@ export default function ScheduleManagementPage() {
                         Create a new assessment instrument for students
                       </DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={handleCreateEvaluation} className="space-y-4">
+                    <form onSubmit={handleCreateEvaluation} className="space-y-5">
                       <div>
                         <Label htmlFor="name" className="text-sm font-medium">Tool Name</Label>
                         <Input
@@ -1063,7 +1144,7 @@ export default function ScheduleManagementPage() {
                           placeholder="e.g., Project Assignment 1"
                           value={evaluationForm.name}
                           onChange={(e) => setEvaluationForm(prev => ({ ...prev, name: e.target.value }))}
-                          className="h-9"
+                          className="h-10 border-gray-200 focus:border-green-500 focus:ring-green-500"
                         />
                       </div>
                       <div>
@@ -1073,14 +1154,14 @@ export default function ScheduleManagementPage() {
                           placeholder="Describe the assignment or assessment..."
                           value={evaluationForm.description}
                           onChange={(e) => setEvaluationForm(prev => ({ ...prev, description: e.target.value }))}
-                          className="h-20 resize-none"
+                          className="h-24 resize-none border-gray-200 focus:border-green-500 focus:ring-green-500"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label htmlFor="courseId" className="text-sm font-medium">Course</Label>
                           <Select value={evaluationForm.courseId} onValueChange={(value) => setEvaluationForm(prev => ({ ...prev, courseId: value }))}>
-                            <SelectTrigger className="h-9">
+                            <SelectTrigger className="h-10 border-gray-200 focus:border-green-500 focus:ring-green-500">
                               <SelectValue placeholder="Select a course" />
                             </SelectTrigger>
                             <SelectContent>
@@ -1095,7 +1176,7 @@ export default function ScheduleManagementPage() {
                         <div>
                           <Label htmlFor="type" className="text-sm font-medium">Type</Label>
                           <Select value={evaluationForm.type} onValueChange={(value) => setEvaluationForm(prev => ({ ...prev, type: value }))}>
-                            <SelectTrigger className="h-9">
+                            <SelectTrigger className="h-10 border-gray-200 focus:border-green-500 focus:ring-green-500">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -1116,7 +1197,7 @@ export default function ScheduleManagementPage() {
                             placeholder="100"
                             value={evaluationForm.maxPoints}
                             onChange={(e) => setEvaluationForm(prev => ({ ...prev, maxPoints: e.target.value }))}
-                            className="h-9"
+                            className="h-10 border-gray-200 focus:border-green-500 focus:ring-green-500"
                           />
                         </div>
                         <div>
@@ -1126,15 +1207,15 @@ export default function ScheduleManagementPage() {
                             type="date"
                             value={evaluationForm.dueDate}
                             onChange={(e) => setEvaluationForm(prev => ({ ...prev, dueDate: e.target.value }))}
-                            className="h-9"
+                            className="h-10 border-gray-200 focus:border-green-500 focus:ring-green-500"
                           />
                         </div>
                       </div>
-                      <div className="flex gap-3 pt-2">
-                        <Button type="submit" className="flex-1 h-9 bg-blue-600 hover:bg-blue-700">
+                      <div className="flex gap-3 pt-4">
+                        <Button type="submit" className="flex-1 h-10 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md">
                           Create Tool
                         </Button>
-                        <Button type="button" variant="outline" className="flex-1 h-9" onClick={() => setShowCreateEvaluation(false)}>
+                        <Button type="button" variant="outline" className="flex-1 h-10" onClick={() => setShowCreateEvaluation(false)}>
                           Cancel
                         </Button>
                       </div>
@@ -1153,26 +1234,43 @@ export default function ScheduleManagementPage() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   {evaluationInstruments.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <Target className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                      <p className="text-sm">No evaluation tools created yet</p>
-                      <p className="text-xs text-gray-400 mt-1">Create assessment instruments to evaluate student performance</p>
+                    <div className="text-center py-12 text-gray-500">
+                      <Target className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                      <p className="text-base font-medium">No evaluation tools created yet</p>
+                      <p className="text-sm text-gray-400 mt-2">Create assessment instruments to evaluate student performance</p>
                     </div>
-                    ) : (
-                    <div className="space-y-3">
+                  ) : (
+                    <div className="space-y-4">
                       {evaluationInstruments.map((tool) => (
-                        <div key={tool.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-green-50 text-green-600">
-                              <Award className="h-4 w-4" />
+                        <div key={tool.id} className="flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-white hover:border-gray-300 transition-all duration-200 shadow-sm">
+                          <div className="flex items-center gap-4">
+                            <div className="p-3 rounded-lg bg-green-100 text-green-600">
+                              <Award className="h-5 w-5" />
                             </div>
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{tool.name}</p>
-                              <p className="text-xs text-gray-500">{tool.course?.name || 'Unknown Course'} • {tool.type} • {tool.maxPoints} points</p>
+                              <h4 className="text-sm font-semibold text-gray-900">{tool.name}</h4>
+                              <div className="flex items-center space-x-3 text-xs text-gray-500 mt-1">
+                                <span className="flex items-center">
+                                  <BookOpen className="h-3 w-3 mr-1" />
+                                  {tool.course?.name || 'Unknown Course'}
+                                </span>
+                                <span className="text-gray-400">•</span>
+                                <span className="font-medium text-green-600">{tool.type}</span>
+                                <span className="text-gray-400">•</span>
+                                <span className="font-medium text-blue-600">{tool.maxPoints} points</span>
+                              </div>
+                              <div className="flex items-center space-x-2 text-xs text-gray-400 mt-1">
+                                <span className="flex items-center">
+                                  <Calendar className="h-3 w-3 mr-1" />
+                                  Due: {new Date(tool.dueDate).toLocaleDateString()}
+                                </span>
+                              </div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">Due: {tool.dueDate}</span>
+                            <Badge variant="outline" className="text-xs font-medium border-green-200 text-green-700">
+                              Active
+                            </Badge>
                           </div>
                         </div>
                       ))}

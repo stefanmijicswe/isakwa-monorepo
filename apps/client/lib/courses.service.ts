@@ -708,3 +708,224 @@ export async function deleteNotification(notificationId: number): Promise<boolea
     return false;
   }
 }
+
+// New interfaces for schedule management
+export interface Subject {
+  id: number;
+  name: string;
+  code: string;
+  credits: number;
+}
+
+// Schedule management functions
+export async function getSubjects(): Promise<Subject[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/subjects`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authService.getToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching subjects:', error);
+    return [];
+  }
+}
+
+export async function createCourseSchedule(scheduleData: {
+  subjectId: string;
+  academicYear: string;
+  semesterType: string;
+}): Promise<any> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/course-schedules`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authService.getToken()}`,
+      },
+      body: JSON.stringify({
+        subjectId: parseInt(scheduleData.subjectId),
+        academicYear: scheduleData.academicYear,
+        semesterType: scheduleData.semesterType,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating course schedule:', error);
+    throw error;
+  }
+}
+
+export async function getCourseSchedules(): Promise<any[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/course-schedules`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authService.getToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching course schedules:', error);
+    return [];
+  }
+}
+
+export async function createCourseSession(sessionData: {
+  scheduleId: number;
+  title: string;
+  description?: string;
+  sessionDate: string;
+  startTime: string;
+  endTime: string;
+  room: string;
+  sessionType: string;
+}): Promise<any> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/course-schedules/sessions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authService.getToken()}`,
+      },
+      body: JSON.stringify(sessionData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating course session:', error);
+    throw error;
+  }
+}
+
+export async function createExamPeriod(periodData: {
+  name: string;
+  startDate: string;
+  endDate: string;
+  academicYear: string;
+  semesterType: string;
+  registrationStartDate: string;
+  registrationEndDate: string;
+}): Promise<any> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/academic-records/exam-periods`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authService.getToken()}`,
+      },
+      body: JSON.stringify(periodData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating exam period:', error);
+    throw error;
+  }
+}
+
+export async function getExamPeriods(): Promise<any[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/academic-records/exam-periods`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authService.getToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching exam periods:', error);
+    return [];
+  }
+}
+
+export async function createExam(examData: {
+  subjectId: string;
+  examPeriodId: string;
+  examDate: string;
+  examTime: string;
+  duration: number;
+  location?: string;
+  maxPoints: number;
+  status: string;
+}): Promise<any> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/academic-records/exams`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authService.getToken()}`,
+      },
+      body: JSON.stringify({
+        subjectId: parseInt(examData.subjectId),
+        examPeriodId: parseInt(examData.examPeriodId),
+        examDate: examData.examDate,
+        examTime: examData.examTime,
+        duration: examData.duration,
+        location: examData.location,
+        maxPoints: examData.maxPoints,
+        status: examData.status,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating exam:', error);
+    throw error;
+  }
+}
+
+export async function getExams(): Promise<any[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/academic-records/exams`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authService.getToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching exams:', error);
+    return [];
+  }
+}
