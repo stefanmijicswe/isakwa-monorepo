@@ -99,7 +99,7 @@ export class NotificationsService {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { notification: { createdAt: 'desc' } },
     });
   }
 
