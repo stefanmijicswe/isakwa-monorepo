@@ -1,557 +1,545 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
-  BookOpen, 
+  Book, 
   Search, 
-  Plus, 
-  User, 
-  Calendar, 
-  Clock, 
-  CheckCircle, 
-  XCircle,
-  Library,
-  BookMarked,
-  Users,
-  FileText
+  Clock,
+  CheckCircle,
+  ArrowRight,
+  Check,
+  Info,
+  Plus,
+  Calendar
 } from "lucide-react";
+import { 
+  getLibraryItems, 
+  getAllBorrowings, 
+  borrowItem, 
+  returnItem,
+  type LibraryItem,
+  type LibraryBorrowing
+} from "@/lib/library.service";
+import { getStudents, type Student } from "@/lib/students.service";
 
-interface Book {
-  id: string;
-  title: string;
-  author: string;
-  isbn: string;
-  category: string;
-  available: boolean;
-  totalCopies: number;
-  availableCopies: number;
-}
-
-interface Rental {
-  id: string;
-  bookId: string;
-  bookTitle: string;
-  studentId: string;
-  studentName: string;
-  rentalDate: string;
-  dueDate: string;
-  returned: boolean;
-  overdue: boolean;
-}
-
-interface BookRequest {
-  id: string;
-  title: string;
-  author: string;
-  isbn: string;
-  category: string;
-  requestedBy: string;
-  requestDate: string;
-  status: "pending" | "approved" | "rejected";
-  priority: "low" | "medium" | "high";
-}
-
-const books: Book[] = [
-  {
-    id: "1",
-    title: "Introduction to Computer Science",
-    author: "John Smith",
-    isbn: "978-0-123456-78-9",
-    category: "Computer Science",
-    available: true,
-    totalCopies: 5,
-    availableCopies: 3
-  },
-  {
-    id: "2",
-    title: "Advanced Mathematics",
-    author: "Sarah Johnson",
-    isbn: "978-0-987654-32-1",
-    category: "Mathematics",
-    available: true,
-    totalCopies: 3,
-    availableCopies: 1
-  },
-  {
-    id: "3",
-    title: "Business Management Principles",
-    author: "Michael Brown",
-    isbn: "978-0-456789-12-3",
-    category: "Business",
-    available: false,
-    totalCopies: 4,
-    availableCopies: 0
-  },
-  {
-    id: "4",
-    title: "English Literature Classics",
-    author: "Emily Davis",
-    isbn: "978-0-321098-76-5",
-    category: "Literature",
-    available: true,
-    totalCopies: 6,
-    availableCopies: 4
-  }
-];
-
-const rentals: Rental[] = [
-  {
-    id: "1",
-    bookId: "1",
-    bookTitle: "Introduction to Computer Science",
-    studentId: "2021001",
-    studentName: "John Doe",
-    rentalDate: "2024-12-01",
-    dueDate: "2024-12-15",
-    returned: false,
-    overdue: false
-  },
-  {
-    id: "2",
-    bookId: "2",
-    bookTitle: "Advanced Mathematics",
-    studentId: "2021002",
-    studentName: "Jane Smith",
-    rentalDate: "2024-11-20",
-    dueDate: "2024-12-05",
-    returned: false,
-    overdue: true
-  }
-];
-
-const bookRequests: BookRequest[] = [
-  {
-    id: "1",
-    title: "Machine Learning Fundamentals",
-    author: "David Wilson",
-    isbn: "978-0-555555-55-5",
-    category: "Computer Science",
-    requestedBy: "Prof. Johnson",
-    requestDate: "2024-12-10",
-    status: "pending",
-    priority: "high"
-  },
-  {
-    id: "2",
-    title: "Data Structures and Algorithms",
-    author: "Lisa Chen",
-    isbn: "978-0-666666-66-6",
-    category: "Computer Science",
-    requestedBy: "Prof. Brown",
-    requestDate: "2024-12-08",
-    status: "approved",
-    priority: "medium"
-  }
-];
-
-export default function LibraryPage() {
+export default function LibraryManagementPage() {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [activeTab, setActiveTab] = useState("borrow");
+  const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
+  const [borrowings, setBorrowings] = useState<LibraryBorrowing[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
-  const [showRentalModal, setShowRentalModal] = useState(false);
-  const [showRequestModal, setShowRequestModal] = useState(false);
-  const [studentId, setStudentId] = useState("");
-  const [studentName, setStudentName] = useState("");
-  const [rentalDuration, setRentalDuration] = useState("14");
-  const [newBookRequest, setNewBookRequest] = useState({
-    title: "",
-    author: "",
-    isbn: "",
-    category: "",
-    priority: "medium" as const
+  const [selectedType, setSelectedType] = useState("all");
+  const [showBorrowModal, setShowBorrowModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
+  const [borrowForm, setBorrowForm] = useState({
+    studentId: "",
+    dueDate: "",
+    notes: ""
+  });
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [selectedBorrowing, setSelectedBorrowing] = useState<LibraryBorrowing | null>(null);
+  const [returnNotes, setReturnNotes] = useState("");
+
+  useEffect(() => {
+    fetchData();
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = async () => {
+    try {
+      const studentsResponse = await getStudents(1, 100);
+      setStudents(studentsResponse.users);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [itemsResponse, borrowingsResponse] = await Promise.all([
+        getLibraryItems(1, 100),
+        getAllBorrowings()
+      ]);
+      
+      setLibraryItems(itemsResponse.data);
+      setBorrowings(borrowingsResponse);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBorrow = async () => {
+    if (!selectedItem || !borrowForm.studentId || !borrowForm.dueDate) return;
+
+    try {
+      await borrowItem({
+        studentId: parseInt(borrowForm.studentId),
+        libraryItemId: selectedItem.id,
+        dueDate: borrowForm.dueDate,
+        notes: borrowForm.notes
+      });
+
+      await fetchData();
+      setBorrowForm({ studentId: "", dueDate: "", notes: "" });
+      setSelectedItem(null);
+      setShowBorrowModal(false);
+    } catch (error) {
+      console.error("Error borrowing item:", error);
+    }
+  };
+
+  const handleReturn = async () => {
+    if (!selectedBorrowing) return;
+
+    try {
+      await returnItem(selectedBorrowing.id, { returnNotes });
+      await fetchData();
+      setReturnNotes("");
+      setSelectedBorrowing(null);
+      setShowReturnModal(false);
+    } catch (error) {
+      console.error("Error returning item:", error);
+    }
+  };
+
+  const filteredItems = libraryItems.filter(item => {
+    const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (item.author && item.author.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesType = selectedType === "all" || !selectedType || item.type === selectedType;
+    return matchesSearch && matchesType;
   });
 
-  const filteredBooks = books.filter(book =>
-    book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    book.isbn.includes(searchTerm)
-  );
+  const activeBorrowings = borrowings.filter(borrowing => borrowing.isActive);
+  const returnedBorrowings = borrowings.filter(borrowing => !borrowing.isActive);
 
-  const handleRentBook = (book: Book) => {
-    setSelectedBook(book);
-    setShowRentalModal(true);
+  const getAvailableCopies = (item: LibraryItem) => {
+    const borrowedCount = item._count?.borrowings || 0;
+    return item.totalCopies - borrowedCount;
   };
 
-  const confirmRental = () => {
-    if (selectedBook && studentId && studentName) {
-      const newRental: Rental = {
-        id: Date.now().toString(),
-        bookId: selectedBook.id,
-        bookTitle: selectedBook.title,
-        studentId,
-        studentName,
-        rentalDate: new Date().toISOString().split('T')[0],
-        dueDate: new Date(Date.now() + parseInt(rentalDuration) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        returned: false,
-        overdue: false
-      };
-      rentals.push(newRental);
-      
-      const bookIndex = books.findIndex(b => b.id === selectedBook.id);
-      if (bookIndex !== -1) {
-        books[bookIndex].availableCopies--;
-        if (books[bookIndex].availableCopies === 0) {
-          books[bookIndex].available = false;
-        }
-      }
-      
-      setShowRentalModal(false);
-      setSelectedBook(null);
-      setStudentId("");
-      setStudentName("");
-      setRentalDuration("14");
-    }
+  const isOverdue = (borrowing: LibraryBorrowing) => {
+    return new Date(borrowing.dueDate) < new Date() && borrowing.isActive;
   };
 
-  const handleReturnBook = (rentalId: string) => {
-    const rentalIndex = rentals.findIndex(r => r.id === rentalId);
-    if (rentalIndex !== -1) {
-      const rental = rentals[rentalIndex];
-      rentals[rentalIndex].returned = true;
-      
-      const bookIndex = books.findIndex(b => b.id === rental.bookId);
-      if (bookIndex !== -1) {
-        books[bookIndex].availableCopies++;
-        if (books[bookIndex].available) {
-          books[bookIndex].available = true;
-        }
-      }
-    }
-  };
-
-  const submitBookRequest = () => {
-    if (newBookRequest.title && newBookRequest.author && newBookRequest.isbn && newBookRequest.category) {
-      const request: BookRequest = {
-        id: Date.now().toString(),
-        ...newBookRequest,
-        requestedBy: "Student Services",
-        requestDate: new Date().toISOString().split('T')[0],
-        status: "pending"
-      };
-      bookRequests.push(request);
-      
-      setNewBookRequest({
-        title: "",
-        author: "",
-        isbn: "",
-        category: "",
-        priority: "medium"
-      });
-      setShowRequestModal(false);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending": return "bg-yellow-100 text-yellow-800";
-      case "approved": return "bg-green-100 text-green-800";
-      case "rejected": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high": return "bg-red-100 text-red-800";
-      case "medium": return "bg-yellow-100 text-yellow-800";
-      case "low": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Library Management</h1>
-          <p className="text-gray-600">Manage book rentals and requests for students</p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <Library className="h-5 w-5" />
-            <span>{books.filter(b => b.available).length} books available</span>
-          </div>
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <Users className="h-5 w-5" />
-            <span>{rentals.filter(r => !r.returned).length} active rentals</span>
-          </div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
+    );
+  }
 
-      <Tabs defaultValue="books" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="books" className="flex items-center space-x-2">
-            <BookOpen className="h-4 w-4" />
-            <span>Books</span>
-          </TabsTrigger>
-          <TabsTrigger value="rentals" className="flex items-center space-x-2">
-            <User className="h-4 w-4" />
-            <span>Rentals</span>
-          </TabsTrigger>
-          <TabsTrigger value="requests" className="flex items-center space-x-2">
-            <FileText className="h-4 w-4" />
-            <span>Book Requests</span>
-          </TabsTrigger>
-          <TabsTrigger value="new-request" className="flex items-center space-x-2">
-            <Plus className="h-4 w-4" />
-            <span>New Request</span>
-          </TabsTrigger>
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Library Management</h1>
+          <p className="text-gray-600">Manage and track library books and borrowings</p>
+        </div>
+        <Button onClick={() => setShowBorrowModal(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Borrow Book
+        </Button>
+      </div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="borrow">Borrow Books</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="books" className="space-y-6">
-          <div className="flex items-center space-x-4">
+        {/* Borrow Books Tab */}
+        <TabsContent value="borrow" className="space-y-6">
+          {/* Search and Filter */}
+          <div className="flex gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search books by title, author, or ISBN..."
+                placeholder="Search books, authors..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
+            <Select value={selectedType} onValueChange={setSelectedType}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="BOOK">Books</SelectItem>
+                <SelectItem value="JOURNAL">Journals</SelectItem>
+                <SelectItem value="MAGAZINE">Magazines</SelectItem>
+                <SelectItem value="THESIS">Theses</SelectItem>
+                <SelectItem value="OTHER">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredBooks.map((book) => (
-              <Card key={book.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{book.title}</CardTitle>
-                      <p className="text-sm text-gray-600">{book.author}</p>
+          {/* Books Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredItems.map((item) => {
+              const availableCopies = getAvailableCopies(item);
+              const canBorrow = availableCopies > 0;
+              
+              return (
+                <Card 
+                  key={item.id} 
+                  className={`cursor-pointer hover:shadow-md transition-shadow ${!canBorrow ? 'opacity-60' : ''}`}
+                  onClick={() => {
+                    if (canBorrow) {
+                      setSelectedItem(item);
+                      setShowBorrowModal(true);
+                    }
+                  }}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="p-2 bg-gray-100 rounded-lg">
+                        <Book className="h-4 w-4 text-gray-600" />
+                      </div>
+                      <Badge variant={availableCopies === 0 ? "destructive" : availableCopies <= 2 ? "secondary" : "default"}>
+                        {availableCopies === 0 ? "Out of Stock" : availableCopies <= 2 ? "Low Stock" : "Available"}
+                      </Badge>
                     </div>
-                    <Badge variant={book.available ? "default" : "secondary"}>
-                      {book.available ? "Available" : "Unavailable"}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="text-sm text-gray-600">
-                    <p><span className="font-medium">ISBN:</span> {book.isbn}</p>
-                    <p><span className="font-medium">Category:</span> {book.category}</p>
-                    <p><span className="font-medium">Copies:</span> {book.availableCopies}/{book.totalCopies}</p>
-                  </div>
-                  <Button
-                    onClick={() => handleRentBook(book)}
-                    disabled={!book.available}
-                    className="w-full"
-                  >
-                    Rent Book
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <h3 className="font-medium text-gray-900 mb-2">{item.title}</h3>
+                    {item.author && (
+                      <p className="text-sm text-gray-600 mb-2">by {item.author}</p>
+                    )}
+                    {item.description && (
+                      <p className="text-sm text-gray-600 mb-3">{item.description}</p>
+                    )}
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Available:</span>
+                        <span className="font-medium">{availableCopies} of {item.totalCopies} copies</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Type:</span>
+                        <Badge variant="outline" className="text-xs">
+                          {item.type}
+                        </Badge>
+                      </div>
+                      {item.isbn && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">ISBN:</span>
+                          <span className="font-medium text-xs">{item.isbn}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      {canBorrow ? (
+                        <div className="flex items-center text-blue-600 text-sm font-medium">
+                          <span>Click to borrow</span>
+                          <ArrowRight className="h-4 w-4 ml-1" />
+                        </div>
+                      ) : (
+                        <div className="text-gray-500 text-sm">
+                          No copies available
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
+
+          {filteredItems.length === 0 && (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Book className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-600">No books found</p>
+              </Card>
+            </Card>
+          )}
         </TabsContent>
 
-        <TabsContent value="rentals" className="space-y-6">
+        {/* History Tab */}
+        <TabsContent value="history" className="space-y-6">
+          {/* Active Borrowings */}
           <Card>
             <CardHeader>
-              <CardTitle>Active Book Rentals</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Active Borrowings ({activeBorrowings.length})
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {rentals.filter(r => !r.returned).map((rental) => (
-                  <div key={rental.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <h3 className="font-medium">{rental.bookTitle}</h3>
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <p>Student: {rental.studentName} (ID: {rental.studentId})</p>
-                        <p>Rented: {rental.rentalDate}</p>
-                        <p>Due: {rental.dueDate}</p>
+            <CardContent className="space-y-4">
+              {activeBorrowings.length === 0 ? (
+                <div className="text-center py-6">
+                  <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                  <p className="text-gray-600">No active borrowings</p>
+                </div>
+              ) : (
+                activeBorrowings.map((borrowing) => (
+                  <div key={borrowing.id} className={`border rounded-lg p-4 ${isOverdue(borrowing) ? 'border-red-200 bg-red-50' : ''}`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-medium text-gray-900">
+                            {borrowing.libraryItem?.title || 'Unknown Book'}
+                          </h4>
+                          {isOverdue(borrowing) && (
+                            <Badge variant="destructive" className="text-xs">Overdue</Badge>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                          <div>
+                            <span className="font-medium">Student:</span>
+                            <p>{borrowing.student?.user?.firstName} {borrowing.student?.user?.lastName}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Borrowed:</span>
+                            <p>{new Date(borrowing.borrowedAt).toLocaleDateString()}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Due Date:</span>
+                            <p className={isOverdue(borrowing) ? 'text-red-600 font-medium' : ''}>
+                              {new Date(borrowing.dueDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Author:</span>
+                            <p>{borrowing.libraryItem?.author || 'Unknown'}</p>
+                          </div>
+                        </div>
+                        {borrowing.notes && (
+                          <div className="mt-3 p-3 bg-gray-50 rounded text-sm">
+                            <span className="font-medium">Notes:</span>
+                            <p className="text-gray-600 mt-1">{borrowing.notes}</p>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {rental.overdue && (
-                        <Badge variant="destructive">Overdue</Badge>
-                      )}
                       <Button
-                        onClick={() => handleReturnBook(rental.id)}
-                        variant="outline"
-                        size="sm"
+                        onClick={() => {
+                          setSelectedBorrowing(borrowing);
+                          setShowReturnModal(true);
+                        }}
+                        className="ml-4"
                       >
-                        Return Book
+                        <Check className="h-4 w-4 mr-2" />
+                        Mark Returned
                       </Button>
                     </div>
                   </div>
-                ))}
-                {rentals.filter(r => !r.returned).length === 0 && (
-                  <p className="text-center text-gray-500 py-8">No active rentals</p>
-                )}
-              </div>
+                ))
+              )}
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="requests" className="space-y-6">
+          {/* Returned Books */}
           <Card>
             <CardHeader>
-              <CardTitle>Book Requests</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5" />
+                Returned Books ({returnedBorrowings.length})
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {bookRequests.map((request) => (
-                  <div key={request.id} className="p-4 border rounded-lg">
-                    <div className="flex items-start justify-between">
+            <CardContent className="space-y-4">
+              {returnedBorrowings.length === 0 ? (
+                <div className="text-center py-6">
+                  <Info className="h-8 w-8 text-blue-500 mx-auto mb-2" />
+                  <p className="text-gray-600">No returned books yet</p>
+                </div>
+              ) : (
+                returnedBorrowings.map((borrowing) => (
+                  <div key={borrowing.id} className="border rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h3 className="font-medium">{request.title}</h3>
-                        <p className="text-sm text-gray-600">{request.author}</p>
-                        <div className="text-sm text-gray-600 space-y-1 mt-2">
-                          <p><span className="font-medium">ISBN:</span> {request.isbn}</p>
-                          <p><span className="font-medium">Category:</span> {request.category}</p>
-                          <p><span className="font-medium">Requested by:</span> {request.requestedBy}</p>
-                          <p><span className="font-medium">Date:</span> {request.requestDate}</p>
+                        <h4 className="font-medium text-gray-900 mb-2">
+                          {borrowing.libraryItem?.title || 'Unknown Book'}
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                          <div>
+                            <span className="font-medium">Student:</span>
+                            <p>{borrowing.student?.user?.firstName} {borrowing.student?.user?.lastName}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Returned:</span>
+                            <p>{borrowing.returnedAt ? new Date(borrowing.returnedAt).toLocaleDateString() : 'N/A'}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Borrowed:</span>
+                            <p>{new Date(borrowing.borrowedAt).toLocaleDateString()}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Author:</span>
+                            <p>{borrowing.libraryItem?.author || 'Unknown'}</p>
+                          </div>
                         </div>
+                        {borrowing.returnNotes && (
+                          <div className="mt-3 p-3 bg-green-50 rounded text-sm border border-green-200">
+                            <span className="font-medium text-green-700">Return Notes:</span>
+                            <p className="text-green-600 mt-1">{borrowing.returnNotes}</p>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex flex-col space-y-2">
-                        <Badge className={getStatusColor(request.status)}>
-                          {request.status}
-                        </Badge>
-                        <Badge className={getPriorityColor(request.priority)}>
-                          {request.priority} priority
-                        </Badge>
-                      </div>
+                      <Badge variant="outline" className="ml-4">Returned</Badge>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="new-request" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Request New Book</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="title">Book Title</Label>
-                    <Input
-                      id="title"
-                      value={newBookRequest.title}
-                      onChange={(e) => setNewBookRequest({...newBookRequest, title: e.target.value})}
-                      placeholder="Enter book title"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="author">Author</Label>
-                    <Input
-                      id="author"
-                      value={newBookRequest.author}
-                      onChange={(e) => setNewBookRequest({...newBookRequest, author: e.target.value})}
-                      placeholder="Enter author name"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="isbn">ISBN</Label>
-                    <Input
-                      id="isbn"
-                      value={newBookRequest.isbn}
-                      onChange={(e) => setNewBookRequest({...newBookRequest, isbn: e.target.value})}
-                      placeholder="Enter ISBN"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="category">Category</Label>
-                    <Input
-                      id="category"
-                      value={newBookRequest.category}
-                      onChange={(e) => setNewBookRequest({...newBookRequest, category: e.target.value})}
-                      placeholder="Enter category"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="priority">Priority</Label>
-                  <select
-                    id="priority"
-                    value={newBookRequest.priority}
-                    onChange={(e) => setNewBookRequest({...newBookRequest, priority: e.target.value as any})}
-                    className="w-full p-2 border rounded-md"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-                <Button onClick={submitBookRequest} className="w-full">
-                  Submit Book Request
-                </Button>
-              </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
-      {showRentalModal && selectedBook && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-bold mb-4">Rent Book</h2>
+      {/* Borrow Modal */}
+      <Dialog open={showBorrowModal} onOpenChange={setShowBorrowModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Borrow Book</DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="book-title">Book</Label>
-                <Input
-                  id="book-title"
-                  value={selectedBook.title}
-                  disabled
-                  className="bg-gray-50"
-                />
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2">{selectedItem.title}</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-700">Available:</span>
+                    <p className="text-gray-600">{getAvailableCopies(selectedItem)} of {selectedItem.totalCopies} copies</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Author:</span>
+                    <p className="text-gray-600">{selectedItem.author || 'Unknown'}</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="student-id">Student ID</Label>
-                <Input
-                  id="student-id"
-                  value={studentId}
-                  onChange={(e) => setStudentId(e.target.value)}
-                  placeholder="Enter student ID"
-                />
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="student">Student</Label>
+                  <Select value={borrowForm.studentId} onValueChange={(value) => setBorrowForm({...borrowForm, studentId: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a student" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {students.map((student) => (
+                        <SelectItem key={student.id} value={student.id.toString()}>
+                          {student.firstName} {student.lastName} ({student.studentProfile?.studentIndex || 'N/A'})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="dueDate">Due Date</Label>
+                  <Input
+                    id="dueDate"
+                    type="date"
+                    min={new Date().toISOString().split('T')[0]}
+                    placeholder="Select due date"
+                    value={borrowForm.dueDate}
+                    onChange={(e) => setBorrowForm({...borrowForm, dueDate: e.target.value})}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Select when the book should be returned
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="notes">Notes (Optional)</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="Any additional notes..."
+                    value={borrowForm.notes}
+                    onChange={(e) => setBorrowForm({...borrowForm, notes: e.target.value})}
+                    rows={3}
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="student-name">Student Name</Label>
-                <Input
-                  id="student-name"
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                  placeholder="Enter student name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="duration">Rental Duration (days)</Label>
-                <Input
-                  id="duration"
-                  type="number"
-                  value={rentalDuration}
-                  onChange={(e) => setRentalDuration(e.target.value)}
-                  min="1"
-                  max="30"
-                />
-              </div>
-              <div className="flex space-x-2">
-                <Button onClick={confirmRental} className="flex-1">
-                  Confirm Rental
-                </Button>
-                <Button 
-                  onClick={() => setShowRentalModal(false)} 
-                  variant="outline" 
-                  className="flex-1"
-                >
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button variant="outline" onClick={() => setShowBorrowModal(false)}>
                   Cancel
+                </Button>
+                <Button
+                  onClick={handleBorrow}
+                  disabled={!borrowForm.studentId || !borrowForm.dueDate}
+                >
+                  Borrow Book
                 </Button>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Return Modal */}
+      <Dialog open={showReturnModal} onOpenChange={setShowReturnModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mark as Returned</DialogTitle>
+          </DialogHeader>
+          {selectedBorrowing && (
+            <div className="space-y-4">
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2">
+                  {selectedBorrowing.libraryItem?.title || 'Unknown Book'}
+                </h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-700">Student:</span>
+                    <p className="text-gray-600">
+                      {selectedBorrowing.student?.user?.firstName} {selectedBorrowing.student?.user?.lastName}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Due Date:</span>
+                    <p className="text-gray-600">
+                      {new Date(selectedBorrowing.dueDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="returnNotes">Return Notes (Optional)</Label>
+                <Textarea
+                  id="returnNotes"
+                  placeholder="Any notes about the return..."
+                  value={returnNotes}
+                  onChange={(e) => setReturnNotes(e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button variant="outline" onClick={() => setShowReturnModal(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleReturn}>
+                  <Check className="h-4 w-4 mr-2" />
+                  Mark Returned
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
