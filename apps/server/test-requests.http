@@ -1,0 +1,92 @@
+### Prvo treba da se ulogujemo kao student
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "student@example.com",
+  "password": "password123"
+}
+
+### Sačuvaj token iz odgovora i koristi ga u sledećim zahtevima
+@studentToken = 
+
+### Test kreiranje nove molbe (koristiću token kad ga dobijem)
+POST http://localhost:3001/student-requests
+Content-Type: application/json
+Authorization: Bearer {{studentToken}}
+
+{
+  "type": "REQUEST",
+  "title": "Molba za otvaranje novog izbornog predmeta",
+  "description": "Molim da se razmotri mogućnost otvaranja novog izbornog predmeta iz oblasti veštačke inteligencije. Zainteresovano je više studenata sa naše godine."
+}
+
+### Test kreiranje žalbe
+POST http://localhost:3001/student-requests
+Content-Type: application/json
+Authorization: Bearer {{studentToken}}
+
+{
+  "type": "COMPLAINT",
+  "title": "Žalba na ocenu na ispitu",
+  "description": "Smatram da je ocena na ispitu iz predmeta Matematika 1 neopravljeno niska. Molim preispitivanje."
+}
+
+### Test dobijanje liste molbi studenta
+GET http://localhost:3001/student-requests
+Authorization: Bearer {{studentToken}}
+
+### Test dobijanje specifične molbe
+GET http://localhost:3001/student-requests/1
+Authorization: Bearer {{studentToken}}
+
+### Test dodavanje komentara na molbu
+POST http://localhost:3001/student-requests/1/comments
+Content-Type: application/json
+Authorization: Bearer {{studentToken}}
+
+{
+  "comment": "Dodatno objašnjenje za moju molbu..."
+}
+
+### Test kao studentska služba - prvo login
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "service@example.com",
+  "password": "password123"
+}
+
+@serviceToken = 
+
+### Test pregled svih molbi kao studentska služba
+GET http://localhost:3001/student-requests
+Authorization: Bearer {{serviceToken}}
+
+### Test promena statusa molbe
+PATCH http://localhost:3001/student-requests/1/status
+Content-Type: application/json
+Authorization: Bearer {{serviceToken}}
+
+{
+  "status": "IN_REVIEW"
+}
+
+### Test dodavanje komentara od strane studentske službe
+POST http://localhost:3001/student-requests/1/comments
+Content-Type: application/json
+Authorization: Bearer {{serviceToken}}
+
+{
+  "comment": "Molba je prosleđena na razmatranje nastavnom veću."
+}
+
+### Test finalna promena statusa
+PATCH http://localhost:3001/student-requests/1/status
+Content-Type: application/json
+Authorization: Bearer {{serviceToken}}
+
+{
+  "status": "APPROVED"
+}
