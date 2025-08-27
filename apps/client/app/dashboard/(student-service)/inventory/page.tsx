@@ -1,453 +1,505 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Package, 
-  Plus, 
   Search, 
-  Calendar, 
-  AlertTriangle, 
-  CheckCircle, 
   Clock,
-  FileText,
-  PenTool,
-  Printer,
-  Monitor,
-  BookOpen
+  CheckCircle,
+  ArrowRight,
+  Check,
+  Info,
+  Plus
 } from "lucide-react";
-
-interface SupplyRequest {
-  id: string;
-  itemName: string;
-  category: string;
-  quantity: number;
-  priority: "low" | "medium" | "high" | "urgent";
-  status: "pending" | "approved" | "rejected" | "delivered";
-  requestedBy: string;
-  requestDate: string;
-  notes?: string;
-  estimatedCost?: number;
-  approvedBy?: string;
-  approvedDate?: string;
-  deliveryDate?: string;
-}
-
-const supplyCategories = [
-  { id: "stationery", name: "Stationery", icon: PenTool, color: "bg-blue-100 text-blue-800" },
-  { id: "paper", name: "Paper & Printing", icon: Printer, color: "bg-green-100 text-green-800" },
-  { id: "electronics", name: "Electronics", icon: Monitor, color: "bg-purple-100 text-purple-800" },
-  { id: "furniture", name: "Furniture", icon: Package, color: "bg-orange-100 text-orange-800" },
-  { id: "books", name: "Books & Manuals", icon: BookOpen, color: "bg-red-100 text-red-800" },
-  { id: "other", name: "Other Supplies", icon: FileText, color: "bg-gray-100 text-gray-800" }
-];
-
-const commonSupplies = {
-  stationery: ["Pens", "Pencils", "Markers", "Highlighters", "Staplers", "Paper Clips", "Sticky Notes", "Tape", "Scissors", "Rulers"],
-  paper: ["A4 Paper", "Printer Ink", "Toner Cartridges", "Notebooks", "Folders", "Envelopes", "Labels", "Cardstock"],
-  electronics: ["USB Cables", "Power Adapters", "Mouse Pads", "Webcams", "Microphones", "Speakers", "Extension Cords"],
-  furniture: ["Desk Chairs", "Filing Cabinets", "Bookshelves", "Desk Organizers", "Whiteboards", "Notice Boards"],
-  books: ["Office Manuals", "Reference Books", "Training Materials", "Procedure Guides"],
-  other: ["First Aid Kits", "Cleaning Supplies", "Storage Boxes", "Cable Organizers"]
-};
-
-const mockRequests: SupplyRequest[] = [
-  {
-    id: "1",
-    itemName: "A4 Paper",
-    category: "paper",
-    quantity: 50,
-    priority: "high",
-    status: "pending",
-    requestedBy: "John Doe",
-    requestDate: "2025-01-15",
-    notes: "Running low on paper, need for upcoming exams",
-    estimatedCost: 25.00
-  },
-  {
-    id: "2",
-    itemName: "Office Chairs",
-    category: "furniture",
-    quantity: 5,
-    priority: "medium",
-    status: "approved",
-    requestedBy: "Jane Smith",
-    requestDate: "2025-01-10",
-    notes: "New staff members need proper seating",
-    estimatedCost: 750.00,
-    approvedBy: "Admin Manager",
-    approvedDate: "2025-01-12"
-  },
-  {
-    id: "3",
-    itemName: "Printer Ink",
-    category: "paper",
-    quantity: 10,
-    priority: "urgent",
-    status: "delivered",
-    requestedBy: "Mike Johnson",
-    requestDate: "2025-01-05",
-    notes: "Printer completely out of ink",
-    estimatedCost: 120.00,
-    approvedBy: "Admin Manager",
-    approvedDate: "2025-01-06",
-    deliveryDate: "2025-01-08"
-  }
-];
+import { 
+  getInventoryItems, 
+  getAllInventoryIssuances, 
+  createInventoryIssuance, 
+  markAsReturned,
+  type InventoryItem,
+  type InventoryIssuance
+} from "@/lib/inventory.service";
+import { getStudents, type Student } from "@/lib/students.service";
 
 export default function InventoryPage() {
-  const [activeTab, setActiveTab] = useState("new-request");
+  const [students, setStudents] = useState<Student[]>([]);
+  const [activeTab, setActiveTab] = useState("borrow");
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [issuances, setIssuances] = useState<InventoryIssuance[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [showNewRequestModal, setShowNewRequestModal] = useState(false);
-  const [newRequest, setNewRequest] = useState({
-    itemName: "",
-    category: "",
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [showBorrowModal, setShowBorrowModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [borrowForm, setBorrowForm] = useState({
+    studentId: "",
     quantity: "",
-    priority: "medium" as const,
     notes: ""
   });
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [selectedIssuance, setSelectedIssuance] = useState<InventoryIssuance | null>(null);
+  const [returnNotes, setReturnNotes] = useState("");
 
-  const filteredRequests = mockRequests.filter(request => {
-    const matchesSearch = request.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.requestedBy.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || request.category === selectedCategory;
+  useEffect(() => {
+    fetchData();
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = async () => {
+    try {
+      const studentsResponse = await getStudents(1, 100);
+      setStudents(studentsResponse.users);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [itemsResponse, issuancesResponse] = await Promise.all([
+        getInventoryItems(1, 100),
+        getAllInventoryIssuances(1, 100)
+      ]);
+      
+      setInventoryItems(itemsResponse.data);
+      setIssuances(issuancesResponse.issuances);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBorrow = async () => {
+    if (!selectedItem || !borrowForm.studentId || !borrowForm.quantity) return;
+
+    try {
+      await createInventoryIssuance({
+        inventoryItemId: selectedItem.id,
+        studentId: parseInt(borrowForm.studentId),
+        quantityIssued: parseInt(borrowForm.quantity),
+        notes: borrowForm.notes
+      });
+
+      await fetchData();
+      setBorrowForm({ studentId: "", quantity: "", notes: "" });
+      setSelectedItem(null);
+      setShowBorrowModal(false);
+    } catch (error) {
+      console.error("Error creating issuance:", error);
+    }
+  };
+
+  const handleReturn = async () => {
+    if (!selectedIssuance) return;
+
+    try {
+      await markAsReturned(selectedIssuance.id, returnNotes);
+      await fetchData();
+      setReturnNotes("");
+      setSelectedIssuance(null);
+      setShowReturnModal(false);
+    } catch (error) {
+      console.error("Error marking as returned:", error);
+    }
+  };
+
+  const filteredItems = inventoryItems.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory = selectedCategory === "all" || !selectedCategory || item.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const handleSubmitRequest = () => {
-    if (!newRequest.itemName || !newRequest.category || !newRequest.quantity) return;
+  const activeIssuances = issuances.filter(issuance => issuance.isActive);
+  const returnedIssuances = issuances.filter(issuance => !issuance.isActive);
 
-    const request: SupplyRequest = {
-      id: Date.now().toString(),
-      itemName: newRequest.itemName,
-      category: newRequest.category,
-      quantity: parseInt(newRequest.quantity),
-      priority: newRequest.priority,
-      status: "pending",
-      requestedBy: "John Doe",
-      requestDate: new Date().toISOString().split('T')[0],
-      notes: newRequest.notes,
-      estimatedCost: Math.random() * 100 + 10
-    };
-
-    mockRequests.unshift(request);
-    
-    setNewRequest({
-      itemName: "",
-      category: "",
-      quantity: "",
-      priority: "medium",
-      notes: ""
-    });
-    setShowNewRequestModal(false);
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "low": return "bg-gray-100 text-gray-800";
-      case "medium": return "bg-blue-100 text-blue-800";
-      case "high": return "bg-orange-100 text-orange-800";
-      case "urgent": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending": return "bg-yellow-100 text-yellow-800";
-      case "approved": return "bg-blue-100 text-blue-800";
-      case "rejected": return "bg-red-100 text-red-800";
-      case "delivered": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "pending": return <Clock className="h-4 w-4" />;
-      case "approved": return <CheckCircle className="h-4 w-4" />;
-      case "rejected": return <AlertTriangle className="h-4 w-4" />;
-      case "delivered": return <CheckCircle className="h-4 w-4" />;
-      default: return <Clock className="h-4 w-4" />;
-    }
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Office Supplies Management</h1>
-          <p className="text-gray-600">Request and track office supplies for student services</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Inventory</h1>
+          <p className="text-gray-600">Manage and track inventory items</p>
         </div>
-        <Button onClick={() => setShowNewRequestModal(true)} className="flex items-center space-x-2">
-          <Plus className="h-4 w-4" />
-          <span>New Request</span>
+        <Button onClick={() => setShowBorrowModal(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Borrow Item
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="new-request">New Request</TabsTrigger>
-          <TabsTrigger value="my-requests">My Requests</TabsTrigger>
-          <TabsTrigger value="all-requests">All Requests</TabsTrigger>
-          <TabsTrigger value="categories">Categories</TabsTrigger>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="borrow">Borrow Items</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="new-request" className="space-y-6">
+        {/* Borrow Items Tab */}
+        <TabsContent value="borrow" className="space-y-6">
+          {/* Search and Filter */}
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search items..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="stationery">Stationery</SelectItem>
+                <SelectItem value="electronics">Electronics</SelectItem>
+                <SelectItem value="books">Books</SelectItem>
+                <SelectItem value="printing">Printing</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Items Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredItems.map((item) => (
+              <Card 
+                key={item.id} 
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => {
+                  setSelectedItem(item);
+                  setShowBorrowModal(true);
+                }}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="p-2 bg-gray-100 rounded-lg">
+                      <Package className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <Badge variant={item.isLowStock ? "destructive" : "secondary"}>
+                      {item.isLowStock ? "Low Stock" : "In Stock"}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <h3 className="font-medium text-gray-900 mb-2">{item.name}</h3>
+                  {item.description && (
+                    <p className="text-sm text-gray-600 mb-3">{item.description}</p>
+                  )}
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Available:</span>
+                      <span className="font-medium">{item.quantity} {item.unit || 'units'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Category:</span>
+                      <Badge variant="outline" className="text-xs">
+                        {item.category}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <div className="flex items-center text-blue-600 text-sm font-medium">
+                      <span>Click to borrow</span>
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {filteredItems.length === 0 && (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Package className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-600">No items found</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* History Tab */}
+        <TabsContent value="history" className="space-y-6">
+          {/* Active Borrowings */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Package className="h-5 w-5" />
-                <span>Request New Supplies</span>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Active Borrowings ({activeIssuances.length})
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="itemName">Item Name *</Label>
-                  <Input
-                    id="itemName"
-                    placeholder="Enter item name"
-                    value={newRequest.itemName}
-                    onChange={(e) => setNewRequest({ ...newRequest, itemName: e.target.value })}
-                  />
+            <CardContent className="space-y-4">
+              {activeIssuances.length === 0 ? (
+                <div className="text-center py-6">
+                  <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                  <p className="text-gray-600">No active borrowings</p>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category *</Label>
-                  <select
-                    id="category"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={newRequest.category}
-                    onChange={(e) => setNewRequest({ ...newRequest, category: e.target.value })}
-                  >
-                    <option value="">Select category</option>
-                    {supplyCategories.map(category => (
-                      <option key={category.id} value={category.id}>{category.name}</option>
-                    ))}
-                  </select>
+              ) : (
+                activeIssuances.map((issuance) => (
+                  <div key={issuance.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900 mb-2">
+                          {issuance.inventoryItem?.name || 'Unknown Item'}
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                          <div>
+                            <span className="font-medium">Student:</span>
+                            <p>{issuance.student?.user?.firstName} {issuance.student?.user?.lastName}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Quantity:</span>
+                            <p>{issuance.quantityIssued} {issuance.inventoryItem?.unit || 'units'}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Borrowed:</span>
+                            <p>{new Date(issuance.issuedAt).toLocaleDateString()}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Issued by:</span>
+                            <p>{issuance.issuedByUser?.firstName} {issuance.issuedByUser?.lastName}</p>
+                          </div>
+                        </div>
+                        {issuance.notes && (
+                          <div className="mt-3 p-3 bg-gray-50 rounded text-sm">
+                            <span className="font-medium">Notes:</span>
+                            <p className="text-gray-600 mt-1">{issuance.notes}</p>
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        onClick={() => {
+                          setSelectedIssuance(issuance);
+                          setShowReturnModal(true);
+                        }}
+                        className="ml-4"
+                      >
+                        <Check className="h-4 w-4 mr-2" />
+                        Mark Returned
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Returned Items */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5" />
+                Returned Items ({returnedIssuances.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {returnedIssuances.length === 0 ? (
+                <div className="text-center py-6">
+                  <Info className="h-8 w-8 text-blue-500 mx-auto mb-2" />
+                  <p className="text-gray-600">No returned items yet</p>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="quantity">Quantity *</Label>
+              ) : (
+                returnedIssuances.map((issuance) => (
+                  <div key={issuance.id} className="border rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900 mb-2">
+                          {issuance.inventoryItem?.name || 'Unknown Item'}
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                          <div>
+                            <span className="font-medium">Student:</span>
+                            <p>{issuance.student?.user?.firstName} {issuance.student?.user?.lastName}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Quantity:</span>
+                            <p>{issuance.quantityIssued} {issuance.inventoryItem?.unit || 'units'}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Returned:</span>
+                            <p>{issuance.returnedAt ? new Date(issuance.returnedAt).toLocaleDateString() : 'N/A'}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Borrowed:</span>
+                            <p>{new Date(issuance.issuedAt).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        {issuance.returnNotes && (
+                          <div className="mt-3 p-3 bg-green-50 rounded text-sm border border-green-200">
+                            <span className="font-medium text-green-700">Return Notes:</span>
+                            <p className="text-green-600 mt-1">{issuance.returnNotes}</p>
+                          </div>
+                        )}
+                      </div>
+                      <Badge variant="outline" className="ml-4">Returned</Badge>
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Borrow Modal */}
+      <Dialog open={showBorrowModal} onOpenChange={setShowBorrowModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Borrow Item</DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-4">
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2">{selectedItem.name}</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-700">Available:</span>
+                    <p className="text-gray-600">{selectedItem.quantity} {selectedItem.unit || 'units'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Category:</span>
+                    <p className="text-gray-600">{selectedItem.category}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="student">Student</Label>
+                  <Select value={borrowForm.studentId} onValueChange={(value) => setBorrowForm({...borrowForm, studentId: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a student" />
+                    </SelectTrigger>
+                    <SelectContent>
+                                                                     {students.map((student) => (
+                          <SelectItem key={student.id} value={student.id.toString()}>
+                            {student.firstName} {student.lastName} ({student.studentProfile?.studentIndex || 'N/A'})
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="quantity">Quantity</Label>
                   <Input
                     id="quantity"
                     type="number"
                     min="1"
+                    max={selectedItem.quantity}
                     placeholder="Enter quantity"
-                    value={newRequest.quantity}
-                    onChange={(e) => setNewRequest({ ...newRequest, quantity: e.target.value })}
+                    value={borrowForm.quantity}
+                    onChange={(e) => setBorrowForm({...borrowForm, quantity: e.target.value})}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Maximum available: {selectedItem.quantity} {selectedItem.unit || 'units'}
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="notes">Notes (Optional)</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="Any additional notes..."
+                    value={borrowForm.notes}
+                    onChange={(e) => setBorrowForm({...borrowForm, notes: e.target.value})}
+                    rows={3}
                   />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="priority">Priority Level</Label>
-                  <select
-                    id="priority"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={newRequest.priority}
-                    onChange={(e) => setNewRequest({ ...newRequest, priority: e.target.value as any })}
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
-                  </select>
-                </div>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="notes">Additional Notes</Label>
-                <textarea
-                  id="notes"
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Any additional details about your request..."
-                  value={newRequest.notes}
-                  onChange={(e) => setNewRequest({ ...newRequest, notes: e.target.value })}
-                />
-              </div>
-              
-              <div className="flex justify-end space-x-3">
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button variant="outline" onClick={() => setShowBorrowModal(false)}>
+                  Cancel
+                </Button>
                 <Button
-                  onClick={handleSubmitRequest}
-                  disabled={!newRequest.itemName || !newRequest.category || !newRequest.quantity}
-                  className="px-6"
+                  onClick={handleBorrow}
+                  disabled={!borrowForm.studentId || !borrowForm.quantity || parseInt(borrowForm.quantity) > selectedItem.quantity}
                 >
-                  Submit Request
+                  Borrow Item
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
-        <TabsContent value="my-requests" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>My Supply Requests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {mockRequests.filter(r => r.requestedBy === "John Doe").map((request) => (
-                  <div key={request.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-medium">{request.itemName}</h3>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p>Category: {supplyCategories.find(c => c.id === request.category)?.name}</p>
-                          <p>Quantity: {request.quantity}</p>
-                          <p>Requested: {request.requestDate}</p>
-                          {request.notes && <p>Notes: {request.notes}</p>}
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge className={getPriorityColor(request.priority)}>
-                          {request.priority.charAt(0).toUpperCase() + request.priority.slice(1)}
-                        </Badge>
-                        <Badge className={getStatusColor(request.status)}>
-                          {getStatusIcon(request.status)}
-                          <span className="ml-1">{request.status.charAt(0).toUpperCase() + request.status.slice(1)}</span>
-                        </Badge>
-                      </div>
-                    </div>
-                    
-                    {request.status === "approved" && (
-                      <div className="border-t pt-3 text-sm text-gray-600">
-                        <p>Approved by: {request.approvedBy} on {request.approvedDate}</p>
-                        {request.estimatedCost && <p>Estimated cost: ${request.estimatedCost.toFixed(2)}</p>}
-                      </div>
-                    )}
-                    
-                    {request.status === "delivered" && (
-                      <div className="border-t pt-3 text-sm text-gray-600">
-                        <p>Delivered on: {request.deliveryDate}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="all-requests" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>All Supply Requests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex space-x-4 mb-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Search requests..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <select
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                  >
-                    <option value="">All Categories</option>
-                    {supplyCategories.map(category => (
-                      <option key={category.id} value={category.id}>{category.name}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div className="space-y-3">
-                  {filteredRequests.map((request) => (
-                    <div key={request.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex-1">
-                          <h3 className="font-medium">{request.itemName}</h3>
-                          <div className="text-sm text-gray-600 space-y-1">
-                            <p>Requested by: {request.requestedBy}</p>
-                            <p>Category: {supplyCategories.find(c => c.id === request.category)?.name}</p>
-                            <p>Quantity: {request.quantity}</p>
-                            <p>Requested: {request.requestDate}</p>
-                            {request.notes && <p>Notes: {request.notes}</p>}
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge className={getPriorityColor(request.priority)}>
-                            {request.priority.charAt(0).toUpperCase() + request.priority.slice(1)}
-                          </Badge>
-                          <Badge className={getStatusColor(request.status)}>
-                            {getStatusIcon(request.status)}
-                            <span className="ml-1">{request.status.charAt(0).toUpperCase() + request.status.slice(1)}</span>
-                          </Badge>
-                        </div>
-                      </div>
-                      
-                      {request.status === "approved" && (
-                        <div className="border-t pt-3 text-sm text-gray-600">
-                          <p>Approved by: {request.approvedBy} on {request.approvedDate}</p>
-                          {request.estimatedCost && <p>Estimated cost: ${request.estimatedCost.toFixed(2)}</p>}
-                        </div>
-                      )}
-                      
-                      {request.status === "delivered" && (
-                        <div className="border-t pt-3 text-sm text-gray-600">
-                          <p>Delivered on: {request.deliveryDate}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  
-                  {filteredRequests.length === 0 && (
-                    <p className="text-center text-gray-500 py-8">
-                      {searchTerm || selectedCategory ? "No requests found matching your criteria" : "No requests found"}
+      {/* Return Modal */}
+      <Dialog open={showReturnModal} onOpenChange={setShowReturnModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mark as Returned</DialogTitle>
+          </DialogHeader>
+          {selectedIssuance && (
+            <div className="space-y-4">
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2">
+                  {selectedIssuance.inventoryItem?.name || 'Unknown Item'}
+                </h4>
+                                   <div className="grid grid-cols-2 gap-4 text-sm">
+                     <div>
+                       <span className="font-medium text-gray-700">Student:</span>
+                       <p className="text-gray-600">
+                         {selectedIssuance.student?.user?.firstName} {selectedIssuance.student?.user?.lastName}
+                       </p>
+                     </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Quantity:</span>
+                    <p className="text-gray-600">
+                      {selectedIssuance.quantityIssued} {selectedIssuance.inventoryItem?.unit || 'units'}
                     </p>
-                  )}
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        <TabsContent value="categories" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {supplyCategories.map((category) => {
-              const IconComponent = category.icon;
-              const categorySupplies = commonSupplies[category.id as keyof typeof commonSupplies] || [];
-              
-              return (
-                <Card key={category.id}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <div className={`p-2 rounded-lg ${category.color}`}>
-                        <IconComponent className="h-5 w-5" />
-                      </div>
-                      <span>{category.name}</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {categorySupplies.map((supply, index) => (
-                        <div key={index} className="text-sm text-gray-600 flex items-center space-x-2">
-                          <Package className="h-3 w-3 text-gray-400" />
-                          <span>{supply}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </TabsContent>
-      </Tabs>
+              <div>
+                <Label htmlFor="returnNotes">Return Notes (Optional)</Label>
+                <Textarea
+                  id="returnNotes"
+                  placeholder="Any notes about the return..."
+                  value={returnNotes}
+                  onChange={(e) => setReturnNotes(e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button variant="outline" onClick={() => setShowReturnModal(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleReturn}>
+                  <Check className="h-4 w-4 mr-2" />
+                  Mark Returned
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

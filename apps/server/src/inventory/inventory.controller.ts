@@ -135,6 +135,17 @@ export class InventoryController {
     return this.inventoryService.findAllInventoryIssuances(pageNum, limitNum);
   }
 
+  @Get('issuances/all')
+  @Roles(UserRole.STUDENT_SERVICE, UserRole.ADMIN)
+  async findAllInventoryIssuancesAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 10;
+    return this.inventoryService.findAllInventoryIssuancesAll(pageNum, limitNum);
+  }
+
   @Put('issuances/:id/return')
   @Roles(UserRole.STUDENT_SERVICE, UserRole.ADMIN)
   async markAsReturned(

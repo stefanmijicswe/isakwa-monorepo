@@ -215,6 +215,36 @@ export class InventoryService {
     };
   }
 
+  async findAllInventoryIssuancesAll(page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+
+    const [issuances, total] = await Promise.all([
+      this.prisma.inventoryIssuance.findMany({
+        skip,
+        take: limit,
+        orderBy: { issuedAt: 'desc' },
+        include: {
+          inventoryItem: true,
+          student: {
+            include: {
+              user: true,
+            },
+          },
+          issuedByUser: true,
+        },
+      }),
+      this.prisma.inventoryIssuance.count({}),
+    ]);
+
+    return {
+      issuances,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
   // Inventory Requests Management
   async createInventoryRequest(requesterId: number, data: CreateInventoryRequestDto) {
     // Check if inventory item exists
