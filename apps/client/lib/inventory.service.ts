@@ -27,21 +27,33 @@ export interface InventoryIssuance {
   isActive: boolean;
   returnNotes?: string;
   returnedAt?: string;
-  inventoryItem?: {
+  item?: {
+    id: number;
     name: string;
+    description?: string;
     category: string;
+    quantity: number;
     unit?: string;
   };
   student?: {
-    user: {
-      firstName: string;
-      lastName: string;
-      email: string;
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    studentProfile?: {
+      studentIndex: string;
+      year: number;
+      studyProgram?: {
+        name: string;
+        code: string;
+      };
     };
   };
   issuedByUser?: {
+    id: number;
     firstName: string;
     lastName: string;
+    email: string;
   };
 }
 

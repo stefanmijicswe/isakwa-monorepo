@@ -162,7 +162,7 @@ export function AddSubjectModal({ isOpen, onClose, onSuccess }: AddSubjectModalP
               <Label htmlFor="name">Name *</Label>
               <Input
                 id="name"
-                value={formData.name || ""}
+                value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="Course name"
                 className={errors.name ? "border-red-500" : ""}
@@ -174,7 +174,7 @@ export function AddSubjectModal({ isOpen, onClose, onSuccess }: AddSubjectModalP
               <Label htmlFor="code">Code *</Label>
               <Input
                 id="code"
-                value={formData.code || ""}
+                value={formData.code}
                 onChange={(e) => handleInputChange("code", e.target.value)}
                 placeholder="Course code"
                 className={errors.code ? "border-red-500" : ""}
@@ -187,7 +187,7 @@ export function AddSubjectModal({ isOpen, onClose, onSuccess }: AddSubjectModalP
             <Label htmlFor="description">Description</Label>
                           <Textarea
                 id="description"
-                value={formData.description || ""}
+                value={formData.description}
                 onChange={(e) => handleInputChange("description", e.target.value)}
                 placeholder="Course description"
                 rows={3}
@@ -202,8 +202,8 @@ export function AddSubjectModal({ isOpen, onClose, onSuccess }: AddSubjectModalP
                 type="number"
                 min="1"
                 max="30"
-                value={formData.credits || ""}
-                onChange={(e) => handleInputChange("credits", parseInt(e.target.value) || 0)}
+                value={formData.credits}
+                onChange={(e) => handleInputChange("credits", parseInt(e.target.value) || 1)}
                 placeholder="ECTS"
                 className={errors.credits ? "border-red-500" : ""}
               />
@@ -258,7 +258,7 @@ export function AddSubjectModal({ isOpen, onClose, onSuccess }: AddSubjectModalP
                 id="lectureHours"
                 type="number"
                 min="0"
-                                 value={formData.lectureHours || ""}
+                value={formData.lectureHours}
                 onChange={(e) => handleInputChange("lectureHours", parseInt(e.target.value) || 0)}
                 placeholder="Hours"
                 className={errors.lectureHours ? "border-red-500" : ""}
@@ -272,7 +272,7 @@ export function AddSubjectModal({ isOpen, onClose, onSuccess }: AddSubjectModalP
                 id="exerciseHours"
                 type="number"
                 min="0"
-                                 value={formData.exerciseHours || ""}
+                value={formData.exerciseHours}
                 onChange={(e) => handleInputChange("exerciseHours", parseInt(e.target.value) || 0)}
                 placeholder="Hours"
                 className={errors.exerciseHours ? "border-red-500" : ""}

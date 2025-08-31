@@ -17,7 +17,16 @@ export class StudyProgramsService {
     }
 
     return this.prisma.studyProgram.create({
-      data: createStudyProgramDto,
+      data: {
+        name: createStudyProgramDto.name,
+        code: `SP${Date.now()}`, // Auto-generate code
+        level: 'BACHELOR', // Default level
+        description: createStudyProgramDto.description,
+        duration: createStudyProgramDto.duration,
+        directorName: createStudyProgramDto.directorName,
+        directorTitle: createStudyProgramDto.directorTitle,
+        faculty: { connect: { id: createStudyProgramDto.facultyId } }
+      },
       include: {
         faculty: {
           select: {
@@ -101,13 +110,8 @@ export class StudyProgramsService {
         subjects: {
           select: {
             id: true,
-            subject: {
-              select: {
-                id: true,
-                code: true,
-                credits: true
-              }
-            }
+            code: true,
+            credits: true
           }
         }
       }

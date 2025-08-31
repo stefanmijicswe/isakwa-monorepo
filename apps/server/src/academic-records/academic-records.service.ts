@@ -65,9 +65,7 @@ export class AcademicRecordsService {
       include: {
         student: {
           include: {
-            user: {
-              select: { firstName: true, lastName: true, email: true },
-            },
+
           },
         },
         studyProgram: {
@@ -146,15 +144,13 @@ export class AcademicRecordsService {
         studentId: dto.studentId,
         subjectId: dto.subjectId,
         academicYear: dto.academicYear,
-        semesterType: dto.semesterType,
+        // semesterType: dto.semesterType, // Field not in schema
         isActive: dto.isActive ?? true,
       },
       include: {
         student: {
           include: {
-            user: {
-              select: { firstName: true, lastName: true, email: true },
-            },
+
           },
         },
         subject: {
@@ -230,7 +226,7 @@ export class AcademicRecordsService {
         registrationStartDate: new Date(dto.registrationStartDate),
         registrationEndDate: new Date(dto.registrationEndDate),
         academicYear: dto.academicYear,
-        semesterType: dto.semesterType,
+        // semesterType: dto.semesterType, // Field not in schema
         isActive: dto.isActive ?? true,
       },
     });
@@ -260,10 +256,12 @@ export class AcademicRecordsService {
 
     return this.prisma.exam.create({
       data: {
-        subjectId: dto.subjectId,
-        examPeriodId: dto.examPeriodId,
+        subject: { connect: { id: dto.subjectId } },
+        examPeriod: { connect: { id: dto.examPeriodId } },
         examDate: examDate,
         examTime: dto.examTime,
+        startTime: '09:00',
+        endTime: '11:00', 
         duration: dto.duration,
         location: dto.location,
         maxPoints: dto.maxPoints ?? 100,
@@ -288,6 +286,42 @@ export class AcademicRecordsService {
         },
         examPeriod: {
           select: { name: true, startDate: true, endDate: true },
+        },
+      },
+      orderBy: {
+        examDate: 'asc',
+      },
+    });
+  }
+
+  // Get exams available for a specific student (only for subjects they're enrolled in)
+  async getAvailableExamsForStudent(studentId: number) {
+    return this.prisma.exam.findMany({
+      where: {
+        status: 'ACTIVE',
+        subject: {
+          courseEnrollments: {
+            some: {
+              studentId: studentId
+            }
+          }
+        },
+        examPeriod: {
+          isActive: true,
+          registrationStartDate: {
+            lte: new Date()
+          },
+          registrationEndDate: {
+            gte: new Date()
+          }
+        }
+      },
+      include: {
+        subject: {
+          select: { name: true, code: true },
+        },
+        examPeriod: {
+          select: { name: true, startDate: true, endDate: true, registrationStartDate: true, registrationEndDate: true },
         },
       },
       orderBy: {
@@ -340,16 +374,15 @@ export class AcademicRecordsService {
 
     return this.prisma.examRegistration.create({
       data: {
-        studentId: dto.studentId,
-        examId: dto.examId,
+        student: { connect: { id: dto.studentId } },
+        exam: { connect: { id: dto.examId } },
+        subject: { connect: { id: exam.subjectId } },
         isActive: dto.isActive ?? true,
       },
       include: {
         student: {
           include: {
-            user: {
-              select: { firstName: true, lastName: true, email: true },
-            },
+
           },
         },
         exam: {
@@ -406,22 +439,26 @@ export class AcademicRecordsService {
 
     const attempt = existingGrade ? existingGrade.attempt + 1 : (dto.attempt || 1);
 
+    // Get exam for subjectId
+    const exam = await this.prisma.exam.findUnique({
+      where: { id: dto.examId }
+    });
+
     return this.prisma.grade.create({
       data: {
-        studentId: dto.studentId,
-        examId: dto.examId,
+        student: { connect: { id: dto.studentId } },
+        exam: { connect: { id: dto.examId } },
+        subject: { connect: { id: exam.subjectId } },
         points: dto.points,
         grade: grade,
         passed: passed,
         attempt: attempt,
-        gradedBy: dto.gradedBy,
+        grader: { connect: { id: dto.gradedBy } },
       },
       include: {
         student: {
           include: {
-            user: {
-              select: { firstName: true, lastName: true, email: true },
-            },
+
           },
         },
         exam: {
@@ -657,9 +694,7 @@ export class AcademicRecordsService {
               include: {
                 student: {
                   include: {
-                    user: {
-                      select: { firstName: true, lastName: true, email: true },
-                    },
+
                   },
                 },
               },
@@ -689,11 +724,7 @@ export class AcademicRecordsService {
             registrations: {
               include: {
                 student: {
-                  include: {
-                    user: {
-                      select: { firstName: true, lastName: true },
-                    },
-                  },
+                  select: { firstName: true, lastName: true },
                 },
               },
             },
@@ -722,7 +753,7 @@ export class AcademicRecordsService {
           },
         },
       },
-      orderBy: { registrationDate: 'desc' },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -747,7 +778,7 @@ export class AcademicRecordsService {
       where: {
         subjectId: dto.subjectId,
         academicYear: dto.academicYear,
-        semesterType: dto.semesterType,
+        // semesterType: dto.semesterType, // Field not in schema
       },
     });
 
@@ -757,9 +788,10 @@ export class AcademicRecordsService {
 
     return this.prisma.syllabus.create({
       data: {
-        subjectId: dto.subjectId,
+        subject: { connect: { id: dto.subjectId } },
+        title: 'Syllabus',
         academicYear: dto.academicYear,
-        semesterType: dto.semesterType,
+        // semesterType: dto.semesterType, // Field not in schema
         description: dto.description,
         objectives: dto.objectives,
         isActive: dto.isActive ?? true,
@@ -770,7 +802,7 @@ export class AcademicRecordsService {
         },
         topics: {
           where: { isActive: true },
-          orderBy: { order: 'asc' },
+          orderBy: { createdAt: 'asc' },
         },
         materials: {
           where: { isActive: true },
@@ -785,7 +817,7 @@ export class AcademicRecordsService {
       include: {
         subject: {
           include: {
-            ProfessorAssignment: {
+            professorAssignments: {
               where: {
                 professorId,
                 isActive: true,
@@ -800,7 +832,7 @@ export class AcademicRecordsService {
       throw new NotFoundException('Syllabus not found');
     }
 
-    if (syllabus.subject.ProfessorAssignment.length === 0) {
+    if (syllabus.subject.professorAssignments.length === 0) {
       throw new ForbiddenException('Professor not assigned to this subject');
     }
 
@@ -813,7 +845,7 @@ export class AcademicRecordsService {
         },
         topics: {
           where: { isActive: true },
-          orderBy: { order: 'asc' },
+          orderBy: { createdAt: 'asc' },
         },
         materials: {
           where: { isActive: true },
@@ -838,7 +870,7 @@ export class AcademicRecordsService {
     // If professorId is provided, only return syllabi for subjects they're assigned to
     if (professorId) {
       where.subject = {
-        ProfessorAssignment: {
+                      professorAssignments: {
           some: {
             professorId,
             isActive: true,
@@ -855,7 +887,7 @@ export class AcademicRecordsService {
         },
         topics: {
           where: { isActive: true },
-          orderBy: { order: 'asc' },
+          orderBy: { createdAt: 'asc' },
         },
         materials: {
           where: { isActive: true },
@@ -863,7 +895,7 @@ export class AcademicRecordsService {
       },
       orderBy: [
         { academicYear: 'desc' },
-        { semesterType: 'asc' },
+        // { semesterType: 'asc' }, // Field not in schema
         { subject: { name: 'asc' } },
       ],
     });
@@ -874,7 +906,7 @@ export class AcademicRecordsService {
 
     if (professorId) {
       where.subject = {
-        ProfessorAssignment: {
+                      professorAssignments: {
           some: {
             professorId,
             isActive: true,
@@ -891,7 +923,7 @@ export class AcademicRecordsService {
         },
         topics: {
           where: { isActive: true },
-          orderBy: { order: 'asc' },
+          orderBy: { createdAt: 'asc' },
         },
         materials: {
           where: { isActive: true },
@@ -912,7 +944,7 @@ export class AcademicRecordsService {
               include: {
           subject: {
             include: {
-              ProfessorAssignment: {
+              professorAssignments: {
                 where: {
                   professorId,
                   isActive: true,
@@ -927,7 +959,7 @@ export class AcademicRecordsService {
       throw new NotFoundException('Syllabus not found');
     }
 
-    if (syllabus.subject.ProfessorAssignment.length === 0) {
+    if (syllabus.subject.professorAssignments.length === 0) {
       throw new ForbiddenException('Professor not assigned to this subject');
     }
 
@@ -946,7 +978,7 @@ export class AcademicRecordsService {
       include: {
         subject: {
           include: {
-            ProfessorAssignment: {
+            professorAssignments: {
               where: {
                 professorId,
                 isActive: true,
@@ -961,7 +993,7 @@ export class AcademicRecordsService {
       throw new NotFoundException('Syllabus not found');
     }
 
-    if (syllabus.subject.ProfessorAssignment.length === 0) {
+    if (syllabus.subject.professorAssignments.length === 0) {
       throw new ForbiddenException('Professor not assigned to this subject');
     }
 
@@ -983,7 +1015,7 @@ export class AcademicRecordsService {
           include: {
             subject: {
               include: {
-                ProfessorAssignment: {
+                professorAssignments: {
                   where: {
                     professorId,
                     isActive: true,
@@ -1000,7 +1032,7 @@ export class AcademicRecordsService {
       throw new NotFoundException('Topic not found');
     }
 
-    if (topic.syllabus.subject.ProfessorAssignment.length === 0) {
+    if (topic.syllabus.subject.professorAssignments.length === 0) {
       throw new ForbiddenException('Professor not assigned to this subject');
     }
 
@@ -1018,7 +1050,7 @@ export class AcademicRecordsService {
           include: {
             subject: {
               include: {
-                ProfessorAssignment: {
+                professorAssignments: {
                   where: {
                     professorId,
                     isActive: true,
@@ -1035,7 +1067,7 @@ export class AcademicRecordsService {
       throw new NotFoundException('Topic not found');
     }
 
-    if (topic.syllabus.subject.ProfessorAssignment.length === 0) {
+    if (topic.syllabus.subject.professorAssignments.length === 0) {
       throw new ForbiddenException('Professor not assigned to this subject');
     }
 
@@ -1053,7 +1085,7 @@ export class AcademicRecordsService {
       include: {
         subject: {
           include: {
-            ProfessorAssignment: {
+            professorAssignments: {
               where: {
                 professorId,
                 isActive: true,
@@ -1068,7 +1100,7 @@ export class AcademicRecordsService {
       throw new NotFoundException('Syllabus not found');
     }
 
-    if (syllabus.subject.ProfessorAssignment.length === 0) {
+    if (syllabus.subject.professorAssignments.length === 0) {
       throw new ForbiddenException('Professor not assigned to this subject');
     }
 
@@ -1090,7 +1122,7 @@ export class AcademicRecordsService {
           include: {
             subject: {
               include: {
-                ProfessorAssignment: {
+                professorAssignments: {
                   where: {
                     professorId,
                     isActive: true,
@@ -1107,7 +1139,7 @@ export class AcademicRecordsService {
       throw new NotFoundException('Material not found');
     }
 
-    if (material.syllabus.subject.ProfessorAssignment.length === 0) {
+    if (material.syllabus.subject.professorAssignments.length === 0) {
       throw new ForbiddenException('Professor not assigned to this subject');
     }
 
@@ -1125,7 +1157,7 @@ export class AcademicRecordsService {
           include: {
             subject: {
               include: {
-                ProfessorAssignment: {
+                professorAssignments: {
                   where: {
                     professorId,
                     isActive: true,
@@ -1142,7 +1174,7 @@ export class AcademicRecordsService {
       throw new NotFoundException('Material not found');
     }
 
-    if (material.syllabus.subject.ProfessorAssignment.length === 0) {
+    if (material.syllabus.subject.professorAssignments.length === 0) {
       throw new ForbiddenException('Professor not assigned to this subject');
     }
 

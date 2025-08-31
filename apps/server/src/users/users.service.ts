@@ -41,24 +41,43 @@ export class UsersService {
       },
     });
 
+    // Generate unique JMBG based on user ID and timestamp
+    const generateUniqueJMBG = () => {
+      const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
+      const userId = user.id.toString().padStart(4, '0'); // User ID padded to 4 digits
+      return `${timestamp}${userId}123`; // Format: timestampuserid123
+    };
+
     // Kreirati profil na osnovu uloge
     if (data.role === UserRole.PROFESSOR) {
       await this.prisma.professorProfile.create({
         data: {
-          userId: user.id,
-          departmentId: data.departmentId || 1, // Default to first department
+          user: { connect: { id: user.id } },
+          department: { connect: { id: data.departmentId || 1 } }, // Default to first department
           title: data.title || '',
           phoneNumber: data.phoneNumber || data.phone,
           officeRoom: data.officeRoom,
+          jmbg: generateUniqueJMBG(), // Unique JMBG
         },
       });
     } else if (data.role === UserRole.STUDENT) {
       await this.prisma.studentProfile.create({
         data: {
-          userId: user.id,
+          user: { connect: { id: user.id } },
           studentIndex: data.studentIndex || data.indexNumber || '',
           year: data.year || 1,
           phoneNumber: data.phoneNumber || data.phone,
+          jmbg: generateUniqueJMBG(), // Unique JMBG
+        },
+      });
+    } else if (data.role === UserRole.STUDENT_SERVICE) {
+      await this.prisma.studentServiceProfile.create({
+        data: {
+          user: { connect: { id: user.id } },
+          department: { connect: { id: data.departmentId || 1 } }, // Default to first department
+          phoneNumber: data.phoneNumber || data.phone,
+          position: data.title || 'Staff Member',
+          officeRoom: data.officeRoom,
         },
       });
     }
@@ -242,11 +261,20 @@ export class UsersService {
         });
       } else {
         // Create new profile if it doesn't exist
+        const generateUniqueJMBG = () => {
+          const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
+          const userId = id.toString().padStart(4, '0'); // User ID padded to 4 digits
+          return `${timestamp}${userId}123`; // Format: timestampuserid123
+        };
+
         await this.prisma.professorProfile.create({
           data: {
-            userId: id,
+            user: { connect: { id: id } },
             title: title || '',
-            departmentId: departmentId || 1, // Default to first department
+            department: { connect: { id: departmentId || 1 } }, // Default to first department
+            jmbg: generateUniqueJMBG(), // Unique JMBG
+            phoneNumber: '', // Default phone
+            officeRoom: '', // Default office
           },
         });
       }

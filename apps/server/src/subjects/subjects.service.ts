@@ -145,7 +145,7 @@ export class SubjectsService {
                     id: true,
                     name: true,
                     universityId: true,
-                    University: {
+                    university: {
                       select: {
                         id: true,
                         name: true

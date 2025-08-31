@@ -82,9 +82,17 @@ export class AcademicRecordsController {
 
   @Get('exams')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.STUDENT_SERVICE, UserRole.ADMIN, UserRole.PROFESSOR)
+  @Roles(UserRole.STUDENT_SERVICE, UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT)
   getExams() {
     return this.academicRecordsService.getExams();
+  }
+
+  @Get('exams/available')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.STUDENT)
+  getAvailableExamsForStudent(@Request() req) {
+    const studentId = req.user.id; // Use User ID for CourseEnrollment lookup
+    return this.academicRecordsService.getAvailableExamsForStudent(studentId);
   }
 
   @Post('register-exam')

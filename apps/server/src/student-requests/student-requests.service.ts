@@ -263,7 +263,7 @@ export class StudentRequestsService {
       data: {
         requestId,
         userId,
-        comment: createCommentDto.comment,
+        content: createCommentDto.comment,
       },
       include: {
         user: {

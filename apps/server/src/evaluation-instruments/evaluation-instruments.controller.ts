@@ -46,7 +46,7 @@ export class EvaluationInstrumentsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   // Evaluation Instruments endpoints
   @Post()
-  @Roles(UserRole.PROFESSOR, UserRole.ADMIN)
+  @Roles(UserRole.PROFESSOR, UserRole.ADMIN, UserRole.STUDENT_SERVICE)
   async createEvaluationInstrument(@Body() createDto: CreateEvaluationInstrumentDto) {
     this.logger.log(`Creating evaluation instrument: ${createDto.title}`);
     return this.evaluationInstrumentsService.createEvaluationInstrument(createDto);
@@ -74,7 +74,7 @@ export class EvaluationInstrumentsController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.PROFESSOR, UserRole.ADMIN)
+  @Roles(UserRole.PROFESSOR, UserRole.ADMIN, UserRole.STUDENT_SERVICE)
   async updateEvaluationInstrument(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdateEvaluationInstrumentDto,
@@ -84,7 +84,7 @@ export class EvaluationInstrumentsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.PROFESSOR, UserRole.ADMIN)
+  @Roles(UserRole.PROFESSOR, UserRole.ADMIN, UserRole.STUDENT_SERVICE)
   async deleteEvaluationInstrument(@Param('id', ParseIntPipe) id: number) {
     this.logger.log(`Deleting evaluation instrument: ${id}`);
     return this.evaluationInstrumentsService.deleteEvaluationInstrument(id);

@@ -27,12 +27,12 @@ export async function seedStudentAnalytics(prisma: PrismaService) {
     const violations = [
       {
         description: 'Late submission of assignment',
-        violationType: ViolationType.LATE_SUBMISSION,
+        violationType: ViolationType.OTHER,
         examId: null,
       },
       {
         description: 'Absence from mandatory laboratory session',
-        violationType: ViolationType.ABSENCE,
+        violationType: ViolationType.ATTENDANCE,
         examId: null,
       },
     ];
@@ -41,7 +41,7 @@ export async function seedStudentAnalytics(prisma: PrismaService) {
       await prisma.studentViolation.create({
         data: {
           studentId: student.id,
-          reportedBy: professor.id,
+          createdBy: professor.id,
           ...violation,
           isActive: true,
         },
@@ -59,8 +59,8 @@ export async function seedStudentAnalytics(prisma: PrismaService) {
         subjectId: subjects[0].id, // Assign to first subject
         title: `Final Project: ${subjects[0].name}`,
         description: `Comprehensive project demonstrating knowledge of ${subjects[0].name}`,
-        supervisorId: professor.id,
-        status: ProjectStatus.IN_PROGRESS,
+        // supervisorId: professor.id,
+        status: ProjectStatus.ACTIVE,
         isActive: true,
       },
     });
@@ -73,10 +73,10 @@ export async function seedStudentAnalytics(prisma: PrismaService) {
     const project = await prisma.finalProject.create({
       data: {
         studentId: student.id,
-        subjectId: subjects[1].id, // Assign to second subject
+        // subjectId: subjects[1].id, // Assign to second subject
         title: `Final Project: ${subjects[1].name}`,
         description: `Comprehensive project demonstrating knowledge of ${subjects[1].name}`,
-        supervisorId: professor.id,
+        // supervisorId: professor.id,
         status: ProjectStatus.COMPLETED,
         submittedAt: new Date('2024-12-15'),
         defendedAt: new Date('2024-12-20'),

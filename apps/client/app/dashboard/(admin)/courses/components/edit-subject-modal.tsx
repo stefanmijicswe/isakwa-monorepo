@@ -18,16 +18,7 @@ interface EditSubjectModalProps {
 }
 
 export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSubjectModalProps) {
-  const [formData, setFormData] = useState<CreateSubjectDto>({
-    name: "",
-    code: "",
-    description: "",
-    credits: 6,
-    semester: 1,
-    lectureHours: 45,
-    exerciseHours: 15,
-    studyProgramId: 1,
-  });
+  const [formData, setFormData] = useState<CreateSubjectDto | null>(null);
   const [studyPrograms, setStudyPrograms] = useState<StudyProgram[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -53,14 +44,14 @@ export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSu
   useEffect(() => {
     if (subject) {
       setFormData({
-        name: subject.name || "",
-        code: subject.code || "",
-        description: subject.description || "",
-        credits: subject.credits || 6,
-        semester: subject.semester || 1,
-        lectureHours: subject.lectureHours || 45,
-        exerciseHours: subject.exerciseHours || 15,
-        studyProgramId: subject.studyProgramId || 1,
+        name: subject.name ?? "",
+        code: subject.code ?? "",
+        description: subject.description ?? "",
+        credits: subject.credits ?? 6,
+        semester: subject.semester ?? 1,
+        lectureHours: subject.lectureHours ?? 45,
+        exerciseHours: subject.exerciseHours ?? 15,
+        studyProgramId: subject.studyProgramId ?? 1,
       });
       setErrors({});
     }
@@ -159,7 +150,7 @@ export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSu
     }
   };
 
-  if (!subject) return null;
+  if (!subject || !isOpen) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -174,7 +165,7 @@ export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSu
               <Label htmlFor="name">Name *</Label>
               <Input
                 id="name"
-                value={formData.name || ""}
+                value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="Subject name"
                 className={errors.name ? "border-red-500" : ""}
@@ -186,7 +177,7 @@ export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSu
               <Label htmlFor="code">Code *</Label>
               <Input
                 id="code"
-                value={formData.code || ""}
+                value={formData.code}
                 onChange={(e) => handleInputChange("code", e.target.value)}
                 placeholder="Subject code"
                 className={errors.code ? "border-red-500" : ""}
@@ -199,7 +190,7 @@ export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSu
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              value={formData.description || ""}
+                              value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
               placeholder="Subject description"
               rows={3}
@@ -214,7 +205,7 @@ export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSu
                 type="number"
                 min="1"
                 max="30"
-                value={formData.credits || ""}
+                value={formData.credits}
                 onChange={(e) => handleInputChange("credits", parseInt(e.target.value) || 0)}
                 placeholder="ECTS"
                 className={errors.credits ? "border-red-500" : ""}
@@ -270,7 +261,7 @@ export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSu
                 id="lectureHours"
                 type="number"
                 min="0"
-                value={formData.lectureHours || ""}
+                value={formData.lectureHours}
                 onChange={(e) => handleInputChange("lectureHours", parseInt(e.target.value) || 0)}
                 placeholder="Hours"
                 className={errors.lectureHours ? "border-red-500" : ""}
@@ -284,7 +275,7 @@ export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSu
                 id="exerciseHours"
                 type="number"
                 min="0"
-                value={formData.exerciseHours || ""}
+                value={formData.exerciseHours}
                 onChange={(e) => handleInputChange("exerciseHours", parseInt(e.target.value) || 0)}
                 placeholder="Hours"
                 className={errors.exerciseHours ? "border-red-500" : ""}

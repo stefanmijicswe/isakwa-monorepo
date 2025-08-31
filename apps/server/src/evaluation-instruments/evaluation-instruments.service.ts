@@ -25,9 +25,9 @@ export class EvaluationInstrumentsService {
         include: {
           subject: {
             include: {
-              study_programs: {
+              studyPrograms: {
                 include: {
-                  faculty: true,
+                  // faculty: true,
                 },
               },
             },
@@ -60,9 +60,9 @@ export class EvaluationInstrumentsService {
         include: {
           subject: {
             include: {
-              study_programs: {
+              studyPrograms: {
                 include: {
-                  faculty: true,
+                  // faculty: true,
                 },
               },
             },
@@ -92,9 +92,9 @@ export class EvaluationInstrumentsService {
         include: {
           subject: {
             include: {
-              study_programs: {
+              studyPrograms: {
                 include: {
-                  faculty: true,
+                  // faculty: true,
                 },
               },
             },
@@ -132,9 +132,9 @@ export class EvaluationInstrumentsService {
         include: {
           subject: {
             include: {
-              study_programs: {
+              studyPrograms: {
                 include: {
-                  faculty: true,
+                  // faculty: true,
                 },
               },
             },
@@ -218,7 +218,7 @@ export class EvaluationInstrumentsService {
           student: true,
         },
         orderBy: {
-          submittedAt: 'desc',
+          createdAt: 'desc',
         },
       });
 
@@ -350,7 +350,7 @@ export class EvaluationInstrumentsService {
           },
         },
         orderBy: {
-          submittedAt: 'desc',
+          createdAt: 'desc',
         },
       });
 

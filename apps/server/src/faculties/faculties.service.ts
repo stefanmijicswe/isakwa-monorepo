@@ -39,7 +39,7 @@ export class FacultiesService {
         deanTitle: data.deanTitle,
       },
       include: {
-        University: true,
+        university: true,
         studyPrograms: true,
       },
     });
@@ -48,7 +48,7 @@ export class FacultiesService {
   async findAll() {
     return this.prisma.faculty.findMany({
       include: {
-        University: true,
+        university: true,
         studyPrograms: true,
       },
     });
@@ -58,7 +58,7 @@ export class FacultiesService {
     const faculty = await this.prisma.faculty.findUnique({
       where: { id },
       include: {
-        University: true,
+        university: true,
         studyPrograms: true,
       },
     });
@@ -94,7 +94,7 @@ export class FacultiesService {
         deanTitle: data.deanTitle,
       },
       include: {
-        University: true,
+        university: true,
         studyPrograms: true,
       },
     });

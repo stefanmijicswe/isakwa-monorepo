@@ -1,10 +1,12 @@
-import { Controller, Get, Put, Delete, UseGuards, Query, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, UseGuards, Query, Body, Param } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 import { UserRole } from '@prisma/client';
+import { CreateUserData } from './users.service';
+import * as bcrypt from 'bcryptjs';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)  // Re-enabled JWT authentication
@@ -65,6 +67,38 @@ export class UsersController {
     console.log('✅ [UsersController] getStudents - calling service with:', { pageNum, limitNum, search });
     const result = await this.usersService.findByRole(UserRole.STUDENT, pageNum, limitNum, search);
     console.log('✅ [UsersController] getStudents - service returned:', result?.users?.length || 0, 'students');
+    return result;
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async createUser(@Body() createUserData: CreateUserData) {
+    console.log('🔍 [UsersController] createUser called with:', { 
+      email: createUserData.email, 
+      role: createUserData.role 
+    });
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(createUserData.password || 'defaultPassword123', 12);
+    
+    const userData = {
+      ...createUserData,
+      password: hashedPassword,
+    };
+
+    const result = await this.usersService.create(userData);
+    console.log('✅ [UsersController] createUser - service returned:', result?.id);
+    return result;
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.STUDENT_SERVICE)
+  async getUserById(@Param('id') id: string) {
+    console.log('🔍 [UsersController] getUserById called with:', { id });
+    const result = await this.usersService.findById(parseInt(id));
+    console.log('✅ [UsersController] getUserById - service returned:', result?.id);
     return result;
   }
 

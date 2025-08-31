@@ -13,8 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Book, 
   Search, 
-  Clock,
-  CheckCircle,
+  Clock, 
+  CheckCircle, 
   ArrowRight,
   Check,
   Info,
@@ -171,7 +171,7 @@ export default function LibraryManagementPage() {
               <div className="mt-2 text-sm text-red-700">
                 <p>{error}</p>
               </div>
-            </div>
+        </div>
             <div className="ml-auto pl-3">
               <div className="-mx-1.5 -my-1.5">
                 <button
@@ -183,9 +183,9 @@ export default function LibraryManagementPage() {
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414L11.414 12l3.293 3.293a1 1 0 01-1.414 1.414L10 13.414l-3.293 3.293a1 1 0 01-1.414-1.414L8.586 12 5.293 8.707a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </button>
-              </div>
-            </div>
           </div>
+          </div>
+        </div>
         </div>
       )}
 
@@ -253,16 +253,16 @@ export default function LibraryManagementPage() {
                     }
                   }}
                 >
-                  <CardHeader className="pb-3">
+                <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <div className="p-2 bg-gray-100 rounded-lg">
                         <Book className="h-4 w-4 text-gray-600" />
-                      </div>
+                    </div>
                       <Badge variant={availableCopies === 0 ? "destructive" : availableCopies <= 2 ? "secondary" : "default"}>
                         {availableCopies === 0 ? "Out of Stock" : availableCopies <= 2 ? "Low Stock" : "Available"}
-                      </Badge>
-                    </div>
-                  </CardHeader>
+                    </Badge>
+                  </div>
+                </CardHeader>
                   <CardContent className="pt-0">
                     <h3 className="font-medium text-gray-900 mb-2">{item.title}</h3>
                     {item.author && (
@@ -275,18 +275,18 @@ export default function LibraryManagementPage() {
                       <div className="flex justify-between">
                         <span className="text-gray-500">Available:</span>
                         <span className="font-medium">{availableCopies} of {item.totalCopies} copies</span>
-                      </div>
+                  </div>
                       <div className="flex justify-between">
                         <span className="text-gray-500">Type:</span>
                         <Badge variant="outline" className="text-xs">
                           {item.type}
                         </Badge>
-                      </div>
+          </div>
                       {item.isbn && (
                         <div className="flex justify-between">
                           <span className="text-gray-500">ISBN:</span>
                           <span className="font-medium text-xs">{item.isbn}</span>
-                        </div>
+                      </div>
                       )}
                     </div>
                     <div className="mt-3 pt-3 border-t border-gray-100">
@@ -294,15 +294,15 @@ export default function LibraryManagementPage() {
                         <div className="flex items-center text-blue-600 text-sm font-medium">
                           <span>Click to borrow</span>
                           <ArrowRight className="h-4 w-4 ml-1" />
-                        </div>
+                    </div>
                       ) : (
                         <div className="text-gray-500 text-sm">
                           No copies available
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
               );
             })}
           </div>
@@ -340,7 +340,7 @@ export default function LibraryManagementPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h4 className="font-medium text-gray-900">
-                            {borrowing.libraryItem?.title || 'Unknown Book'}
+                            {borrowing.item?.title || 'Unknown Book'}
                           </h4>
                           {isOverdue(borrowing) && (
                             <Badge variant="destructive" className="text-xs">Overdue</Badge>
@@ -349,7 +349,7 @@ export default function LibraryManagementPage() {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                           <div>
                             <span className="font-medium">Student:</span>
-                            <p>{borrowing.student?.user?.firstName} {borrowing.student?.user?.lastName}</p>
+                            <p>{borrowing.student?.firstName} {borrowing.student?.lastName}</p>
                           </div>
                           <div>
                             <span className="font-medium">Borrowed:</span>
@@ -363,9 +363,9 @@ export default function LibraryManagementPage() {
                           </div>
                           <div>
                             <span className="font-medium">Author:</span>
-                            <p>{borrowing.libraryItem?.author || 'Unknown'}</p>
-                          </div>
+                            <p>{borrowing.item?.author || 'Unknown'}</p>
                         </div>
+                      </div>
                         {borrowing.notes && (
                           <div className="mt-3 p-3 bg-gray-50 rounded text-sm">
                             <span className="font-medium">Notes:</span>
@@ -410,26 +410,26 @@ export default function LibraryManagementPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900 mb-2">
-                          {borrowing.libraryItem?.title || 'Unknown Book'}
+                          {borrowing.item?.title || 'Unknown Book'}
                         </h4>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                          <div>
+                  <div>
                             <span className="font-medium">Student:</span>
-                            <p>{borrowing.student?.user?.firstName} {borrowing.student?.user?.lastName}</p>
-                          </div>
-                          <div>
+                            <p>{borrowing.student?.firstName} {borrowing.student?.lastName}</p>
+                  </div>
+                  <div>
                             <span className="font-medium">Returned:</span>
                             <p>{borrowing.returnedAt ? new Date(borrowing.returnedAt).toLocaleDateString() : 'N/A'}</p>
-                          </div>
-                          <div>
+                </div>
+                  <div>
                             <span className="font-medium">Borrowed:</span>
                             <p>{new Date(borrowing.borrowedAt).toLocaleDateString()}</p>
-                          </div>
-                          <div>
+                  </div>
+                  <div>
                             <span className="font-medium">Author:</span>
-                            <p>{borrowing.libraryItem?.author || 'Unknown'}</p>
-                          </div>
-                        </div>
+                            <p>{borrowing.item?.author || 'Unknown'}</p>
+                  </div>
+                </div>
                         {borrowing.notes && (
                           <div className="mt-3 p-3 bg-green-50 rounded text-sm border border-green-200">
                             <span className="font-medium text-green-700">Return Notes:</span>
@@ -444,8 +444,8 @@ export default function LibraryManagementPage() {
                         )}
                       </div>
                       <Badge variant="outline" className="ml-4">Returned</Badge>
-                    </div>
-                  </div>
+                </div>
+              </div>
                 ))
               )}
             </CardContent>
@@ -479,15 +479,15 @@ export default function LibraryManagementPage() {
                    </div>
                  </div>
                )}
-               <div className="space-y-4">
+            <div className="space-y-4">
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h4 className="font-medium text-gray-900 mb-2">{selectedItem.title}</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
+              <div>
                     <span className="font-medium text-gray-700">Available:</span>
                     <p className="text-gray-600">{getAvailableCopies(selectedItem)} of {selectedItem.totalCopies} copies</p>
-                  </div>
-                  <div>
+              </div>
+              <div>
                     <span className="font-medium text-gray-700">Author:</span>
                     <p className="text-gray-600">{selectedItem.author || 'Unknown'}</p>
                   </div>
@@ -509,11 +509,11 @@ export default function LibraryManagementPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
+              </div>
 
-                <div>
+              <div>
                   <Label htmlFor="dueDate">Due Date</Label>
-                  <Input
+                <Input
                     id="dueDate"
                     type="date"
                     min={new Date().toISOString().split('T')[0]}
@@ -524,9 +524,9 @@ export default function LibraryManagementPage() {
                   <p className="text-xs text-gray-500 mt-1">
                     Select when the book should be returned
                   </p>
-                </div>
+              </div>
 
-                <div>
+              <div>
                   <Label htmlFor="notes">Notes (Optional)</Label>
                   <Textarea
                     id="notes"
@@ -534,15 +534,15 @@ export default function LibraryManagementPage() {
                     value={borrowForm.notes}
                     onChange={(e) => setBorrowForm({...borrowForm, notes: e.target.value})}
                     rows={3}
-                  />
-                </div>
+                />
+              </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-4">
                 <Button variant="outline" onClick={() => setShowBorrowModal(false)}>
                   Cancel
                 </Button>
-                <Button
+                <Button 
                   onClick={handleBorrow}
                   disabled={!borrowForm.studentId || !borrowForm.dueDate}
                 >
@@ -565,13 +565,13 @@ export default function LibraryManagementPage() {
             <div className="space-y-4">
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h4 className="font-medium text-gray-900 mb-2">
-                  {selectedBorrowing.libraryItem?.title || 'Unknown Book'}
+                  {selectedBorrowing.item?.title || 'Unknown Book'}
                 </h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="font-medium text-gray-700">Student:</span>
                     <p className="text-gray-600">
-                      {selectedBorrowing.student?.user?.firstName} {selectedBorrowing.student?.user?.lastName}
+                      {selectedBorrowing.student?.firstName} {selectedBorrowing.student?.lastName}
                     </p>
                   </div>
                   <div>
@@ -602,9 +602,9 @@ export default function LibraryManagementPage() {
                   <Check className="h-4 w-4 mr-2" />
                   Mark Returned
                 </Button>
-              </div>
-            </div>
-          )}
+          </div>
+        </div>
+      )}
         </DialogContent>
       </Dialog>
     </div>

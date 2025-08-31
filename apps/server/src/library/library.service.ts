@@ -42,7 +42,7 @@ export class LibraryService {
              include: {
                student: {
                  include: {
-                   user: { select: { firstName: true, lastName: true } },
+                   
                  },
                },
              },
@@ -85,7 +85,7 @@ export class LibraryService {
           include: {
             student: {
               include: {
-                user: { select: { firstName: true, lastName: true, email: true } },
+                
               },
             },
           },
@@ -179,18 +179,19 @@ export class LibraryService {
 
     return this.prisma.libraryBorrowing.create({
       data: {
-        studentId: student.id, // Use student.id (StudentProfile.id), not data.studentId (User.id)
-        libraryItemId: data.libraryItemId,
+        student: { connect: { id: student.userId } },
+        item: { connect: { id: data.libraryItemId } },
         dueDate: new Date(data.dueDate),
         notes: data.notes,
+        status: 'BORROWED',
       },
       include: {
         student: {
           include: {
-            user: { select: { firstName: true, lastName: true, email: true } },
+            
           },
         },
-        libraryItem: {
+        item: {
           select: { title: true, author: true, type: true },
         },
       },
@@ -201,10 +202,10 @@ export class LibraryService {
     const borrowing = await this.prisma.libraryBorrowing.findUnique({
       where: { id: borrowingId },
       include: {
-        libraryItem: { select: { title: true } },
+        item: { select: { title: true } },
         student: {
           include: {
-            user: { select: { firstName: true, lastName: true } },
+            
           },
         },
       },
@@ -228,10 +229,10 @@ export class LibraryService {
       include: {
         student: {
           include: {
-            user: { select: { firstName: true, lastName: true, email: true } },
+            
           },
         },
-        libraryItem: {
+        item: {
           select: { title: true, author: true, type: true },
         },
       },
@@ -242,8 +243,27 @@ export class LibraryService {
     return this.prisma.libraryBorrowing.findMany({
       where: { studentId },
       include: {
-        libraryItem: {
-          select: { title: true, author: true, type: true, isbn: true },
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            studentProfile: {
+              select: {
+                studentIndex: true
+              }
+            }
+          }
+        },
+        item: {
+          select: { 
+            id: true,
+            title: true, 
+            author: true, 
+            type: true, 
+            isbn: true,
+            category: true
+          },
         },
       },
       orderBy: { borrowedAt: 'desc' },
@@ -261,10 +281,10 @@ export class LibraryService {
       include: {
         student: {
           include: {
-            user: { select: { firstName: true, lastName: true, email: true } },
+            
           },
         },
-        libraryItem: {
+        item: {
           select: { title: true, author: true, type: true },
         },
       },
@@ -277,12 +297,34 @@ export class LibraryService {
       where: {}, // No filter - get ALL borrowings (active and returned)
       include: {
         student: {
-          include: {
-            user: { select: { firstName: true, lastName: true, email: true } },
-          },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            studentProfile: {
+              select: {
+                studentIndex: true,
+                year: true,
+                studyProgram: {
+                  select: {
+                    name: true,
+                    code: true
+                  }
+                }
+              }
+            }
+          }
         },
-        libraryItem: {
-          select: { title: true, author: true, type: true },
+        item: {
+          select: { 
+            id: true,
+            title: true, 
+            author: true, 
+            type: true,
+            isbn: true,
+            category: true
+          },
         },
       },
       orderBy: { borrowedAt: 'desc' },

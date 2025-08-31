@@ -24,6 +24,7 @@ import { Badge } from "../../../../components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../components/ui/tabs"
 import { EditPersonnelModal } from "./components/edit-personnel-modal"
 import { DeletePersonnelDialog } from "./components/delete-personnel-dialog"
+import { AddPersonnelModal } from "./components/add-personnel-modal"
 
 interface Personnel {
   id: number
@@ -77,6 +78,7 @@ export default function PersonnelPage() {
   const [selectedPerson, setSelectedPerson] = useState<Personnel | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [personToDelete, setPersonToDelete] = useState<Personnel | null>(null)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
   // Fetch personnel from backend API
   const fetchPersonnel = async (role: string, page: number = 1, search?: string) => {
@@ -284,6 +286,15 @@ export default function PersonnelPage() {
     })
   }
 
+  // Handle successful personnel creation
+  const handlePersonnelCreated = (newPersonnel: Personnel) => {
+    // Add to current list
+    setPersonnel(prev => [newPersonnel, ...prev])
+    setTotalPersonnel(prev => prev + 1)
+    // Refresh the list to get updated data
+    fetchPersonnel(activeTab === 'professors' ? 'PROFESSOR' : 'STUDENT_SERVICE', currentPage, searchTerm)
+  }
+
   if (user?.role !== 'ADMIN') {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -305,7 +316,11 @@ export default function PersonnelPage() {
             Manage professors and administrative staff
           </p>
         </div>
-        <Button size="sm" className="bg-slate-900 hover:bg-slate-800">
+        <Button 
+          size="sm" 
+          className="bg-slate-900 hover:bg-slate-800"
+          onClick={() => setIsAddModalOpen(true)}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Personnel
         </Button>
@@ -795,6 +810,13 @@ export default function PersonnelPage() {
         }}
         onConfirm={handleConfirmDelete}
         personnelName={personToDelete ? `${personToDelete.firstName} ${personToDelete.lastName}` : ''}
+      />
+
+      {/* Add Personnel Modal */}
+      <AddPersonnelModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={handlePersonnelCreated}
       />
     </div>
   )

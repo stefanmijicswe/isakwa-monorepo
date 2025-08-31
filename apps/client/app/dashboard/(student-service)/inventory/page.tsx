@@ -14,7 +14,7 @@ import {
   Package, 
   Search, 
   Clock,
-  CheckCircle,
+  CheckCircle, 
   ArrowRight,
   Check,
   Info,
@@ -162,13 +162,13 @@ export default function InventoryPage() {
           <div className="flex gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
+                  <Input
                 placeholder="Search items..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
-              />
-            </div>
+                  />
+                </div>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="All Categories" />
@@ -181,8 +181,8 @@ export default function InventoryPage() {
                 <SelectItem value="printing">Printing</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
+                </div>
+                
           {/* Items Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredItems.map((item) => (
@@ -213,22 +213,22 @@ export default function InventoryPage() {
                     <div className="flex justify-between">
                       <span className="text-gray-500">Available:</span>
                       <span className="font-medium">{item.quantity} {item.unit || 'units'}</span>
-                    </div>
+                </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Category:</span>
                       <Badge variant="outline" className="text-xs">
                         {item.category}
                       </Badge>
-                    </div>
-                  </div>
+                </div>
+              </div>
                   <div className="mt-3 pt-3 border-t border-gray-100">
                     <div className="flex items-center text-blue-600 text-sm font-medium">
                       <span>Click to borrow</span>
                       <ArrowRight className="h-4 w-4 ml-1" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              </div>
+              </div>
+            </CardContent>
+          </Card>
             ))}
           </div>
 
@@ -264,32 +264,32 @@ export default function InventoryPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900 mb-2">
-                          {issuance.inventoryItem?.name || 'Unknown Item'}
+                          {issuance.item?.name || 'Unknown Item'}
                         </h4>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                           <div>
                             <span className="font-medium">Student:</span>
-                            <p>{issuance.student?.user?.firstName} {issuance.student?.user?.lastName}</p>
+                            <p>{issuance.student?.firstName} {issuance.student?.lastName}</p>
                           </div>
                           <div>
                             <span className="font-medium">Quantity:</span>
-                            <p>{issuance.quantityIssued} {issuance.inventoryItem?.unit || 'units'}</p>
-                          </div>
+                            <p>{issuance.quantityIssued} units</p>
+                        </div>
                           <div>
                             <span className="font-medium">Borrowed:</span>
                             <p>{new Date(issuance.issuedAt).toLocaleDateString()}</p>
-                          </div>
+                      </div>
                           <div>
                             <span className="font-medium">Issued by:</span>
                             <p>{issuance.issuedByUser?.firstName} {issuance.issuedByUser?.lastName}</p>
-                          </div>
-                        </div>
+                      </div>
+                    </div>
                         {issuance.notes && (
                           <div className="mt-3 p-3 bg-gray-50 rounded text-sm">
                             <span className="font-medium">Notes:</span>
                             <p className="text-gray-600 mt-1">{issuance.notes}</p>
-                          </div>
-                        )}
+                      </div>
+                    )}
                       </div>
                       <Button
                         onClick={() => {
@@ -328,16 +328,16 @@ export default function InventoryPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900 mb-2">
-                          {issuance.inventoryItem?.name || 'Unknown Item'}
+                          {issuance.item?.name || 'Unknown Item'}
                         </h4>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                           <div>
                             <span className="font-medium">Student:</span>
-                            <p>{issuance.student?.user?.firstName} {issuance.student?.user?.lastName}</p>
+                            <p>{issuance.student?.firstName} {issuance.student?.lastName}</p>
                           </div>
                           <div>
                             <span className="font-medium">Quantity:</span>
-                            <p>{issuance.quantityIssued} {issuance.inventoryItem?.unit || 'units'}</p>
+                            <p>{issuance.quantityIssued} units</p>
                           </div>
                           <div>
                             <span className="font-medium">Returned:</span>
@@ -352,12 +352,12 @@ export default function InventoryPage() {
                           <div className="mt-3 p-3 bg-green-50 rounded text-sm border border-green-200">
                             <span className="font-medium text-green-700">Return Notes:</span>
                             <p className="text-green-600 mt-1">{issuance.returnNotes}</p>
-                          </div>
-                        )}
                       </div>
+                    )}
+                  </div>
                       <Badge variant="outline" className="ml-4">Returned</Badge>
                     </div>
-                  </div>
+              </div>
                 ))
               )}
             </CardContent>
@@ -372,7 +372,7 @@ export default function InventoryPage() {
             <DialogTitle>Borrow Item</DialogTitle>
           </DialogHeader>
           {selectedItem && (
-            <div className="space-y-4">
+              <div className="space-y-4">
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h4 className="font-medium text-gray-900 mb-2">{selectedItem.name}</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -385,7 +385,7 @@ export default function InventoryPage() {
                     <p className="text-gray-600">{selectedItem.category}</p>
                   </div>
                 </div>
-              </div>
+                  </div>
 
               <div className="space-y-4">
                 <div>
@@ -403,7 +403,7 @@ export default function InventoryPage() {
                     </SelectContent>
                   </Select>
                 </div>
-
+                
                 <div>
                   <Label htmlFor="quantity">Quantity</Label>
                   <Input
@@ -418,7 +418,7 @@ export default function InventoryPage() {
                   <p className="text-xs text-gray-500 mt-1">
                     Maximum available: {selectedItem.quantity} {selectedItem.unit || 'units'}
                   </p>
-                </div>
+                          </div>
 
                 <div>
                   <Label htmlFor="notes">Notes (Optional)</Label>
@@ -429,9 +429,9 @@ export default function InventoryPage() {
                     onChange={(e) => setBorrowForm({...borrowForm, notes: e.target.value})}
                     rows={3}
                   />
-                </div>
-              </div>
-
+                        </div>
+                      </div>
+                      
               <div className="flex justify-end gap-3 pt-4">
                 <Button variant="outline" onClick={() => setShowBorrowModal(false)}>
                   Cancel
@@ -443,8 +443,8 @@ export default function InventoryPage() {
                   Borrow Item
                 </Button>
               </div>
-            </div>
-          )}
+                        </div>
+                      )}
         </DialogContent>
       </Dialog>
 
@@ -458,21 +458,21 @@ export default function InventoryPage() {
             <div className="space-y-4">
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h4 className="font-medium text-gray-900 mb-2">
-                  {selectedIssuance.inventoryItem?.name || 'Unknown Item'}
+                  {selectedIssuance.item?.name || 'Unknown Item'}
                 </h4>
                                    <div className="grid grid-cols-2 gap-4 text-sm">
                      <div>
                        <span className="font-medium text-gray-700">Student:</span>
                        <p className="text-gray-600">
-                         {selectedIssuance.student?.user?.firstName} {selectedIssuance.student?.user?.lastName}
+                         {selectedIssuance.student?.firstName} {selectedIssuance.student?.lastName}
                        </p>
-                     </div>
+                        </div>
                   <div>
                     <span className="font-medium text-gray-700">Quantity:</span>
                     <p className="text-gray-600">
-                      {selectedIssuance.quantityIssued} {selectedIssuance.inventoryItem?.unit || 'units'}
+                      {selectedIssuance.quantityIssued} units
                     </p>
-                  </div>
+                    </div>
                 </div>
               </div>
 
@@ -495,8 +495,8 @@ export default function InventoryPage() {
                   <Check className="h-4 w-4 mr-2" />
                   Mark Returned
                 </Button>
-              </div>
-            </div>
+                      </div>
+                        </div>
           )}
         </DialogContent>
       </Dialog>

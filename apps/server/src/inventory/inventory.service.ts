@@ -154,17 +154,18 @@ export class InventoryService {
     const [issuance] = await this.prisma.$transaction([
       this.prisma.inventoryIssuance.create({
         data: {
-          inventoryItemId: data.inventoryItemId,
-          studentId: student.id, // Use student.id (StudentProfile.id), not data.studentId (User.id)
+          item: { connect: { id: data.inventoryItemId } },
+          student: { connect: { id: student.userId } },
+          issuedByUser: { connect: { id: issuedBy } },
+          quantity: data.quantityIssued,
           quantityIssued: data.quantityIssued,
-          issuedBy: issuedBy,
           notes: data.notes,
         },
         include: {
-          inventoryItem: true,
+          item: true,
           student: {
             include: {
-              user: true,
+
             },
           },
           issuedByUser: true,
@@ -194,13 +195,44 @@ export class InventoryService {
         take: limit,
         orderBy: { issuedAt: 'desc' },
         include: {
-          inventoryItem: true,
-          student: {
-            include: {
-              user: true,
-            },
+          item: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              category: true,
+              quantity: true,
+              unit: true
+            }
           },
-          issuedByUser: true,
+          student: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              studentProfile: {
+                select: {
+                  studentIndex: true,
+                  year: true,
+                  studyProgram: {
+                    select: {
+                      name: true,
+                      code: true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          issuedByUser: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true
+            }
+          },
         },
       }),
       this.prisma.inventoryIssuance.count({ where }),
@@ -224,13 +256,44 @@ export class InventoryService {
         take: limit,
         orderBy: { issuedAt: 'desc' },
         include: {
-          inventoryItem: true,
-          student: {
-            include: {
-              user: true,
-            },
+          item: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              category: true,
+              quantity: true,
+              unit: true
+            }
           },
-          issuedByUser: true,
+          student: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              studentProfile: {
+                select: {
+                  studentIndex: true,
+                  year: true,
+                  studyProgram: {
+                    select: {
+                      name: true,
+                      code: true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          issuedByUser: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true
+            }
+          },
         },
       }),
       this.prisma.inventoryIssuance.count({}),
@@ -265,8 +328,9 @@ export class InventoryService {
 
     return this.prisma.inventoryRequest.create({
       data: {
-        requesterId,
-        inventoryItemId: data.inventoryItemId,
+        requester: { connect: { id: requesterId } },
+        item: { connect: { id: data.inventoryItemId } },
+        quantity: data.quantityRequested,
         quantityRequested: data.quantityRequested,
         reason: data.reason,
       },
@@ -274,7 +338,7 @@ export class InventoryService {
         requester: {
           select: { firstName: true, lastName: true, email: true, role: true },
         },
-        inventoryItem: {
+        item: {
           select: { name: true, category: true, unit: true },
         },
       },
@@ -301,7 +365,7 @@ export class InventoryService {
           approver: {
             select: { firstName: true, lastName: true, email: true },
           },
-          inventoryItem: {
+          item: {
             select: { name: true, category: true, unit: true, quantity: true },
           },
         },
@@ -325,7 +389,7 @@ export class InventoryService {
     const request = await this.prisma.inventoryRequest.findUnique({
       where: { id },
       include: {
-        inventoryItem: true,
+        item: true,
       },
     });
 
@@ -339,7 +403,7 @@ export class InventoryService {
 
     // If approving, check stock availability
     if (data.status === InventoryRequestStatus.APPROVED) {
-      if (request.quantityRequested > request.inventoryItem.quantity) {
+      if (request.quantityRequested > request.item.quantity) {
         throw new BadRequestException('Insufficient stock to approve this request');
       }
     }
@@ -376,7 +440,7 @@ export class InventoryService {
         approver: {
           select: { firstName: true, lastName: true, email: true },
         },
-        inventoryItem: {
+        item: {
           select: { name: true, category: true, unit: true },
         },
       },
@@ -387,7 +451,7 @@ export class InventoryService {
     return this.prisma.inventoryRequest.findMany({
       where: { requesterId: userId },
       include: {
-        inventoryItem: {
+        item: {
           select: { name: true, category: true, unit: true },
         },
         approver: {
@@ -435,7 +499,7 @@ export class InventoryService {
     // Find the issuance
     const issuance = await this.prisma.inventoryIssuance.findUnique({
       where: { id: issuanceId },
-      include: { inventoryItem: true },
+      include: { item: true },
     });
 
     if (!issuance) {

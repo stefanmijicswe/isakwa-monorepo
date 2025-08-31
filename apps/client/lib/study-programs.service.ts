@@ -56,7 +56,12 @@ export async function getStudyPrograms(params?: {
     if (params?.search) searchParams.append('search', params.search);
     if (params?.duration) searchParams.append('duration', params.duration.toString());
 
-    const response = await fetch(`http://localhost:3001/api/study-programs?${searchParams}`);
+    const response = await fetch(`http://localhost:3001/api/study-programs?${searchParams}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        'Content-Type': 'application/json'
+      }
+    });
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -74,7 +79,12 @@ export async function getStudyPrograms(params?: {
 
 export async function getStudyProgramById(id: number): Promise<StudyProgram> {
   try {
-    const response = await fetch(`http://localhost:3001/api/study-programs/${id}`);
+    const response = await fetch(`http://localhost:3001/api/study-programs/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        'Content-Type': 'application/json'
+      }
+    });
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -96,8 +106,7 @@ export async function createStudyProgram(createData: CreateStudyProgramDto): Pro
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // TODO: Add Authorization header when auth is implemented
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
       },
       body: JSON.stringify(createData)
     });
@@ -122,8 +131,7 @@ export async function updateStudyProgram(id: number, updateData: UpdateStudyProg
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        // TODO: Add Authorization header when auth is implemented
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
       },
       body: JSON.stringify(updateData)
     });
@@ -147,8 +155,7 @@ export async function deleteStudyProgram(id: number): Promise<void> {
     const response = await fetch(`http://localhost:3001/api/study-programs/${id}`, {
       method: 'DELETE',
       headers: {
-        // TODO: Add Authorization header when auth is implemented
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
       }
     });
     

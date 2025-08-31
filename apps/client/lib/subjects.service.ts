@@ -42,7 +42,7 @@ export interface UpdateSubjectDto {
 export interface CreateSubjectDto {
   name: string;
   code: string;
-  description?: string;
+  description: string;
   credits: number;
   semester: number;
   lectureHours: number;
@@ -70,7 +70,12 @@ export async function getSubjects(params?: {
   const url = `http://localhost:3001/api/subjects${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
   
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        'Content-Type': 'application/json'
+      }
+    });
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -106,8 +111,7 @@ export async function updateSubject(id: number, updateData: UpdateSubjectDto): P
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        // TODO: Add Authorization header when auth is implemented
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
       },
       body: JSON.stringify(updateData)
     });
@@ -131,8 +135,7 @@ export async function deleteSubject(id: number): Promise<void> {
     const response = await fetch(`http://localhost:3001/api/subjects/${id}`, {
       method: 'DELETE',
       headers: {
-        // TODO: Add Authorization header when auth is implemented
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
       }
     });
     
@@ -151,8 +154,7 @@ export async function createSubject(createData: CreateSubjectDto): Promise<Subje
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // TODO: Add Authorization header when auth is implemented
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
       },
       body: JSON.stringify(createData)
     });
@@ -189,7 +191,12 @@ export interface StudyProgram {
 
 export async function getStudyPrograms(): Promise<StudyProgram[]> {
   try {
-    const response = await fetch(`http://localhost:3001/api/study-programs`);
+    const response = await fetch(`http://localhost:3001/api/study-programs`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        'Content-Type': 'application/json'
+      }
+    });
     
     if (!response.ok) {
       const errorText = await response.text();

@@ -7,424 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id                     Int                     @id @default(autoincrement())
-  email                  String                  @unique
-  password               String
-  firstName              String
-  lastName               String
-  role                   UserRole
-  isActive               Boolean                 @default(true)
-  createdAt              DateTime                @default(now())
-  updatedAt              DateTime                @updatedAt
-  dateOfBirth            DateTime?
-  notificationRecipients NotificationRecipient[]
-  createdNotifications   Notification[]          @relation("NotificationCreator")
-  professorAssignments   ProfessorAssignment[]
-  professorProfile       ProfessorProfile?
-  requestComments        RequestComment[]
-  studentProfile         StudentProfile?
-  studentRequests        StudentRequest[]        @relation("StudentRequestCreator")
-  studentServiceProfile  StudentServiceProfile?
-
-  @@map("users")
-}
-
-model ProfessorProfile {
-  id          Int     @id @default(autoincrement())
-  userId      Int     @unique
-  department  String
-  title       String
-  phoneNumber String?
-  officeRoom  String?
-  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  titles      Title[]
-
-  @@map("professor_profiles")
-}
-
-model StudentProfile {
-  id                 Int                 @id @default(autoincrement())
-  userId             Int                 @unique
-  studentIndex       String              @unique
-  year               Int
-  studyProgramId     Int?
-  phoneNumber        String?
-  status             String              @default("ACTIVE")
-  enrollmentYear     String?
-  courseEnrollments  CourseEnrollment[]
-  examRegistrations  ExamRegistration[]
-  grades             Grade[]
-  studentEnrollments StudentEnrollment[]
-  studyProgram       StudyProgram?       @relation(fields: [studyProgramId], references: [id])
-  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("student_profiles")
-}
-
-model StudentServiceProfile {
-  id          Int     @id @default(autoincrement())
-  userId      Int     @unique
-  department  String
-  phoneNumber String?
-  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("student_service_profiles")
-}
-
-model University {
-  id          Int       @id @default(autoincrement())
-  name        String
-  description String?
-  addressId   Int?
-  phone       String?
-  email       String?
-  website     String?
-  rectorName  String?
-  rectorTitle String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  faculties   Faculty[]
-  address     Address?  @relation(fields: [addressId], references: [id])
-
-  @@map("universities")
-}
-
-model Faculty {
-  id            Int            @id @default(autoincrement())
-  universityId  Int
-  name          String
-  description   String?
-  addressId     Int?
-  phone         String?
-  email         String?
-  deanName      String?
-  deanTitle     String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  address       Address?       @relation(fields: [addressId], references: [id])
-  university    University     @relation(fields: [universityId], references: [id], onDelete: Cascade)
-  studyPrograms StudyProgram[]
-
-  @@map("faculties")
-}
-
-model StudyProgram {
-  id                   Int                   @id @default(autoincrement())
-  facultyId            Int
-  name                 String
-  description          String?
-  duration             Int
-  directorName         String?
-  directorTitle        String?
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  professorAssignments ProfessorAssignment[]
-  studentEnrollments   StudentEnrollment[]
-  studentProfiles      StudentProfile[]
-  faculty              Faculty               @relation(fields: [facultyId], references: [id], onDelete: Cascade)
-  subjects             Subject[]
-
-  @@unique([facultyId, name])
-  @@map("study_programs")
-}
-
-model Subject {
-  id                   Int                   @id @default(autoincrement())
-  studyProgramId       Int
-  name                 String
-  code                 String                @unique
-  description          String?
-  credits              Int
-  semester             Int
-  lectureHours         Int                   @default(0)
-  exerciseHours        Int                   @default(0)
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  courseEnrollments    CourseEnrollment[]
-  exams                Exam[]
-  professorAssignments ProfessorAssignment[]
-  subjectOutcomes      SubjectOutcome[]
-  studyProgram         StudyProgram          @relation(fields: [studyProgramId], references: [id], onDelete: Cascade)
-
-  @@map("subjects")
-}
-
-model SubjectOutcome {
-  id          Int     @id @default(autoincrement())
-  subjectId   Int
-  description String
-  order       Int
-  subject     Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-
-  @@map("subject_outcomes")
-}
-
-model StudentEnrollment {
-  id             Int            @id @default(autoincrement())
-  studentId      Int
-  studyProgramId Int
-  academicYear   String
-  year           Int
-  status         String         @default("ACTIVE")
-  enrollmentDate DateTime       @default(now())
-  completionDate DateTime?
-  studyProgram   StudyProgram   @relation(fields: [studyProgramId], references: [id], onDelete: Cascade)
-  student        StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([studentId, studyProgramId, academicYear])
-  @@map("student_enrollments")
-}
-
-model CourseEnrollment {
-  id             Int            @id @default(autoincrement())
-  studentId      Int
-  subjectId      Int
-  academicYear   String
-  semesterType   String
-  enrollmentDate DateTime       @default(now())
-  isActive       Boolean        @default(true)
-  subject        Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  student        StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([studentId, subjectId, academicYear])
-  @@map("course_enrollments")
-}
-
-model ProfessorAssignment {
-  id             Int          @id @default(autoincrement())
-  professorId    Int
-  subjectId      Int
-  studyProgramId Int
-  academicYear   String
-  teachingType   String       @default("LECTURE")
-  isActive       Boolean      @default(true)
-  assignedAt     DateTime     @default(now())
-  studyProgram   StudyProgram @relation(fields: [studyProgramId], references: [id], onDelete: Cascade)
-  subject        Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  professor      User         @relation(fields: [professorId], references: [id], onDelete: Cascade)
-
-  @@unique([professorId, subjectId, academicYear])
-  @@map("professor_assignments")
-}
-
-model ExamPeriod {
-  id                    Int      @id @default(autoincrement())
-  name                  String
-  startDate             DateTime
-  endDate               DateTime
-  registrationStartDate DateTime
-  registrationEndDate   DateTime
-  academicYear          String
-  semesterType          String
-  isActive              Boolean  @default(true)
-  createdAt             DateTime @default(now())
-  exams                 Exam[]
-
-  @@map("exam_periods")
-}
-
-model Exam {
-  id                Int                @id @default(autoincrement())
-  subjectId         Int
-  examPeriodId      Int
-  examDate          DateTime
-  examTime          String
-  duration          Int
-  location          String?
-  maxPoints         Int                @default(100)
-  status            String             @default("SCHEDULED")
-  createdAt         DateTime           @default(now())
-  examRegistrations ExamRegistration[]
-  examPeriod        ExamPeriod         @relation(fields: [examPeriodId], references: [id], onDelete: Cascade)
-  subject           Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  grades            Grade[]
-
-  @@map("exams")
-}
-
-model ExamRegistration {
-  id               Int            @id @default(autoincrement())
-  studentId        Int
-  examId           Int
-  registrationDate DateTime       @default(now())
-  isActive         Boolean        @default(true)
-  exam             Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
-  student          StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([studentId, examId])
-  @@map("exam_registrations")
-}
-
-model Grade {
-  id        Int            @id @default(autoincrement())
-  studentId Int
-  examId    Int
-  points    Int
-  grade     Int?
-  passed    Boolean        @default(false)
-  attempt   Int            @default(1)
-  gradedAt  DateTime       @default(now())
-  gradedBy  Int?
-  exam      Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
-  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@map("grades")
-}
-
-model TitleType {
-  id     Int     @id @default(autoincrement())
-  name   String  @unique
-  titles Title[]
-
-  @@map("title_types")
-}
-
-model Title {
-  id               Int               @id @default(autoincrement())
-  professorId      Int
-  titleTypeId      Int
-  electionDate     DateTime
-  endDate          DateTime?
-  isActive         Boolean           @default(true)
-  titleType        TitleType         @relation(fields: [titleTypeId], references: [id], onDelete: Cascade)
-  professor        ProfessorProfile  @relation(fields: [professorId], references: [id], onDelete: Cascade)
-  scientificFields ScientificField[] @relation("ScientificFieldToTitle")
-
-  @@map("titles")
-}
-
-model ScientificField {
-  id     Int     @id @default(autoincrement())
-  name   String  @unique
-  titles Title[] @relation("ScientificFieldToTitle")
-
-  @@map("scientific_fields")
-}
-
-model State {
-  id     Int    @id @default(autoincrement())
-  name   String @unique
-  cities City[]
-
-  @@map("states")
-}
-
-model City {
-  id        Int       @id @default(autoincrement())
-  name      String
-  zipCode   String
-  stateId   Int
-  addresses Address[]
-  state     State     @relation(fields: [stateId], references: [id])
-
-  @@map("cities")
-}
-
-model Address {
-  id           Int          @id @default(autoincrement())
-  street       String
-  number       String
-  cityId       Int
-  city         City         @relation(fields: [cityId], references: [id])
-  faculties    Faculty[]
-  universities University[]
-
-  @@map("addresses")
-}
-
-model Notification {
-  id         Int                     @id @default(autoincrement())
-  title      String
-  message    String
-  type       NotificationType        @default(GENERAL)
-  priority   NotificationPriority    @default(NORMAL)
-  isActive   Boolean                 @default(true)
-  createdBy  Int
-  createdAt  DateTime                @default(now())
-  recipients NotificationRecipient[]
-  creator    User                    @relation("NotificationCreator", fields: [createdBy], references: [id], onDelete: Cascade)
-
-  @@map("notifications")
-}
-
-model NotificationRecipient {
-  id             Int          @id @default(autoincrement())
-  notificationId Int
-  userId         Int
-  isRead         Boolean      @default(false)
-  readAt         DateTime?
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
-
-  @@map("notification_recipients")
-}
-
-model StudentRequest {
-  id          Int                 @id @default(autoincrement())
-  studentId   Int
-  type        RequestType
-  title       String
-  description String
-  status      RequestStatus       @default(PENDING)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  attachments RequestAttachment[]
-  comments    RequestComment[]
-  student     User                @relation("StudentRequestCreator", fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@map("student_requests")
-}
-
-model RequestComment {
-  id        Int            @id @default(autoincrement())
-  requestId Int
-  userId    Int
-  comment   String
-  createdAt DateTime       @default(now())
-  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  request   StudentRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
-
-  @@map("request_comments")
-}
-
-model RequestAttachment {
-  id         Int            @id @default(autoincrement())
-  requestId  Int
-  fileName   String
-  filePath   String
-  uploadedAt DateTime       @default(now())
-  request    StudentRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
-
-  @@map("request_attachments")
-}
-
+// ===== ENUMS =====
 enum UserRole {
-  ADMIN
-  PROFESSOR
   STUDENT
+  PROFESSOR
   STUDENT_SERVICE
-}
-
-enum NotificationType {
-  GENERAL
-  ACADEMIC
-  ADMINISTRATIVE
-  URGENT
-}
-
-enum NotificationPriority {
-  LOW
-  NORMAL
-  HIGH
-  URGENT
+  ADMIN
 }
 
 enum StudentStatus {
   ACTIVE
   INACTIVE
   GRADUATED
-  EXPELLED
+  DROPPED
 }
 
 enum SemesterType {
@@ -435,34 +30,29 @@ enum SemesterType {
 enum TeachingType {
   LECTURE
   EXERCISE
-  LABORATORY
+  MENTORING
 }
 
 enum ExamStatus {
-  SCHEDULED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
-
-enum InventoryRequestStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  COMPLETED
-}
-
-enum ViolationType {
-  ACADEMIC_DISHONESTY
-  ATTENDANCE
-  BEHAVIOR
-  OTHER
-}
-
-enum ProjectStatus {
   ACTIVE
+  INACTIVE
   COMPLETED
-  CANCELLED
+}
+
+enum NotificationType {
+  GENERAL
+  COURSE_ANNOUNCEMENT
+  EXAM_REMINDER
+  ASSIGNMENT_DUE
+  SYSTEM
+  ADMINISTRATIVE
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
 }
 
 enum RequestType {
@@ -475,4 +65,842 @@ enum RequestStatus {
   IN_REVIEW
   APPROVED
   REJECTED
+}
+
+enum InventoryCategory {
+  ELECTRONICS
+  BOOKS
+  SUPPLIES
+  EQUIPMENT
+  OTHER
+  STATIONERY
+  OFFICE_SUPPLIES
+  CLEANING_SUPPLIES
+  COMPUTER_ACCESSORIES
+  FURNITURE
+}
+
+enum InventoryRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+  FULFILLED
+}
+
+enum LibraryItemType {
+  BOOK
+  JOURNAL
+  MAGAZINE
+  NEWSPAPER
+  THESIS
+  REPORT
+  MANUAL
+  REFERENCE
+  FICTION
+  NON_FICTION
+}
+
+enum BorrowingStatus {
+  BORROWED
+  RETURNED
+  OVERDUE
+}
+
+enum EvaluationType {
+  PROJECT
+  TEST
+  QUIZ
+  ASSIGNMENT
+  EXAM
+  MIDTERM
+  LABORATORY
+  PRESENTATION
+  FINAL
+}
+
+enum ViolationType {
+  ACADEMIC_DISHONESTY
+  DISCIPLINARY
+  ATTENDANCE
+  OTHER
+}
+
+enum ProjectStatus {
+  ACTIVE
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// ===== CORE USER MODELS =====
+model User {
+  id                     Int                     @id @default(autoincrement())
+  email                  String                  @unique
+  password               String
+  firstName              String
+  lastName               String
+  role                   UserRole
+  isActive               Boolean                 @default(true)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  dateOfBirth            DateTime?
+  
+  // Relations
+  professorProfile       ProfessorProfile?
+  studentProfile         StudentProfile?
+  studentServiceProfile  StudentServiceProfile?
+  notificationRecipients NotificationRecipient[]
+  createdNotifications   Notification[]          @relation("NotificationCreator")
+  professorAssignments   ProfessorAssignment[]
+  requestComments        RequestComment[]
+  studentRequests        StudentRequest[]        @relation("StudentRequestCreator")
+  inventoryIssuances     InventoryIssuance[]     @relation("InventoryIssuanceStudent")
+  inventoryIssued        InventoryIssuance[]     @relation("InventoryIssuedBy")
+  libraryBorrowings      LibraryBorrowing[]      @relation("LibraryBorrowingStudent")
+  inventoryRequests      InventoryRequest[]      @relation("InventoryRequestRequester")
+  inventoryRequestApprovals InventoryRequest[]  @relation("InventoryRequestApprover")
+  courseEnrollments      CourseEnrollment[]
+  examRegistrations      ExamRegistration[]
+  grades                 Grade[]
+  studentEnrollments     StudentEnrollment[]
+  createdViolations      StudentViolation[]      @relation("ViolationCreator")
+  finalProjects          FinalProject[]
+  syllabusTopics         SyllabusTopic[]         @relation("TopicCreator")
+  syllabusMaterials      SyllabusMaterial[]      @relation("MaterialCreator")
+  evaluationInstruments  EvaluationInstrument[]  @relation("InstrumentCreator")
+  evaluationSubmissions  EvaluationSubmission[]
+  courseSchedules        CourseSchedule[]        @relation("ScheduleCreator")
+  courseSessions         CourseSession[]         @relation("SessionCreator")
+  syllabus               Syllabus[]              @relation("SyllabusCreator")
+  gradedSubmissions      EvaluationSubmission[]  @relation("GradedSubmissions")
+  studentViolations      StudentViolation[]      @relation("StudentViolations")
+  gradedGrades           Grade[]                 @relation("GradeGrader")
+  
+  @@map("users")
+}
+
+// ===== PROFILE MODELS =====
+model ProfessorProfile {
+  id          Int     @id @default(autoincrement())
+  userId      Int     @unique
+  departmentId Int
+  department  Department @relation(fields: [departmentId], references: [id])
+  title       String
+  phoneNumber String?
+  officeRoom  String?
+  biography   String?
+  jmbg        String  @unique
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  titles      Title[]
+  
+  @@map("professor_profiles")
+}
+
+model StudentProfile {
+  id                 Int                 @id @default(autoincrement())
+  userId             Int                 @unique
+  studentIndex       String              @unique
+  year               Int
+  studyProgramId     Int?
+  phoneNumber        String?
+  status             StudentStatus       @default(ACTIVE)
+  enrollmentYear     String?
+  jmbg               String              @unique
+  courseEnrollments  CourseEnrollment[]      @relation("StudentCourseEnrollments")
+  examRegistrations  ExamRegistration[]      @relation("StudentExamRegistrations")
+  grades             Grade[]                 @relation("StudentGrades")
+  studentEnrollments StudentEnrollment[]     @relation("StudentEnrollmentProfile")
+  violations         StudentViolation[]      @relation("StudentProfileViolations")
+  finalProjects      FinalProject[]          @relation("StudentFinalProjects")
+  evaluationSubmissions EvaluationSubmission[] @relation("StudentProfileSubmissions")
+  enrollments        StudentEnrollment[]     @relation("StudentProfileEnrollments")
+  studyProgram       StudyProgram?       @relation(fields: [studyProgramId], references: [id])
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("student_profiles")
+}
+
+model StudentServiceProfile {
+  id          Int     @id @default(autoincrement())
+  userId      Int     @unique
+  departmentId Int
+  department  Department @relation(fields: [departmentId], references: [id])
+  position    String?
+  phoneNumber String?
+  officeRoom  String?
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("student_service_profiles")
+}
+
+// ===== DEPARTMENT MODEL =====
+model Department {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  facultyId   Int?
+  faculty     Faculty? @relation(fields: [facultyId], references: [id])
+  professors  ProfessorProfile[]
+  studentServices StudentServiceProfile[]
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("departments")
+}
+
+// ===== GEOGRAPHICAL MODELS =====
+model Country {
+  id      Int     @id @default(autoincrement())
+  name    String  @unique
+  code    String  @unique
+  cities  City[]
+  states  State[]
+  
+  @@map("countries")
+}
+
+model State {
+  id          Int     @id @default(autoincrement())
+  name        String
+  countryId   Int
+  country     Country @relation(fields: [countryId], references: [id])
+  cities      City[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("states")
+}
+
+model City {
+  id        Int       @id @default(autoincrement())
+  name      String
+  countryId Int
+  stateId   Int?
+  zipCode   String?
+  state     State?   @relation(fields: [stateId], references: [id])
+  country   Country  @relation(fields: [countryId], references: [id])
+  addresses Address[]
+  
+  @@map("cities")
+}
+
+model Address {
+  id          Int         @id @default(autoincrement())
+  street      String
+  number      String
+  cityId      Int
+  city        City        @relation(fields: [cityId], references: [id])
+  universities University[]
+  faculties   Faculty[]
+  
+  @@map("addresses")
+}
+
+// ===== INSTITUTIONAL MODELS =====
+model University {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  addressId   Int?
+  phone       String?
+  email       String?
+  website     String?
+  rectorName  String?
+  rectorTitle String?
+  foundingDate DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  address     Address?  @relation(fields: [addressId], references: [id])
+  faculties   Faculty[]
+  
+  @@map("universities")
+}
+
+model Faculty {
+  id          Int         @id @default(autoincrement())
+  universityId Int
+  name        String
+  description String?
+  addressId   Int?
+  phone       String?
+  email       String?
+  deanName    String?
+  deanTitle   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  university  University  @relation(fields: [universityId], references: [id])
+  address     Address?    @relation(fields: [addressId], references: [id])
+  studyPrograms StudyProgram[]
+  departments Department[]
+  
+  @@map("faculties")
+}
+
+model StudyProgram {
+  id          Int     @id @default(autoincrement())
+  facultyId   Int
+  name        String  @unique
+  code        String  @unique
+  level       String
+  description String?
+  duration    Int
+  directorName String?
+  directorTitle String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  faculty     Faculty @relation(fields: [facultyId], references: [id])
+  subjects    Subject[]
+  studentProfiles StudentProfile[]
+  studentEnrollments StudentEnrollment[]
+  professorAssignments ProfessorAssignment[]
+  subjectStudyPrograms SubjectStudyProgram[]
+  
+  @@map("study_programs")
+}
+
+// ===== ACADEMIC MODELS =====
+model Subject {
+  id            Int                @id @default(autoincrement())
+  name          String
+  code          String              @unique
+  description   String?
+  credits       Int
+  ects          Int                 @default(0)
+  semester      Int
+  mandatory     Boolean            @default(true)
+  numberOfLectures Int             @default(0)
+  numberOfExercises Int            @default(0)
+  otherFormsOfTeaching Int         @default(0)
+  researchWork  Int                @default(0)
+  otherClasses  Int                @default(0)
+  studyProgramId Int
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  studyProgram  StudyProgram       @relation(fields: [studyProgramId], references: [id])
+  courseEnrollments CourseEnrollment[]
+  examRegistrations ExamRegistration[]
+  courseSchedules CourseSchedule[]
+  syllabus      Syllabus[]
+  evaluationInstruments EvaluationInstrument[]
+  professorAssignments ProfessorAssignment[]
+  grades        Grade[]
+  studyPrograms SubjectStudyProgram[]
+  finalProjects FinalProject[]
+  exams         Exam[]
+  
+  @@map("subjects")
+}
+
+model SubjectStudyProgram {
+  id             Int          @id @default(autoincrement())
+  subjectId      Int
+  studyProgramId Int
+  subject        Subject      @relation(fields: [subjectId], references: [id])
+  studyProgram   StudyProgram @relation(fields: [studyProgramId], references: [id])
+  
+  @@map("subject_study_programs")
+}
+
+model CourseSchedule {
+  id            Int             @id @default(autoincrement())
+  subjectId     Int
+  academicYear  String
+  semesterType  SemesterType
+  createdBy     Int?
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  subject       Subject         @relation(fields: [subjectId], references: [id])
+  sessions      CourseSession[]
+  creator       User?           @relation("ScheduleCreator", fields: [createdBy], references: [id])
+  
+  @@map("course_schedules")
+}
+
+model CourseSession {
+  id          Int           @id @default(autoincrement())
+  scheduleId  Int
+  title       String
+  description String?
+  sessionType TeachingType
+  dayOfWeek   Int
+  startTime   String
+  endTime     String
+  room        String?
+  sessionDate DateTime?
+  createdBy   Int?
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  schedule    CourseSchedule @relation(fields: [scheduleId], references: [id])
+  creator     User?         @relation("SessionCreator", fields: [createdBy], references: [id])
+  
+  @@map("course_sessions")
+}
+
+model ProfessorAssignment {
+  id          Int     @id @default(autoincrement())
+  professorId Int
+  subjectId   Int
+  studyProgramId Int?
+  academicYear String?
+  teachingType TeachingType?
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  professor   User    @relation(fields: [professorId], references: [id])
+  subject     Subject @relation(fields: [subjectId], references: [id])
+  studyProgram StudyProgram? @relation(fields: [studyProgramId], references: [id])
+  
+  @@map("professor_assignments")
+}
+
+// ===== ENROLLMENT MODELS =====
+model CourseEnrollment {
+  id          Int            @id @default(autoincrement())
+  studentId   Int
+  subjectId   Int
+  academicYear String?
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  student     User           @relation(fields: [studentId], references: [id])
+  subject     Subject        @relation(fields: [subjectId], references: [id])
+  studentProfile StudentProfile? @relation("StudentCourseEnrollments", fields: [studentId], references: [userId])
+  
+  @@map("course_enrollments")
+}
+
+model ExamRegistration {
+  id          Int            @id @default(autoincrement())
+  studentId   Int
+  subjectId   Int
+  examId      Int?
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  student     User           @relation(fields: [studentId], references: [id])
+  subject     Subject        @relation(fields: [subjectId], references: [id])
+  exam        Exam?          @relation(fields: [examId], references: [id])
+  studentProfile StudentProfile? @relation("StudentExamRegistrations", fields: [studentId], references: [userId])
+  
+  @@map("exam_registrations")
+}
+
+model StudentEnrollment {
+  id          Int            @id @default(autoincrement())
+  studentId   Int
+  studyProgramId Int?
+  year        Int
+  academicYear String?
+  status      StudentStatus  @default(ACTIVE)
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  student     User           @relation(fields: [studentId], references: [id])
+  studyProgram StudyProgram? @relation(fields: [studyProgramId], references: [id])
+  studentProfile StudentProfile? @relation("StudentEnrollmentProfile", fields: [studentId], references: [userId])
+  profileEnrollments StudentProfile? @relation("StudentProfileEnrollments", fields: [studentId], references: [userId])
+  
+  @@map("student_enrollments")
+}
+
+model Grade {
+  id          Int            @id @default(autoincrement())
+  studentId   Int
+  subjectId   Int
+  examId      Int?
+  grade       Int
+  points      Int?
+  passed      Boolean        @default(false)
+  attempt     Int            @default(1)
+  gradedBy    Int?
+  gradedAt    DateTime?
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  student     User           @relation(fields: [studentId], references: [id])
+  subject     Subject        @relation(fields: [subjectId], references: [id])
+  exam        Exam?          @relation(fields: [examId], references: [id])
+  grader      User?          @relation("GradeGrader", fields: [gradedBy], references: [id])
+  studentProfile StudentProfile? @relation("StudentGrades", fields: [studentId], references: [userId])
+  
+  @@map("grades")
+}
+
+// ===== SYLLABUS MODELS =====
+model Syllabus {
+  id          Int             @id @default(autoincrement())
+  subjectId   Int
+  title       String
+  description String?
+  objectives  String?
+  academicYear String?
+  createdBy   Int?
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  subject     Subject         @relation(fields: [subjectId], references: [id])
+  topics      SyllabusTopic[]
+  materials   SyllabusMaterial[]
+  creator     User?           @relation("SyllabusCreator", fields: [createdBy], references: [id])
+  
+  @@map("syllabus")
+}
+
+model SyllabusTopic {
+  id          Int      @id @default(autoincrement())
+  syllabusId  Int
+  title       String
+  description String?
+  weekNumber  Int?
+  createdBy   Int?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  syllabus    Syllabus @relation(fields: [syllabusId], references: [id])
+  creator     User?    @relation("TopicCreator", fields: [createdBy], references: [id])
+  
+  @@map("syllabus_topics")
+}
+
+model SyllabusMaterial {
+  id          Int      @id @default(autoincrement())
+  syllabusId  Int
+  title       String
+  description String?
+  filePath    String?
+  createdBy   Int?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  syllabus    Syllabus @relation(fields: [syllabusId], references: [id])
+  creator     User?    @relation("MaterialCreator", fields: [createdBy], references: [id])
+  
+  @@map("syllabus_materials")
+}
+
+// ===== EVALUATION MODELS =====
+model EvaluationInstrument {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  type        EvaluationType
+  maxPoints   Int      @default(100)
+  dueDate     DateTime?
+  subjectId   Int
+  createdBy   Int?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  submissions EvaluationSubmission[]
+  creator     User?    @relation("InstrumentCreator", fields: [createdBy], references: [id])
+  
+  @@map("evaluation_instruments")
+}
+
+model EvaluationSubmission {
+  id           Int      @id @default(autoincrement())
+  instrumentId Int
+  studentId    Int
+  points       Int?
+  grade        Int?
+  feedback     String?
+  passed       Boolean  @default(false)
+  gradedAt     DateTime?
+  gradedBy     Int?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  instrument   EvaluationInstrument @relation(fields: [instrumentId], references: [id])
+  student      User     @relation(fields: [studentId], references: [id])
+  grader       User?    @relation("GradedSubmissions", fields: [gradedBy], references: [id])
+  studentProfile StudentProfile? @relation("StudentProfileSubmissions", fields: [studentId], references: [userId])
+  
+  @@map("evaluation_submissions")
+}
+
+// ===== VIOLATION AND PROJECT MODELS =====
+model StudentViolation {
+  id            Int           @id @default(autoincrement())
+  studentId     Int
+  violationType ViolationType
+  description   String
+  date          DateTime
+  createdBy     Int
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  student       User          @relation("StudentViolations", fields: [studentId], references: [id])
+  creator       User          @relation("ViolationCreator", fields: [createdBy], references: [id])
+  studentProfile StudentProfile? @relation("StudentProfileViolations", fields: [studentId], references: [userId])
+  
+  @@map("student_violations")
+}
+
+model FinalProject {
+  id          Int           @id @default(autoincrement())
+  studentId   Int
+  title       String
+  description String?
+  subjectId   Int?
+  status      ProjectStatus @default(ACTIVE)
+  grade       Int?
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  student     User          @relation(fields: [studentId], references: [id])
+  subject     Subject?      @relation(fields: [subjectId], references: [id])
+  studentProfile StudentProfile? @relation("StudentFinalProjects", fields: [studentId], references: [userId])
+  
+  @@map("final_projects")
+}
+
+// ===== TITLE MODELS =====
+model Title {
+  id                 Int               @id @default(autoincrement())
+  professorProfileId Int
+  name               String
+  type               String
+  typeId             Int?
+  titleType          TitleType?        @relation(fields: [typeId], references: [id])
+  scientificFieldId  Int?
+  scientificField    ScientificField? @relation(fields: [scientificFieldId], references: [id])
+  electionDate       DateTime?
+  endDate            DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  professorProfile   ProfessorProfile @relation(fields: [professorProfileId], references: [id])
+  
+  @@map("titles")
+}
+
+model ScientificField {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  titles      Title[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("scientific_fields")
+}
+
+model TitleType {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  titles      Title[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("title_types")
+}
+
+// ===== INVENTORY MANAGEMENT MODELS =====
+model InventoryItem {
+  id          Int                @id @default(autoincrement())
+  name        String
+  description String?
+  category    InventoryCategory
+  quantity    Int
+  minStock    Int                @default(0)
+  unit        String?
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  issuances   InventoryIssuance[]
+  requests    InventoryRequest[]
+  
+  @@map("inventory_items")
+}
+
+model InventoryIssuance {
+  id                Int           @id @default(autoincrement())
+  inventoryItemId   Int
+  studentId         Int
+  quantity          Int
+  quantityIssued    Int
+  issuedAt          DateTime      @default(now())
+  returnedAt        DateTime?
+  notes             String?
+  returnNotes       String?
+  issuedBy          Int
+  isActive          Boolean       @default(true)
+  item              InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  student           User          @relation("InventoryIssuanceStudent", fields: [studentId], references: [id])
+  issuedByUser      User          @relation("InventoryIssuedBy", fields: [issuedBy], references: [id])
+  
+  @@map("inventory_issuances")
+}
+
+model InventoryRequest {
+  id                Int                   @id @default(autoincrement())
+  inventoryItemId   Int
+  requesterId       Int
+  approverId        Int?
+  quantity          Int
+  quantityRequested Int
+  status            InventoryRequestStatus @default(PENDING)
+  notes             String?
+  reason            String?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  item              InventoryItem         @relation(fields: [inventoryItemId], references: [id])
+  requester         User                  @relation("InventoryRequestRequester", fields: [requesterId], references: [id])
+  approver          User?                 @relation("InventoryRequestApprover", fields: [approverId], references: [id])
+  
+  @@map("inventory_requests")
+}
+
+// ===== LIBRARY MANAGEMENT MODELS =====
+model LibraryItem {
+  id          Int                @id @default(autoincrement())
+  title       String
+  author      String
+  isbn        String?
+  type        LibraryItemType
+  category    String
+  description String?
+  copies      Int                @default(1)
+  totalCopies Int                @default(1)
+  available   Int                @default(1)
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  borrowings  LibraryBorrowing[]
+  
+  @@map("library_items")
+}
+
+model LibraryBorrowing {
+  id              Int           @id @default(autoincrement())
+  libraryItemId   Int
+  studentId       Int
+  borrowedAt      DateTime      @default(now())
+  dueDate         DateTime
+  returnedAt      DateTime?
+  notes           String?
+  status          BorrowingStatus
+  isActive        Boolean       @default(true)
+  item            LibraryItem   @relation(fields: [libraryItemId], references: [id])
+  student         User          @relation("LibraryBorrowingStudent", fields: [studentId], references: [id])
+  
+  @@map("library_borrowings")
+}
+
+// ===== NOTIFICATIONS MODELS =====
+model Notification {
+  id          Int                    @id @default(autoincrement())
+  title       String
+  message     String
+  type        NotificationType
+  priority    NotificationPriority
+  isActive    Boolean                @default(true)
+  createdBy   Int
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  creator     User                   @relation("NotificationCreator", fields: [createdBy], references: [id])
+  recipients NotificationRecipient[]
+  
+  @@map("notifications")
+}
+
+model NotificationRecipient {
+  id             Int         @id @default(autoincrement())
+  notificationId Int
+  userId         Int
+  isRead         Boolean     @default(false)
+  readAt         DateTime?
+  notification   Notification @relation(fields: [notificationId], references: [id])
+  user           User        @relation(fields: [userId], references: [id])
+  
+  @@map("notification_recipients")
+}
+
+// ===== STUDENT REQUESTS MODELS =====
+model StudentRequest {
+  id          Int           @id @default(autoincrement())
+  studentId   Int
+  type        RequestType
+  title       String
+  description String
+  status      RequestStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  student     User          @relation("StudentRequestCreator", fields: [studentId], references: [id])
+  comments    RequestComment[]
+  attachments RequestAttachment[]
+  
+  @@map("student_requests")
+}
+
+model RequestComment {
+  id        Int           @id @default(autoincrement())
+  requestId Int
+  userId    Int
+  content   String
+  comment   String?
+  createdAt DateTime      @default(now())
+  request   StudentRequest @relation(fields: [requestId], references: [id])
+  user      User          @relation(fields: [userId], references: [id])
+  
+  @@map("request_comments")
+}
+
+// ===== ACADEMIC RECORDS MODELS =====
+model ExamPeriod {
+  id                    Int         @id @default(autoincrement())
+  name                  String
+  startDate             DateTime
+  endDate               DateTime
+  registrationStartDate DateTime
+  registrationEndDate   DateTime
+  academicYear          String
+  semesterType          SemesterType?
+  isActive              Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  exams                 Exam[]
+
+  @@map("exam_periods")
+}
+
+model Exam {
+  id           Int         @id @default(autoincrement())
+  subjectId    Int
+  examPeriodId Int
+  examDate     DateTime
+  examTime     String?
+  startTime    String
+  endTime      String
+  location     String?
+  status       ExamStatus  @default(ACTIVE)
+  maxPoints    Int         @default(100)
+  duration     Int         @default(120) // minutes
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  subject      Subject     @relation(fields: [subjectId], references: [id])
+  examPeriod   ExamPeriod  @relation(fields: [examPeriodId], references: [id])
+  registrations ExamRegistration[]
+  grades       Grade[]
+
+  @@map("exams")
+}
+
+model RequestAttachment {
+  id        Int           @id @default(autoincrement())
+  requestId Int
+  fileName  String
+  filePath  String
+  fileSize  Int?
+  mimeType  String?
+  uploadedAt DateTime     @default(now())
+  request   StudentRequest @relation(fields: [requestId], references: [id])
+  
+  @@map("request_attachments")
 }

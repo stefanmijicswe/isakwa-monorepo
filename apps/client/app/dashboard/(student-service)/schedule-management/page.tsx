@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar, Clock, Target, Plus, Search, Filter, Users, BookOpen, MapPin, FileText, Award } from 'lucide-react';
 import { getSubjects, Subject, createCourseSchedule, getCourseSchedules, createCourseSession, createExamPeriod, getExamPeriods, createExam, getExams } from '@/lib/courses.service';
+import { createEvaluationInstrument, getEvaluationInstruments, EvaluationType, type EvaluationInstrument, type CreateEvaluationInstrumentDto } from '@/lib/evaluation.service';
 import { Badge } from '@/components/ui/badge';
 
 interface CourseSchedule {
@@ -68,19 +69,7 @@ interface Exam {
   };
 }
 
-interface EvaluationInstrument {
-  id: number;
-  name: string;
-  description: string;
-  courseId: number;
-  type: string;
-  maxPoints: number;
-  dueDate: string;
-  isActive: boolean;
-  course?: {
-    name: string;
-  };
-}
+
 
 export default function ScheduleManagementPage() {
   const [activeTab, setActiveTab] = useState('course-schedules');
@@ -171,6 +160,22 @@ export default function ScheduleManagementPage() {
     }
   }, [activeTab]);
 
+  // Fetch evaluation instruments when switching to evaluation-tools tab
+  useEffect(() => {
+    if (activeTab === 'evaluation-tools') {
+      const fetchEvaluationTools = async () => {
+        try {
+          const evaluationData = await getEvaluationInstruments();
+          setEvaluationInstruments(evaluationData);
+        } catch (error) {
+          console.error('Failed to fetch evaluation instruments:', error);
+          setEvaluationInstruments([]);
+        }
+      };
+      fetchEvaluationTools();
+    }
+  }, [activeTab]);
+
   // Form states
   const [scheduleForm, setScheduleForm] = useState({
     subjectId: '',
@@ -185,7 +190,7 @@ export default function ScheduleManagementPage() {
     startTime: '',
     endTime: '',
     room: '',
-    sessionType: 'LECTURE' as 'LECTURE' | 'EXERCISE' | 'LABORATORY' | 'SEMINAR'
+    sessionType: 'LECTURE' as 'LECTURE' | 'EXERCISE' | 'MENTORING'
   });
 
   const [examPeriodForm, setExamPeriodForm] = useState({
@@ -205,7 +210,7 @@ export default function ScheduleManagementPage() {
     duration: '',
     location: '',
     maxPoints: '100',
-    status: 'SCHEDULED'
+    status: 'ACTIVE'
   });
 
   const [evaluationForm, setEvaluationForm] = useState({
@@ -304,7 +309,7 @@ export default function ScheduleManagementPage() {
           startTime: '', 
           endTime: '', 
           room: '', 
-          sessionType: 'LECTURE'
+          sessionType: 'LECTURE' as 'LECTURE' | 'EXERCISE' | 'MENTORING'
         });
       
       console.log('Course session created successfully:', newSession);
@@ -416,10 +421,45 @@ export default function ScheduleManagementPage() {
 
   const handleCreateEvaluation = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement API call
-    console.log('Creating evaluation:', evaluationForm);
-    setShowCreateEvaluation(false);
-    setEvaluationForm({ name: '', description: '', courseId: '', type: 'PROJECT', maxPoints: '', dueDate: '' });
+    
+    try {
+      // Validate form data
+      if (!evaluationForm.name || !evaluationForm.courseId || !evaluationForm.type || !evaluationForm.maxPoints) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      // Create evaluation instrument via API
+      const evaluationData: CreateEvaluationInstrumentDto = {
+        title: evaluationForm.name,
+        description: evaluationForm.description || undefined,
+        type: evaluationForm.type as EvaluationType,
+        subjectId: parseInt(evaluationForm.courseId),
+        maxPoints: parseInt(evaluationForm.maxPoints),
+        dueDate: evaluationForm.dueDate || undefined,
+        isActive: true
+      };
+
+      const newEvaluation = await createEvaluationInstrument(evaluationData);
+      
+      // Close modal and reset form
+      setShowCreateEvaluation(false);
+      setEvaluationForm({ name: '', description: '', courseId: '', type: 'PROJECT', maxPoints: '', dueDate: '' });
+      
+      console.log('Evaluation created successfully:', newEvaluation);
+      alert('Evaluation tool created successfully!');
+      
+      // Refresh evaluation instruments list
+      try {
+        const updatedEvaluations = await getEvaluationInstruments();
+        setEvaluationInstruments(updatedEvaluations);
+      } catch (error) {
+        console.error('Failed to refresh evaluation instruments:', error);
+      }
+    } catch (error) {
+      console.error('Failed to create evaluation:', error);
+      alert(`Failed to create evaluation tool: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   return (
@@ -490,7 +530,7 @@ export default function ScheduleManagementPage() {
                                  </SelectTrigger>
                                  <SelectContent>
                                    {subjectsLoading ? (
-                                     <SelectItem value="" disabled>
+                                     <SelectItem value="loading" disabled>
                                        Loading subjects...
                                      </SelectItem>
                                    ) : subjects && subjects.length > 0 ? (
@@ -500,7 +540,7 @@ export default function ScheduleManagementPage() {
                                        </SelectItem>
                                      ))
                                    ) : (
-                                     <SelectItem value="" disabled>
+                                     <SelectItem value="no-subjects" disabled>
                                        No subjects available
                                      </SelectItem>
                                    )}
@@ -739,15 +779,14 @@ export default function ScheduleManagementPage() {
                     </div>
                     <div>
                       <Label htmlFor="sessionType" className="text-sm font-medium">Session Type</Label>
-                                             <Select value={sessionForm.sessionType} onValueChange={(value) => setSessionForm(prev => ({ ...prev, sessionType: value as 'LECTURE' | 'EXERCISE' | 'LABORATORY' | 'SEMINAR' }))}>
+                                             <Select value={sessionForm.sessionType} onValueChange={(value) => setSessionForm(prev => ({ ...prev, sessionType: value as 'LECTURE' | 'EXERCISE' | 'MENTORING' }))}>
                          <SelectTrigger className="h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="LECTURE">Lecture</SelectItem>
                           <SelectItem value="EXERCISE">Exercise</SelectItem>
-                          <SelectItem value="LABORATORY">Laboratory</SelectItem>
-                          <SelectItem value="SEMINAR">Seminar</SelectItem>
+                          <SelectItem value="MENTORING">Mentoring</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1086,14 +1125,14 @@ export default function ScheduleManagementPage() {
                        </div>
                                              <div>
                          <Label htmlFor="status" className="text-sm font-medium">Status</Label>
-                         <Select value={examForm.status || 'SCHEDULED'} onValueChange={(value) => setExamForm(prev => ({ ...prev, status: value }))}>
+                         <Select value={examForm.status || 'ACTIVE'} onValueChange={(value) => setExamForm(prev => ({ ...prev, status: value }))}>
                            <SelectTrigger className="h-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500">
                              <SelectValue />
                            </SelectTrigger>
                            <SelectContent>
-                             <SelectItem value="SCHEDULED">Scheduled</SelectItem>
+                             <SelectItem value="ACTIVE">Active</SelectItem>
+                             <SelectItem value="INACTIVE">Inactive</SelectItem>
                              <SelectItem value="COMPLETED">Completed</SelectItem>
-                             <SelectItem value="CANCELLED">Cancelled</SelectItem>
                            </SelectContent>
                          </Select>
                        </div>
@@ -1248,11 +1287,11 @@ export default function ScheduleManagementPage() {
                               <Award className="h-5 w-5" />
                             </div>
                             <div>
-                              <h4 className="text-sm font-semibold text-gray-900">{tool.name}</h4>
+                              <h4 className="text-sm font-semibold text-gray-900">{tool.title}</h4>
                               <div className="flex items-center space-x-3 text-xs text-gray-500 mt-1">
                                 <span className="flex items-center">
                                   <BookOpen className="h-3 w-3 mr-1" />
-                                  {tool.course?.name || 'Unknown Course'}
+                                  {tool.subject?.name || 'Unknown Course'}
                                 </span>
                                 <span className="text-gray-400">•</span>
                                 <span className="font-medium text-green-600">{tool.type}</span>
@@ -1262,7 +1301,7 @@ export default function ScheduleManagementPage() {
                               <div className="flex items-center space-x-2 text-xs text-gray-400 mt-1">
                                 <span className="flex items-center">
                                   <Calendar className="h-3 w-3 mr-1" />
-                                  Due: {new Date(tool.dueDate).toLocaleDateString()}
+                                  Due: {tool.dueDate ? new Date(tool.dueDate).toLocaleDateString() : 'No due date'}
                                 </span>
                               </div>
                             </div>

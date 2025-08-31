@@ -21,7 +21,7 @@ export class CourseSchedulesService {
         where: {
           professorId: userId,
           subjectId: dto.subjectId,
-          academicYear: dto.academicYear,
+
           isActive: true,
         },
       });
@@ -81,7 +81,7 @@ export class CourseSchedulesService {
     // If professor ID provided, only show schedules for subjects they teach
     if (userRole === 'PROFESSOR' && userId) {
       where.subject = {
-        ProfessorAssignment: {
+        professorAssignments: {
           some: {
             professorId: userId,
             isActive: true,
@@ -111,7 +111,7 @@ export class CourseSchedulesService {
 
     if (userRole === 'PROFESSOR' && userId) {
       where.subject = {
-        ProfessorAssignment: {
+        professorAssignments: {
           some: {
             professorId: userId,
             isActive: true,
@@ -148,7 +148,7 @@ export class CourseSchedulesService {
         include: {
           subject: {
             include: {
-              ProfessorAssignment: {
+              professorAssignments: {
                 where: {
                   professorId: userId,
                   isActive: true,
@@ -163,7 +163,7 @@ export class CourseSchedulesService {
         throw new NotFoundException('Course schedule not found');
       }
 
-      if (schedule.subject.ProfessorAssignment.length === 0) {
+      if (schedule.subject.professorAssignments.length === 0) {
         throw new ForbiddenException('Professor not assigned to this subject');
       }
     } else {
@@ -199,7 +199,7 @@ export class CourseSchedulesService {
         include: {
           subject: {
             include: {
-              ProfessorAssignment: {
+              professorAssignments: {
                 where: {
                   professorId: userId,
                   isActive: true,
@@ -214,7 +214,7 @@ export class CourseSchedulesService {
         throw new NotFoundException('Course schedule not found');
       }
 
-      if (schedule.subject.ProfessorAssignment.length === 0) {
+      if (schedule.subject.professorAssignments.length === 0) {
         throw new ForbiddenException('Professor not assigned to this subject');
       }
     } else {
@@ -245,7 +245,7 @@ export class CourseSchedulesService {
         include: {
           subject: {
             include: {
-              ProfessorAssignment: {
+              professorAssignments: {
                 where: {
                   professorId: userId,
                   isActive: true,
@@ -260,7 +260,7 @@ export class CourseSchedulesService {
         throw new NotFoundException('Course schedule not found');
       }
 
-      if (schedule.subject.ProfessorAssignment.length === 0) {
+      if (schedule.subject.professorAssignments.length === 0) {
         throw new ForbiddenException('Professor not assigned to this subject');
       }
     } else {
@@ -294,6 +294,7 @@ export class CourseSchedulesService {
         endTime: dto.endTime,
         room: dto.room,
         sessionType: dto.sessionType,
+        dayOfWeek: new Date(dto.sessionDate).getDay(),
         isActive: dto.isActive ?? true,
       },
       include: {
@@ -312,7 +313,7 @@ export class CourseSchedulesService {
         include: {
           subject: {
             include: {
-              ProfessorAssignment: {
+              professorAssignments: {
                 where: {
                   professorId: userId,
                   isActive: true,
@@ -323,7 +324,7 @@ export class CourseSchedulesService {
         },
       });
 
-      if (!schedule || schedule.subject.ProfessorAssignment.length === 0) {
+      if (!schedule || schedule.subject.professorAssignments.length === 0) {
         throw new ForbiddenException('Access denied to this course schedule');
       }
     } else if (userRole === 'STUDENT_SERVICE') {
@@ -357,7 +358,7 @@ export class CourseSchedulesService {
     if (userRole === 'PROFESSOR' && userId) {
       where.schedule = {
         subject: {
-          ProfessorAssignment: {
+          professorAssignments: {
             some: {
               professorId: userId,
               isActive: true,
@@ -392,7 +393,7 @@ export class CourseSchedulesService {
           include: {
             subject: {
               include: {
-                ProfessorAssignment: {
+                professorAssignments: {
                   where: {
                     professorId,
                     isActive: true,
@@ -409,7 +410,7 @@ export class CourseSchedulesService {
       throw new NotFoundException('Course session not found');
     }
 
-    if (session.schedule.subject.ProfessorAssignment.length === 0) {
+    if (session.schedule.subject.professorAssignments.length === 0) {
       throw new ForbiddenException('Professor not assigned to this subject');
     }
 
@@ -446,7 +447,7 @@ export class CourseSchedulesService {
           include: {
             subject: {
               include: {
-                ProfessorAssignment: {
+                professorAssignments: {
                   where: {
                     professorId,
                     isActive: true,
@@ -463,7 +464,7 @@ export class CourseSchedulesService {
       throw new NotFoundException('Course session not found');
     }
 
-    if (session.schedule.subject.ProfessorAssignment.length === 0) {
+    if (session.schedule.subject.professorAssignments.length === 0) {
       throw new ForbiddenException('Professor not assigned to this subject');
     }
 
@@ -509,7 +510,7 @@ export class CourseSchedulesService {
     const where: any = {
       isActive: true,
       subject: {
-        ProfessorAssignment: {
+        professorAssignments: {
           some: {
             professorId,
             isActive: true,

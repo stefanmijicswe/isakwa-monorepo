@@ -135,6 +135,7 @@ export interface Notification {
 
 export interface RegisteredExam {
   id: number;
+  examId: number; // Add examId for filtering
   courseId: number;
   courseName: string;
   courseCode: string;
@@ -195,30 +196,39 @@ class CoursesService {
 
   async getEnrolledCourses(): Promise<Course[]> {
     try {
-      // Get current user to extract student ID
+      // Get current user to extract student profile ID
       const user = await authService.getCurrentUser();
-      if (!user || !user.id) {
-        throw new Error('User not authenticated or missing ID');
+      if (!user || !user.studentProfile?.id) {
+        throw new Error('User not authenticated or missing student profile');
       }
 
-      // Use the correct endpoint with student ID parameter
-      const response = await this.request<{currentCourses: any[]}>(`/academic-records/current-enrollments/${user.id}`);
+      // Use the correct endpoint with student profile ID
+      const response = await this.request<any>(`/academic-records/students/${user.studentProfile.id}/academic-history`);
       
       // Transform backend data to frontend Course format
-      return response.currentCourses.map((enrollment: any) => ({
-        id: enrollment.id,
-        name: enrollment.subject?.name || 'Unknown Course',
-        acronym: enrollment.subject?.code || 'N/A',
-        ects: enrollment.subject?.credits || 0,
-        semester: enrollment.semesterType || 'Unknown',
-        professor: enrollment.subject?.professor?.firstName && enrollment.subject?.professor?.lastName 
-          ? `${enrollment.subject.professor.firstName} ${enrollment.subject.professor.lastName}`
+      // Combine current enrollments and passed subjects with unique prefixes
+      const currentEnrollments = (response.currentEnrollments || []).map((e: any) => ({ ...e, _type: 'current' }));
+      const passedSubjects = (response.passedSubjects || []).map((e: any) => ({ ...e, _type: 'passed' }));
+      const courseEnrollments = (response.student?.courseEnrollments || []).map((e: any) => ({ ...e, _type: 'enrollment' }));
+      
+      const allCourses = [...currentEnrollments, ...passedSubjects, ...courseEnrollments];
+
+      return allCourses.map((enrollment: any, index: number) => ({
+        id: `${enrollment._type}-${enrollment.id || enrollment.subjectId || index}`, // Guaranteed unique ID
+        name: enrollment.subject?.name || enrollment.name || 'Unknown Course',
+        acronym: enrollment.subject?.code || enrollment.code || 'N/A',
+        ects: enrollment.subject?.credits || enrollment.credits || 0,
+        semester: enrollment.semesterType || enrollment.semester || 'Unknown',
+        professor: enrollment.professor 
+          ? (typeof enrollment.professor === 'string' 
+             ? enrollment.professor 
+             : `${enrollment.professor.firstName || ''} ${enrollment.professor.lastName || ''}`.trim())
           : 'TBD',
-        schedule: 'To be scheduled', // Backend doesn't have schedule info yet
-        room: 'TBD', // Backend doesn't have room info yet
-        progress: enrollment.finalGrade ? 100 : 0, // 100% if graded, 0% if not
-        grade: enrollment.finalGrade || null,
-        status: enrollment.isActive ? 'Active' : 'Completed'
+        schedule: 'To be scheduled',
+        room: 'TBD',
+        progress: enrollment.finalGrade || enrollment.grade ? 100 : 0,
+        grade: enrollment.finalGrade || enrollment.grade || null,
+        status: enrollment.isActive !== false ? 'Active' : 'Completed'
       }));
     } catch (error) {
       console.warn('Failed to fetch from backend, using fallback data:', error);
@@ -262,34 +272,33 @@ class CoursesService {
 
   async getGrades(): Promise<Grade[]> {
     try {
-      // Get current user to extract student ID
+      // Get current user to extract student profile ID
       const user = await authService.getCurrentUser();
-      if (!user || !user.id) {
-        throw new Error('User not authenticated or missing ID');
+      if (!user || !user.studentProfile?.id) {
+        throw new Error('User not authenticated or missing student profile');
       }
 
       // Use the academic history endpoint to get grades
-      const response = await this.request<any>(`/academic-records/current-enrollments/${user.id}`);
+      const response = await this.request<any>(`/academic-records/students/${user.studentProfile.id}/academic-history`);
       
       // Transform backend data to frontend Grade format
-      return response.currentCourses
-        .filter((enrollment: any) => enrollment.finalGrade) // Only courses with grades
-        .map((enrollment: any) => ({
-          id: enrollment.id,
-          courseId: enrollment.subjectId,
-          courseName: enrollment.subject?.name || 'Unknown Course',
-          courseAcronym: enrollment.subject?.code || 'N/A',
-          assessmentType: 'Final Exam', // Backend doesn't have assessment type yet
-          assessmentDate: enrollment.enrollmentDate || new Date().toISOString(),
-          grade: enrollment.finalGrade,
-          numericalGrade: enrollment.finalGrade, // Use the grade directly since it's already numeric
-          ects: enrollment.subject?.credits || 0,
-          semester: enrollment.semesterType || 'Unknown',
-          professor: enrollment.subject?.professor?.firstName && enrollment.subject?.professor?.lastName 
-            ? `${enrollment.subject.professor.firstName} ${enrollment.subject.professor.lastName}`
-            : 'TBD',
-          comments: undefined
-        }));
+      // Get grades from student.grades array
+      const grades = response.student?.grades || [];
+      
+      return grades.map((grade: any) => ({
+        id: grade.id || Math.random(),
+        courseId: grade.exam?.subjectId || grade.subjectId || 0,
+        courseName: grade.exam?.subject?.name || 'Unknown Course',
+        courseAcronym: grade.exam?.subject?.code || 'N/A',
+        assessmentType: 'Final Exam',
+        assessmentDate: grade.gradedAt || new Date().toISOString(),
+        grade: grade.grade?.toString() || '0',
+        numericalGrade: grade.grade || 0,
+        ects: grade.exam?.subject?.credits || 0,
+        semester: 'Unknown',
+        professor: 'TBD',
+        comments: grade.comments
+      }));
     } catch (error) {
       console.warn('Failed to fetch grades from backend, using fallback data:', error);
       // Return empty array if backend fails
@@ -410,24 +419,28 @@ class CoursesService {
   async getRegisteredExams(): Promise<RegisteredExam[]> {
     try {
       const currentUser = await authService.getCurrentUser();
-      if (!currentUser) return [];
+      if (!currentUser || !currentUser.studentProfile?.id) return [];
 
-      // Call the backend API to get registered exams
-      const response = await this.request<any>(`/academic-records/exam-registrations/${currentUser.id}`);
+      // Use academic history API to get exam registrations
+      const response = await this.request<any>(`/academic-records/students/${currentUser.studentProfile.id}/academic-history`);
+      
+      // Get exam registrations from the academic history response
+      const examRegistrations = response.examRegistrations || [];
       
       // Transform backend data to frontend RegisteredExam format
-      return response.map((registration: any) => ({
+      return examRegistrations.map((registration: any) => ({
         id: registration.id,
+        examId: registration.examId, // Add examId for filtering
         courseId: registration.exam?.subjectId || registration.examId,
         courseName: registration.exam?.subject?.name || 'Unknown Course',
         courseCode: registration.exam?.subject?.code || 'N/A',
         courseCredits: registration.exam?.subject?.credits || 0,
         examDate: registration.exam?.examDate || new Date().toISOString(),
         examTime: "10:00 AM", // Backend doesn't have time yet
-        examPeriodName: "Active Period", // Backend doesn't have period name yet
+        examPeriodName: registration.exam?.examPeriod?.name || "Active Period",
         totalPoints: registration.exam?.maxPoints || 100,
         registrationDate: registration.registrationDate || new Date().toISOString(),
-        status: registration.status || 'REGISTERED'
+        status: registration.isActive ? 'REGISTERED' : 'CANCELLED'
       }));
     } catch (error) {
       console.warn('Failed to fetch registered exams from backend:', error);
@@ -439,18 +452,18 @@ class CoursesService {
   async registerForExam(examId: number): Promise<boolean> {
     try {
       const currentUser = await authService.getCurrentUser();
-      if (!currentUser) return false;
+      if (!currentUser || !currentUser.studentProfile?.id) return false;
 
       // Call the backend API to register for exam
       const response = await this.request<any>('/academic-records/register-exam', {
         method: 'POST',
         body: JSON.stringify({
-          studentId: currentUser.id,
-          examId: examId
+          studentId: parseInt(currentUser.studentProfile.id.toString(), 10),
+          examId: parseInt(examId.toString(), 10)
         })
       });
 
-      console.log(`Student ${currentUser.id} successfully registered for exam ${examId}:`, response);
+      console.log(`Student ${currentUser.studentProfile.id} successfully registered for exam ${examId}:`, response);
       return true;
     } catch (error) {
       console.error('Error registering for exam:', error);
@@ -512,51 +525,42 @@ export async function getActiveExamPeriods(): Promise<ExamPeriod[]> {
 export async function getAvailableExams(): Promise<AvailableExam[]> {
   try {
     const currentUser = await authService.getCurrentUser();
-    if (!currentUser) return [];
+    if (!currentUser || !currentUser.studentProfile?.id) return [];
 
-    // Get student's current enrollments
-    const enrollments = await coursesService.getEnrolledCourses();
+    // Get exams available for this specific student (only enrolled subjects)
+    const response = await fetch(`${API_BASE_URL}/academic-records/exams/available`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authService.getToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const exams = await response.json();
     
     // Get already registered exams to filter them out
     const registeredExams = await coursesService.getRegisteredExams();
-    const registeredCourseIds = new Set(registeredExams.map(exam => exam.courseId));
+    const registeredExamIds = new Set(registeredExams.map(exam => exam.examId));
     
-    // Get active exam periods
-    const examPeriods = await getActiveExamPeriods();
+    // Filter out already registered exams and format for frontend
+    const availableExams: AvailableExam[] = exams
+      .filter((exam: any) => !registeredExamIds.has(exam.id))
+      .map((exam: any) => ({
+        id: exam.id,
+        courseId: exam.subjectId,
+        courseName: exam.subject?.name || 'Unknown Course',
+        courseCode: exam.subject?.code || 'N/A',
+        courseCredits: 100, // Default points
+        examDate: exam.examDate,
+        examTime: exam.examTime || '10:00 AM',
+        examPeriodName: exam.examPeriod?.name || 'Exam Period',
+        totalPoints: exam.maxPoints || 100,
+        isActive: true // Already filtered by backend
+      }));
     
-    // Create available exams based on enrollments, excluding already registered ones
-    const availableExams: AvailableExam[] = [];
-    
-    for (const enrollment of enrollments) {
-      // Skip if student is already registered for this course's exam
-      if (registeredCourseIds.has(enrollment.id)) {
-        continue;
-      }
-      
-      // Create exam for each enrolled subject with realistic dates
-      const examDate = new Date();
-      examDate.setDate(examDate.getDate() + Math.floor(Math.random() * 30) + 7); // Random date 7-37 days from now
-      
-      // Format date as YYYY-MM-DD
-      const year = examDate.getFullYear();
-      const month = String(examDate.getMonth() + 1).padStart(2, '0');
-      const day = String(examDate.getDate()).padStart(2, '0');
-      const formattedDate = `${year}-${month}-${day}`;
-      
-      availableExams.push({
-        id: enrollment.id,
-        courseId: enrollment.id,
-        courseName: enrollment.name, // Using enrollment.name (Course interface)
-        courseCode: enrollment.acronym, // Using enrollment.acronym (Course interface)
-        courseCredits: enrollment.ects,
-        examDate: formattedDate,
-        examTime: "10:00 AM", // Mock time for now
-        examPeriodName: examPeriods[0]?.name || "Upcoming",
-        totalPoints: 100,
-        isActive: true
-      });
-    }
-
     return availableExams;
   } catch (error) {
     console.error('Error fetching available exams:', error);
@@ -580,27 +584,49 @@ export async function cancelExamRegistration(registrationId: number): Promise<bo
 export async function getStudyHistory(): Promise<StudyHistoryItem[]> {
   try {
     const currentUser = await authService.getCurrentUser();
-    if (!currentUser) return [];
+    if (!currentUser || !currentUser.studentProfile?.id) return [];
 
-    // Use the existing getEnrolledCourses method instead of private request
-    const enrollments = await coursesService.getEnrolledCourses();
+    // Use the academic history API directly
+    const response = await fetch(`${API_BASE_URL}/academic-records/students/${currentUser.studentProfile.id}/academic-history`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authService.getToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    // Combine all course data from different sources with unique prefixes
+    const passedSubjects = (data.passedSubjects || []).map((item: any, i: number) => ({ ...item, _source: 'passed', _index: i }));
+    const currentEnrollments = (data.currentEnrollments || []).map((item: any, i: number) => ({ ...item, _source: 'current', _index: i }));
+    const courseEnrollments = (data.student?.courseEnrollments || []).map((item: any, i: number) => ({ ...item, _source: 'enrollment', _index: i }));
+    
+    const allCourseData = [...passedSubjects, ...currentEnrollments, ...courseEnrollments];
     
     // Transform the data to match StudyHistoryItem format
-    return enrollments.map((enrollment) => ({
-      id: enrollment.id,
-      subjectId: enrollment.id, // Using enrollment.id as subjectId for now
-      subjectName: enrollment.name,
-      subjectCode: enrollment.acronym,
-      subjectCredits: enrollment.ects,
-      professor: enrollment.professor,
-      academicYear: enrollment.semester, // Using semester as academicYear for now
-      semesterType: enrollment.semester,
-      enrollmentDate: new Date().toISOString(), // Mock date for now
-      finalGrade: enrollment.grade,
-      finalPoints: enrollment.grade ? 85 : null, // Mock points for now
-      attempts: 1, // Mock attempts for now
-      status: enrollment.grade 
-        ? (parseInt(enrollment.grade) >= 6 ? 'passed' : 'failed')
+    return allCourseData.map((item: any, index: number) => ({
+      id: `${item._source}-${item.id || item.subjectId || item._index}-${index}`,
+      subjectId: item.subjectId || item.id || 0,
+      subjectName: item.subject?.name || item.name || 'Unknown Course',
+      subjectCode: item.subject?.code || item.code || 'N/A',
+      subjectCredits: item.subject?.credits || item.credits || 0,
+      professor: item.professor 
+        ? (typeof item.professor === 'string' 
+           ? item.professor 
+           : `${item.professor.firstName || ''} ${item.professor.lastName || ''}`.trim())
+        : 'TBD',
+      academicYear: item.academicYear || '2024/2025',
+      semesterType: item.semesterType || 'WINTER',
+      enrollmentDate: item.enrollmentDate || new Date().toISOString(),
+      finalGrade: item.finalGrade || item.grade || null,
+      finalPoints: item.finalPoints || (item.grade ? 85 : null),
+      attempts: item.attempts || 1,
+      status: item.finalGrade || item.grade 
+        ? (parseInt(item.finalGrade || item.grade) >= 6 ? 'passed' : 'failed')
         : 'in_progress'
     }));
   } catch (error) {
@@ -731,7 +757,9 @@ export async function getSubjects(): Promise<Subject[]> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return await response.json();
+    const result = await response.json();
+    // Backend returns { data: [...], meta: {...} }, we need just the data array
+    return result.data || [];
   } catch (error) {
     console.error('Error fetching subjects:', error);
     return [];

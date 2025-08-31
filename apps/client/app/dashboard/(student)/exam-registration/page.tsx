@@ -64,7 +64,7 @@ export default function ExamRegistrationPage() {
     
     try {
       setIsRegistering(true)
-      await registerForExam(selectedExam.id)
+      await registerForExam(parseInt(selectedExam.id.toString(), 10))
       
       // Refresh data
       await fetchData()
@@ -82,8 +82,10 @@ export default function ExamRegistrationPage() {
 
   const formatDate = (dateString: string) => {
     try {
-      // Handle YYYY-MM-DD format properly
-      const date = new Date(dateString + 'T00:00:00')
+      // Check if it's already a full ISO string or just YYYY-MM-DD
+      const date = dateString.includes('T') 
+        ? new Date(dateString) 
+        : new Date(dateString + 'T00:00:00');
       
       // Check if date is valid
       if (isNaN(date.getTime())) {

@@ -12,9 +12,9 @@ export async function seedSyllabus(prisma: PrismaService) {
       data: {
         subjectId: subject.id,
         academicYear: '2024/2025',
-        semesterType: 'WINTER',
+        // semesterType: 'WINTER',
         description: `Syllabus for ${subject.name} - Winter 2024/2025`,
-        objectives: `Students will learn the fundamentals of ${subject.name}`,
+        // objectives: `Students will learn the fundamentals of ${subject.name}`,
         isActive: true,
       },
     });
