@@ -70,7 +70,7 @@ export function ProgramsSection() {
           </h2>
           <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
             Choose from our diverse range of academic programs designed to prepare you for success
-            in today's dynamic world.
+            in today&apos;s dynamic world.
           </p>
         </div>
 

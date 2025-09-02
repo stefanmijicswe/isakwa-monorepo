@@ -60,6 +60,15 @@ enum RequestType {
   COMPLAINT
 }
 
+enum RequestCategory {
+  ACADEMIC
+  ADMINISTRATIVE
+  FINANCIAL
+  DISCIPLINARY
+  TECHNICAL
+  OTHER
+}
+
 enum RequestStatus {
   PENDING
   IN_REVIEW
@@ -155,6 +164,7 @@ model User {
   professorAssignments   ProfessorAssignment[]
   requestComments        RequestComment[]
   studentRequests        StudentRequest[]        @relation("StudentRequestCreator")
+  assignedRequests       StudentRequest[]        @relation("AssignedRequests")
   inventoryIssuances     InventoryIssuance[]     @relation("InventoryIssuanceStudent")
   inventoryIssued        InventoryIssuance[]     @relation("InventoryIssuedBy")
   libraryBorrowings      LibraryBorrowing[]      @relation("LibraryBorrowingStudent")
@@ -828,10 +838,15 @@ model StudentRequest {
   type        RequestType
   title       String
   description String
+  category    RequestCategory @default(OTHER)
   status      RequestStatus @default(PENDING)
+  assignedTo  Int?          // ID of assigned staff member
+  priority    NotificationPriority @default(NORMAL)
+  dueDate     DateTime?     // Expected resolution date
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   student     User          @relation("StudentRequestCreator", fields: [studentId], references: [id])
+  assignedStaff User?       @relation("AssignedRequests", fields: [assignedTo], references: [id])
   comments    RequestComment[]
   attachments RequestAttachment[]
   

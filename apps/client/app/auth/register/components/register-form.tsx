@@ -94,12 +94,16 @@ export function RegisterForm({
         })
       }
 
-      await register(registerData)
-      // Redirect to dashboard on successful registration
-      router.push("/dashboard")
-    } catch (error: any) {
+      const userData = await register(registerData)
+      // Redirect based on user role
+      if (userData?.role === 'PROFESSOR') {
+        router.push("/dashboard/teaching-courses")
+      } else {
+        router.push("/dashboard")
+      }
+    } catch (error: unknown) {
       console.error("Registration failed:", error)
-      setSubmitError(error.message || "Registration failed. Please try again.")
+      setSubmitError((error as Error)?.message || "Registration failed. Please try again.")
     }
   }
 

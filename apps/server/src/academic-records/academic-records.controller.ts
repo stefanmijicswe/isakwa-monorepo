@@ -230,6 +230,13 @@ export class AcademicRecordsController {
     return this.academicRecordsService.getStudentExamRegistrations(id);
   }
 
+  @Get('professor-exam-registrations')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
+  async getProfessorExamRegistrations(@Request() req) {
+    return this.academicRecordsService.getProfessorExamRegistrations(req.user.id);
+  }
+
   // Syllabus Management Endpoints
   @Post('syllabus')
   @UseGuards(JwtAuthGuard, RolesGuard)

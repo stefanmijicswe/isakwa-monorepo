@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Bell, Search, Clock, User, CheckCircle, X } from 'lucide-react';
+import { Bell, Search, Clock, User, CheckCircle, X, Plus, Send, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   getAllNotifications, 
   getUserNotifications,
@@ -25,12 +28,39 @@ export default function NotificationsPage() {
   const [error, setError] = useState('');
   const [userRole, setUserRole] = useState<string>('');
   const [unreadCount, setUnreadCount] = useState(0);
+  
+  // Professor notification creation states
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newNotification, setNewNotification] = useState({
+    title: '',
+    message: '',
+    type: 'INFO' as NotificationType,
+    subjectId: '',
+    priority: 'NORMAL' as 'LOW' | 'NORMAL' | 'HIGH'
+  });
+  const [professorCourses, setProfessorCourses] = useState<Array<{id: number, name: string, code: string}>>([]);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     const role = localStorage.getItem('user_role') || '';
     setUserRole(role);
     fetchNotifications(role);
+    
+    // Load professor courses if user is a professor
+    if (role === 'PROFESSOR') {
+      loadProfessorCourses();
+    }
   }, []);
+  
+  const loadProfessorCourses = async () => {
+    // Mock professor courses - in real app this would come from API
+    const mockCourses = [
+      { id: 1, name: 'Introduction to Information Technologies', code: 'IT101' },
+      { id: 2, name: 'Programming Fundamentals', code: 'PROG201' },
+      { id: 3, name: 'Web Development', code: 'WEB301' }
+    ];
+    setProfessorCourses(mockCourses);
+  };
 
   // Update unread count whenever notifications change
   useEffect(() => {
@@ -130,6 +160,57 @@ export default function NotificationsPage() {
     }
   };
 
+  const handleCreateNotification = async () => {
+    if (!newNotification.title || !newNotification.message || !newNotification.subjectId) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    setCreating(true);
+    try {
+      // Mock creating notification - in real app this would be API call
+      const selectedCourse = professorCourses.find(c => c.id.toString() === newNotification.subjectId);
+      const mockNotification: Notification = {
+        id: Date.now(),
+        title: `[${selectedCourse?.code}] ${newNotification.title}`,
+        message: newNotification.message,
+        type: newNotification.type,
+        priority: newNotification.priority,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        userId: parseInt(localStorage.getItem('user_id') || '1'),
+        user: {
+          id: parseInt(localStorage.getItem('user_id') || '1'),
+          email: localStorage.getItem('user_email') || 'professor@example.com',
+          firstName: 'John',
+          lastName: 'Professor'
+        },
+        recipients: [],
+        isGlobal: false
+      };
+
+      setNotifications([mockNotification, ...notifications]);
+      
+      // Reset form
+      setNewNotification({
+        title: '',
+        message: '',
+        type: 'INFO' as NotificationType,
+        subjectId: '',
+        priority: 'NORMAL' as 'LOW' | 'NORMAL' | 'HIGH'
+      });
+      
+      setIsCreateModalOpen(false);
+      setError('');
+      
+    } catch (error) {
+      console.error('Failed to create notification:', error);
+      setError('Failed to create notification');
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'URGENT':
@@ -207,6 +288,132 @@ export default function NotificationsPage() {
             {unreadCount > 0 && (
               <span className="text-sm text-gray-600">{unreadCount} unread</span>
             )}
+            
+            {userRole === 'PROFESSOR' && (
+              <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="h-8 px-3 text-xs gap-1"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Create
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Create Course Notification</DialogTitle>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Subject</label>
+                      <Select 
+                        value={newNotification.subjectId} 
+                        onValueChange={(value) => setNewNotification({...newNotification, subjectId: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select subject" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {professorCourses.map(course => (
+                            <SelectItem key={course.id} value={course.id.toString()}>
+                              {course.code} - {course.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium">Title</label>
+                      <Input
+                        value={newNotification.title}
+                        onChange={(e) => setNewNotification({...newNotification, title: e.target.value})}
+                        placeholder="Notification title"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium">Message</label>
+                      <Textarea
+                        value={newNotification.message}
+                        onChange={(e) => setNewNotification({...newNotification, message: e.target.value})}
+                        placeholder="Write your message..."
+                        rows={3}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-sm font-medium">Type</label>
+                        <Select 
+                          value={newNotification.type} 
+                          onValueChange={(value) => setNewNotification({...newNotification, type: value as NotificationType})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="INFO">Info</SelectItem>
+                            <SelectItem value="ASSIGNMENT">Assignment</SelectItem>
+                            <SelectItem value="EXAM">Exam</SelectItem>
+                            <SelectItem value="GRADE">Grade</SelectItem>
+                            <SelectItem value="REMINDER">Reminder</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium">Priority</label>
+                        <Select 
+                          value={newNotification.priority} 
+                          onValueChange={(value) => setNewNotification({...newNotification, priority: value as 'LOW' | 'NORMAL' | 'HIGH'})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="LOW">Low</SelectItem>
+                            <SelectItem value="NORMAL">Normal</SelectItem>
+                            <SelectItem value="HIGH">High</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2 pt-4">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setIsCreateModalOpen(false)}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleCreateNotification}
+                        disabled={creating}
+                        className="flex-1 gap-2"
+                      >
+                        {creating ? (
+                          <>
+                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                            Creating...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-3 w-3" />
+                            Send
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+            
             <Button
               onClick={handleMarkAllAsRead}
               variant="outline"

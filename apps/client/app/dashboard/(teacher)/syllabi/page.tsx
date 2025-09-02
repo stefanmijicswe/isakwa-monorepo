@@ -1,158 +1,209 @@
 "use client"
 
 import * as React from "react"
-import { Edit3, BookOpen, Calendar, Users, FileText, Save, X } from "lucide-react"
+import { Edit3, Plus, FileText, Save, X, Loader2 } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { syllabiService, Subject, Syllabus, CreateSyllabusDto, UpdateSyllabusDto } from "@/lib/syllabi.service"
+
+interface CourseWithSyllabus extends Subject {
+  syllabus?: Syllabus
+  syllabusExists: boolean
+}
 
 export default function SyllabiPage() {
   const [showEditor, setShowEditor] = React.useState(false)
-  const [selectedCourse, setSelectedCourse] = React.useState<any>(null)
+  const [selectedCourse, setSelectedCourse] = React.useState<CourseWithSyllabus | null>(null)
   const [syllabusContent, setSyllabusContent] = React.useState("")
+  const [courses, setCourses] = React.useState<CourseWithSyllabus[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [saving, setSaving] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
-  const teachingCourses = [
-    {
-      id: 1,
-      name: "Introduction to Information Technologies",
-      acronym: "IT101",
-      ects: 6,
-      semester: "Winter",
-      studentsEnrolled: 45,
-      status: "Active"
-    },
-    {
-      id: 2,
-      name: "Programming Fundamentals",
-      acronym: "PF102",
-      ects: 6,
-      semester: "Winter",
-      studentsEnrolled: 38,
-      status: "Active"
-    },
-    {
-      id: 3,
-      name: "Web Technologies",
-      acronym: "WT202",
-      ects: 6,
-      semester: "Summer",
-      studentsEnrolled: 32,
-      status: "Active"
-    },
-    {
-      id: 4,
-      name: "Database Systems",
-      acronym: "DB203",
-      ects: 6,
-      semester: "Summer",
-      studentsEnrolled: 28,
-      status: "Active"
-    },
-    {
-      id: 5,
-      name: "Software Engineering Basics",
-      acronym: "SE205",
-      ects: 6,
-      semester: "Winter",
-      studentsEnrolled: 25,
-      status: "Active"
-    },
-    {
-      id: 6,
-      name: "Object-Oriented Programming",
-      acronym: "OOP301",
-      ects: 6,
-      semester: "Winter",
-      studentsEnrolled: 42,
-      status: "Active"
-    },
-    {
-      id: 7,
-      name: "Computer Networks",
-      acronym: "CN204",
-      ects: 6,
-      semester: "Summer",
-      studentsEnrolled: 35,
-      status: "Active"
-    },
-    {
-      id: 8,
-      name: "Information Security",
-      acronym: "IS303",
-      ects: 6,
-      semester: "Summer",
-      studentsEnrolled: 30,
-      status: "Active"
+  // Load professor's subjects and syllabi
+  React.useEffect(() => {
+    loadData()
+  }, [])
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      // Get current academic year
+      const currentYear = syllabiService.getCurrentAcademicYear()
+      
+      // Fetch professor's subjects
+      const subjects = await syllabiService.getProfessorSubjects(currentYear)
+      
+      // Fetch existing syllabi for these subjects
+      const syllabi = await syllabiService.getSyllabi({ academicYear: currentYear })
+      
+      // Combine subjects with their syllabi
+      const coursesWithSyllabi: CourseWithSyllabus[] = subjects.map(subject => {
+        const syllabus = syllabi.find(s => s.subjectId === subject.id)
+        return {
+          ...subject,
+          syllabus,
+          syllabusExists: !!syllabus
+        }
+      })
+      
+      setCourses(coursesWithSyllabi)
+    } catch (err) {
+      console.error('Failed to load data:', err)
+      setError('Failed to load courses and syllabi')
+    } finally {
+      setLoading(false)
     }
-  ]
-
-  const getSemesterColor = (semester: string) => {
-    return semester === "Winter" 
-      ? "bg-blue-100 text-blue-800" 
-      : "bg-orange-100 text-orange-800"
   }
 
-  const getStatusColor = (status: string) => {
-    return status === "Active" 
-      ? "bg-green-100 text-green-800" 
-      : "bg-slate-100 text-slate-800"
-  }
-
-  const handleEditSyllabus = (course: any) => {
+  const handleEditSyllabus = async (course: CourseWithSyllabus) => {
     setSelectedCourse(course)
-    setSyllabusContent(`# ${course.name} Syllabus
+    
+    if (course.syllabusExists && course.syllabus) {
+      // Load existing syllabus content
+      try {
+        const syllabus = await syllabiService.getSyllabusById(course.syllabus.id)
+        setSyllabusContent(`# ${course.name} Syllabus
 
-## Course Overview
-This course provides students with fundamental knowledge and skills in ${course.name.toLowerCase()}.
+## Course Information
+- **Course Code:** ${course.code}
+- **Semester:** ${syllabiService.getSemesterDisplayName(course.semesterType)} ${course.academicYear}
+- **Credits:** ${course.ects} ECTS
 
-## Learning Objectives
-- Understand the basic concepts and principles
-- Develop practical skills through hands-on exercises
-- Apply knowledge to real-world scenarios
+## Course Description
+${syllabus.description || 'No description provided'}
 
-## Course Content
-### Week 1-2: Introduction
-- Basic concepts and terminology
-- Historical development
-- Current trends and applications
+## Learning Outcomes
+${syllabus.objectives || 'No learning outcomes specified'}
 
-### Week 3-4: Core Principles
-- Fundamental theories
-- Key methodologies
-- Best practices
+## Additional Information
+Created: ${new Date(syllabus.createdAt).toLocaleDateString()}
+Last Updated: ${new Date(syllabus.updatedAt).toLocaleDateString()}`)
+      } catch (err) {
+        console.error('Failed to load syllabus:', err)
+        setSyllabusContent(`# ${course.name} Syllabus
 
-### Week 5-6: Practical Applications
-- Hands-on exercises
-- Case studies
-- Project work
+## Course Information
+- **Course Code:** ${course.code}
+- **Semester:** ${syllabiService.getSemesterDisplayName(course.semesterType)} ${course.academicYear}
+- **Credits:** ${course.ects} ECTS
+
+## Course Description
+Error loading syllabus content. Please try again.`)
+      }
+    } else {
+      // Template for new syllabus
+      setSyllabusContent(`# ${course.name} Syllabus
+
+## Course Information
+- **Course Code:** ${course.code}
+- **Semester:** ${syllabiService.getSemesterDisplayName(course.semesterType)} ${course.academicYear}
+- **Credits:** ${course.ects} ECTS
+
+## Course Description
+[Add course description here]
+
+## Learning Outcomes
+Upon completion of this course, students will be able to:
+- [Add learning outcome 1]
+- [Add learning outcome 2]
+- [Add learning outcome 3]
 
 ## Assessment Methods
-- Midterm exam: 30%
-- Final exam: 40%
-- Assignments: 20%
-- Participation: 10%
+- [Add assessment methods and weightings]
+
+## Course Schedule
+- [Add weekly schedule and topics]
 
 ## Required Materials
-- Textbook: [To be specified]
-- Software: [To be specified]
-- Additional resources: [To be specified]
-
-## Office Hours
-- Monday: 2:00 PM - 4:00 PM
-- Wednesday: 10:00 AM - 12:00 PM
-- Friday: 1:00 PM - 3:00 PM
-
-## Contact Information
-- Professor: John Doe
-- Email: john.doe@university.edu
-- Office: Room 301, Building A`)
+- [Add textbooks and resources]`)
+    }
     setShowEditor(true)
   }
 
-  const handleSaveSyllabus = () => {
-    // TODO: Implement backend save functionality
-    console.log("Saving syllabus for:", selectedCourse.name)
-    console.log("Content:", syllabusContent)
-    setShowEditor(false)
-    setSelectedCourse(null)
-    setSyllabusContent("")
+  const handleSaveSyllabus = async () => {
+    if (!selectedCourse) return
+    
+    try {
+      setSaving(true)
+      setError(null)
+      
+      // Parse the content to extract description and objectives
+      const sections = parseSyllabusContent(syllabusContent)
+      console.log('📝 Parsed sections:', sections)
+      console.log('📄 Original content:', syllabusContent)
+      
+      if (selectedCourse.syllabusExists && selectedCourse.syllabus) {
+        // Update existing syllabus
+        const updateData: UpdateSyllabusDto = {
+          description: sections.description,
+          objectives: sections.objectives,
+          isActive: true
+        }
+        
+        await syllabiService.updateSyllabus(selectedCourse.syllabus.id, updateData)
+      } else {
+        // Create new syllabus
+        const createData: CreateSyllabusDto = {
+          subjectId: selectedCourse.id,
+          academicYear: selectedCourse.academicYear,
+          semesterType: selectedCourse.semesterType,
+          description: sections.description,
+          objectives: sections.objectives,
+          isActive: true
+        }
+        
+        await syllabiService.createSyllabus(createData)
+      }
+      
+      // Refresh the data to show updated syllabi
+      await loadData()
+      
+      // Close editor
+      setShowEditor(false)
+      setSelectedCourse(null)
+      setSyllabusContent("")
+    } catch (err) {
+      console.error('Failed to save syllabus:', err)
+      setError('Failed to save syllabus. Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Helper function to parse syllabus content
+  const parseSyllabusContent = (content: string) => {
+    const lines = content.split('\n')
+    let description = ''
+    let objectives = ''
+    let currentSection = ''
+    
+    for (const line of lines) {
+      if (line.startsWith('## Course Description')) {
+        currentSection = 'description'
+        continue
+      } else if (line.startsWith('## Learning Outcomes')) {
+        currentSection = 'objectives'
+        continue
+      } else if (line.startsWith('##')) {
+        currentSection = ''
+        continue
+      }
+      
+      // Include all non-empty lines in the current section
+      if (currentSection === 'description' && line.trim()) {
+        description += line.trim() + '\n'
+      } else if (currentSection === 'objectives' && line.trim()) {
+        objectives += line.trim() + '\n'
+      }
+    }
+    
+    return {
+      description: description.trim() || 'Course description not provided',
+      objectives: objectives.trim() || 'Learning outcomes not specified'
+    }
   }
 
   const handleCancelEdit = () => {
@@ -161,133 +212,203 @@ This course provides students with fundamental knowledge and skills in ${course.
     setSyllabusContent("")
   }
 
-  const totalStudents = teachingCourses.reduce((sum, course) => sum + course.studentsEnrolled, 0)
-  const totalEcts = teachingCourses.reduce((sum, course) => sum + course.ects, 0)
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">Course Syllabi</h1>
+          <p className="text-slate-600">Loading your courses...</p>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+          <span className="ml-2 text-slate-600">Loading courses and syllabi...</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">Course Syllabi</h1>
+          <p className="text-slate-600">Manage your course syllabi</p>
+        </div>
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-6">
+            <div className="text-red-800">
+              <p className="font-medium">Error loading data</p>
+              <p className="text-sm mt-1">{error}</p>
+              <Button 
+                onClick={loadData} 
+                variant="outline" 
+                className="mt-3 border-red-300 text-red-700 hover:bg-red-100"
+              >
+                Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Syllabi Management</h1>
-        <p className="text-slate-600">Edit and manage course syllabi</p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-slate-200">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-slate-900">{teachingCourses.length}</div>
-            <div className="text-sm text-slate-600">Active Courses</div>
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-slate-200">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-slate-900">{totalStudents}</div>
-            <div className="text-sm text-slate-600">Total Students</div>
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-slate-200">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-slate-900">{totalEcts}</div>
-            <div className="text-sm text-slate-600">Total ECTS</div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="bg-white rounded-lg border border-slate-200">
-        <div className="p-6 border-b border-slate-200">
-          <h2 className="text-lg font-semibold text-slate-900">Teaching Courses</h2>
-          <p className="text-sm text-slate-600 mt-1">Manage syllabi for your current courses</p>
-        </div>
-        
-        <div className="divide-y divide-slate-200">
-          {teachingCourses.map((course) => (
-            <div key={course.id} className="p-6 hover:bg-slate-50 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="font-mono text-sm font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">
-                      {course.acronym}
-                    </span>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getSemesterColor(course.semester)}`}>
-                      {course.semester} Semester
-                    </span>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(course.status)}`}>
-                      {course.status}
-                    </span>
-                  </div>
-                  <h3 className="font-medium text-slate-900 text-lg mb-1">{course.name}</h3>
-                  <p className="text-sm text-slate-600">{course.ects} ECTS</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-slate-900">{course.studentsEnrolled}</div>
-                    <div className="text-xs text-slate-500">Students</div>
-                  </div>
-                  <button
-                    onClick={() => handleEditSyllabus(course)}
-                    className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors flex items-center gap-2"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                    Edit Syllabus
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <h1 className="text-2xl font-semibold text-slate-900">Course Syllabi</h1>
+        <p className="text-slate-600">Manage your course syllabi</p>
       </div>
 
-      {showEditor && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] mx-4 flex flex-col">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900">Syllabus Editor</h3>
-                <p className="text-sm text-slate-600">{selectedCourse?.name} ({selectedCourse?.acronym})</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleCancelEdit}
-                  className="p-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-            
-            <div className="flex-1 p-6 overflow-hidden">
-              <div className="h-full flex flex-col">
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Syllabus Content (Markdown supported)
-                  </label>
-                </div>
-                <textarea
-                  value={syllabusContent}
-                  onChange={(e) => setSyllabusContent(e.target.value)}
-                  className="flex-1 w-full p-4 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm resize-none"
-                  placeholder="Enter your syllabus content here..."
-                />
-              </div>
-            </div>
-            
-            <div className="p-6 border-t border-slate-200 flex justify-end gap-3">
-              <button
-                onClick={handleCancelEdit}
-                className="px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
+      {/* Error Display */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <p className="text-red-800 text-sm">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Main Content Area */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Left Panel - Courses List */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-medium text-slate-900">Your Courses</h2>
+          <div className="space-y-4">
+            {courses.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <FileText className="h-8 w-8 text-slate-400 mx-auto mb-3" />
+                  <h3 className="font-medium text-slate-900 mb-1">No courses found</h3>
+                  <p className="text-sm text-slate-600">You don't have any assigned courses for this academic year.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              courses.map((course) => (
+              <Card 
+                key={course.id} 
+                className={`hover:shadow-sm transition-shadow cursor-pointer ${
+                  selectedCourse?.id === course.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+                }`}
               >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveSyllabus}
-                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors flex items-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                Save Syllabus
-              </button>
-            </div>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm text-slate-600 bg-slate-100 px-2 py-1 rounded">
+                          {course.code}
+                        </span>
+                        <span className="text-sm text-slate-500">
+                          {syllabiService.getSemesterDisplayName(course.semesterType)} {course.academicYear}
+                        </span>
+                        <span className="text-sm text-slate-500">• {course.ects} ECTS</span>
+                      </div>
+                      <h3 className="font-medium text-slate-900">{course.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-slate-400" />
+                        <span className="text-sm text-slate-500">
+                          {course.syllabusExists ? "Syllabus exists" : "No syllabus"}
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => handleEditSyllabus(course)}
+                      variant={course.syllabusExists ? "outline" : "default"}
+                      size="sm"
+                      className="gap-2"
+                    >
+                      {course.syllabusExists ? (
+                        <>
+                          <Edit3 className="h-4 w-4" />
+                          Edit
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-4 w-4" />
+                          Create
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              ))
+            )}
           </div>
         </div>
-      )}
+
+        {/* Right Panel - Syllabus Editor */}
+        <div className="space-y-4">
+          {showEditor && selectedCourse ? (
+            <Card className="h-[calc(100vh-12rem)]">
+              <CardHeader className="border-b">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg">Syllabus Editor</CardTitle>
+                    <p className="text-sm text-slate-600">
+                      {selectedCourse.name} ({selectedCourse.code})
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCancelEdit}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="p-6 h-full">
+                <div className="h-full flex flex-col">
+                  <label className="text-sm font-medium text-slate-700 mb-2">
+                    Syllabus Content
+                  </label>
+                  <textarea
+                    value={syllabusContent}
+                    onChange={(e) => setSyllabusContent(e.target.value)}
+                    className="flex-1 w-full p-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm resize-none"
+                    placeholder="Enter syllabus content..."
+                  />
+                  <div className="flex justify-end gap-3 mt-4">
+                    <Button variant="outline" onClick={handleCancelEdit}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleSaveSyllabus} 
+                      disabled={saving}
+                      className="gap-2"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" />
+                          Save
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="h-[calc(100vh-12rem)]">
+              <CardContent className="p-8 text-center h-full flex flex-col justify-center">
+                <FileText className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                <h3 className="font-medium text-slate-900 mb-2">Select a Course</h3>
+                <p className="text-sm text-slate-500">
+                  Choose a course from the left to view or edit its syllabus
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

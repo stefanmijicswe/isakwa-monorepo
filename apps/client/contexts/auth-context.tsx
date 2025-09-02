@@ -42,6 +42,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Store token
       authService.setToken(response.access_token);
       
+      // Debug: Check if token is stored
+      console.log('Auth debug - token stored:', {
+        hasToken: !!response.access_token,
+        tokenLength: response.access_token?.length,
+        storedToken: authService.getToken()
+      });
+      
       // Store user data in localStorage for easy access
       if (typeof window !== 'undefined') {
         localStorage.setItem('user_id', response.user.id.toString());
@@ -53,6 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(true);
       
       console.log('Login successful:', response.user);
+      return response.user;
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
@@ -80,6 +88,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(true);
       
       console.log('Registration successful:', response.user);
+      return response.user;
     } catch (error) {
       console.error('Registration failed:', error);
       throw error;

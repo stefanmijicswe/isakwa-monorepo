@@ -90,4 +90,33 @@ export class StudentRequestsController {
   async deleteRequest(@Param('id', ParseIntPipe) id: number, @Request() req) {
     return this.studentRequestsService.deleteRequest(id, req.user.id, req.user.role);
   }
+
+  @Get('assigned/me')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.PROFESSOR, UserRole.STUDENT_SERVICE, UserRole.ADMIN)
+  async getMyAssignedRequests(
+    @Request() req,
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('limit', ParseIntPipe) limit: number = 10,
+  ) {
+    return this.studentRequestsService.getAssignedRequests(req.user.id, page, limit);
+  }
+
+  @Patch(':id/reassign')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.PROFESSOR, UserRole.STUDENT_SERVICE, UserRole.ADMIN)
+  async reassignRequest(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('newAssigneeId', ParseIntPipe) newAssigneeId: number,
+    @Request() req,
+  ) {
+    return this.studentRequestsService.reassignRequest(id, newAssigneeId, req.user.id, req.user.role);
+  }
+
+  @Get(':id/workflow')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.STUDENT, UserRole.PROFESSOR, UserRole.STUDENT_SERVICE, UserRole.ADMIN)
+  async getRequestWorkflow(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.studentRequestsService.getRequestWorkflowStatus(id, req.user.id, req.user.role);
+  }
 }

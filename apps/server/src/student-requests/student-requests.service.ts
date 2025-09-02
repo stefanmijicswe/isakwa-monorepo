@@ -1,14 +1,18 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { RequestRoutingService } from './request-routing.service';
+import { RequestWorkflowService } from './request-workflow.service';
 import { CreateStudentRequestDto, UpdateRequestStatusDto, CreateCommentDto } from './dto';
-import { RequestStatus, UserRole, NotificationType, NotificationPriority } from '@prisma/client';
+import { RequestStatus, UserRole, NotificationType, NotificationPriority, RequestCategory } from '@prisma/client';
 
 @Injectable()
 export class StudentRequestsService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
+    private requestRoutingService: RequestRoutingService,
+    private requestWorkflowService: RequestWorkflowService,
   ) {}
 
   async createRequest(createRequestDto: CreateStudentRequestDto, studentId: number) {
@@ -22,6 +26,10 @@ export class StudentRequestsService {
       throw new ForbiddenException('Only students can create requests');
     }
 
+    // Auto-determine category if not provided
+    const category = createRequestDto.category || this.determineCategoryFromTitle(createRequestDto.title);
+    const priority = createRequestDto.priority || (createRequestDto.type === 'COMPLAINT' ? NotificationPriority.HIGH : NotificationPriority.NORMAL);
+
     // Create the request
     const request = await this.prisma.studentRequest.create({
       data: {
@@ -29,6 +37,8 @@ export class StudentRequestsService {
         type: createRequestDto.type,
         title: createRequestDto.title,
         description: createRequestDto.description,
+        category,
+        priority,
       },
       include: {
         student: {
@@ -47,16 +57,8 @@ export class StudentRequestsService {
       },
     });
 
-    // Send notification to student service
-    await this.notificationsService.createNotification(
-      {
-        title: `New ${createRequestDto.type.toLowerCase()}: ${createRequestDto.title}`,
-        message: `Student ${user.firstName} ${user.lastName} (${user.studentProfile.studentIndex}) has submitted a new ${createRequestDto.type.toLowerCase()}.`,
-        type: NotificationType.ADMINISTRATIVE,
-        priority: NotificationPriority.NORMAL,
-      },
-      studentId,
-    );
+    // Automatically assign request to appropriate staff
+    await this.requestRoutingService.autoAssignRequest(request.id);
 
     return request;
   }
@@ -188,6 +190,9 @@ export class StudentRequestsService {
       throw new NotFoundException('Request not found');
     }
 
+    // Process workflow before updating status
+    await this.requestWorkflowService.processStatusChange(requestId, updateStatusDto.status, userId);
+
     const updatedRequest = await this.prisma.studentRequest.update({
       where: { id: requestId },
       data: { status: updateStatusDto.status },
@@ -207,26 +212,6 @@ export class StudentRequestsService {
         },
       },
     });
-
-    // Send notification to student about status change
-    const statusMessages = {
-      [RequestStatus.PENDING]: 'is now pending review',
-      [RequestStatus.IN_REVIEW]: 'is being reviewed',
-      [RequestStatus.APPROVED]: 'has been approved',
-      [RequestStatus.REJECTED]: 'has been rejected',
-    };
-
-    await this.notificationsService.createNotification(
-      {
-        title: `Request Status Updated: ${request.title}`,
-        message: `Your ${request.type.toLowerCase()} "${request.title}" ${statusMessages[updateStatusDto.status]}.`,
-        type: NotificationType.ADMINISTRATIVE,
-        priority: updateStatusDto.status === RequestStatus.APPROVED || updateStatusDto.status === RequestStatus.REJECTED 
-          ? NotificationPriority.HIGH 
-          : NotificationPriority.NORMAL,
-      },
-      userId,
-    );
 
     return updatedRequest;
   }
@@ -372,5 +357,142 @@ export class StudentRequestsService {
     return this.prisma.studentRequest.delete({
       where: { id: requestId },
     });
+  }
+
+  /**
+   * Auto-determines request category based on title keywords
+   */
+  private determineCategoryFromTitle(title: string): RequestCategory {
+    const titleLower = title.toLowerCase();
+
+    // Academic keywords
+    if (titleLower.includes('grade') || titleLower.includes('exam') || titleLower.includes('course') || 
+        titleLower.includes('professor') || titleLower.includes('syllabus') || titleLower.includes('assignment')) {
+      return RequestCategory.ACADEMIC;
+    }
+
+    // Financial keywords
+    if (titleLower.includes('payment') || titleLower.includes('fee') || titleLower.includes('tuition') || 
+        titleLower.includes('scholarship') || titleLower.includes('financial')) {
+      return RequestCategory.FINANCIAL;
+    }
+
+    // Disciplinary keywords
+    if (titleLower.includes('disciplinary') || titleLower.includes('misconduct') || 
+        titleLower.includes('violation') || titleLower.includes('appeal')) {
+      return RequestCategory.DISCIPLINARY;
+    }
+
+    // Technical keywords
+    if (titleLower.includes('system') || titleLower.includes('website') || titleLower.includes('login') || 
+        titleLower.includes('password') || titleLower.includes('technical') || titleLower.includes('bug')) {
+      return RequestCategory.TECHNICAL;
+    }
+
+    // Default to administrative
+    return RequestCategory.ADMINISTRATIVE;
+  }
+
+  /**
+   * Get requests assigned to specific user
+   */
+  async getAssignedRequests(userId: number, page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+
+    const [requests, total] = await Promise.all([
+      this.prisma.studentRequest.findMany({
+        where: { assignedTo: userId },
+        include: {
+          student: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              studentProfile: {
+                select: {
+                  studentIndex: true,
+                },
+              },
+            },
+          },
+          _count: {
+            select: {
+              comments: true,
+              attachments: true,
+            },
+          },
+        },
+        orderBy: [
+          { priority: 'desc' },
+          { createdAt: 'desc' },
+        ],
+        skip,
+        take: limit,
+      }),
+      this.prisma.studentRequest.count({ where: { assignedTo: userId } }),
+    ]);
+
+    return {
+      requests,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  /**
+   * Reassign request to different staff member
+   */
+  async reassignRequest(requestId: number, newAssigneeId: number, currentUserId: number, userRole: UserRole) {
+    // Only admin or current assignee can reassign
+    if (userRole !== UserRole.ADMIN) {
+      const request = await this.prisma.studentRequest.findUnique({
+        where: { id: requestId },
+        select: { assignedTo: true },
+      });
+
+      if (!request) {
+        throw new NotFoundException('Request not found');
+      }
+
+      if (request.assignedTo !== currentUserId) {
+        throw new ForbiddenException('You can only reassign requests assigned to you');
+      }
+    }
+
+    await this.requestRoutingService.reassignRequest(requestId, newAssigneeId);
+    
+    return { message: 'Request reassigned successfully' };
+  }
+
+  /**
+   * Get detailed workflow status for a request
+   */
+  async getRequestWorkflowStatus(requestId: number, userId: number, userRole: UserRole) {
+    // Check permissions first
+    const request = await this.prisma.studentRequest.findUnique({
+      where: { id: requestId },
+      select: { studentId: true, assignedTo: true },
+    });
+
+    if (!request) {
+      throw new NotFoundException('Request not found');
+    }
+
+    // Students can only view their own requests, staff can view assigned requests
+    if (userRole === UserRole.STUDENT && request.studentId !== userId) {
+      throw new ForbiddenException('You can only view your own requests');
+    }
+
+    if (userRole !== UserRole.ADMIN && userRole !== UserRole.STUDENT && 
+        request.assignedTo !== userId && request.studentId !== userId) {
+      throw new ForbiddenException('You can only view requests assigned to you');
+    }
+
+    return this.requestWorkflowService.getRequestWorkflowStatus(requestId);
   }
 }

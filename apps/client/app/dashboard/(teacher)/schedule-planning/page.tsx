@@ -1,126 +1,113 @@
 "use client"
 
 import * as React from "react"
-import { Calendar, BookOpen, Plus, X, Edit3, Clock, MapPin } from "lucide-react"
+import { Calendar, BookOpen, X, Edit3, Eye, Loader2 } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { scheduleService, Schedule, Course, ScheduleItem } from "@/lib/schedule.service"
 
 export default function SchedulePlanningPage() {
   const [showEditor, setShowEditor] = React.useState(false)
-  const [selectedCourse, setSelectedCourse] = React.useState<any>(null)
-  const [scheduleData, setScheduleData] = React.useState<any>({
+  const [showSavedView, setShowSavedView] = React.useState(false)
+  const [selectedCourse, setSelectedCourse] = React.useState<Course | null>(null)
+  const [editingScheduleId, setEditingScheduleId] = React.useState<number | null>(null)
+  const [scheduleData, setScheduleData] = React.useState<{
+    lectures: ScheduleItem[]
+    practice: ScheduleItem[]
+  }>({
     lectures: [],
     practice: []
   })
 
-  const teachingCourses = [
-    {
-      id: 1,
-      name: "Introduction to Information Technologies",
-      acronym: "IT101",
-      ects: 6,
-      semester: "Winter",
-      studentsEnrolled: 45,
-      status: "Active"
-    },
-    {
-      id: 2,
-      name: "Programming Fundamentals",
-      acronym: "PF102",
-      ects: 6,
-      semester: "Winter",
-      studentsEnrolled: 38,
-      status: "Active"
-    },
-    {
-      id: 3,
-      name: "Web Technologies",
-      acronym: "WT202",
-      ects: 6,
-      semester: "Summer",
-      studentsEnrolled: 32,
-      status: "Active"
-    },
-    {
-      id: 4,
-      name: "Database Systems",
-      acronym: "DB203",
-      ects: 6,
-      semester: "Summer",
-      studentsEnrolled: 28,
-      status: "Active"
-    },
-    {
-      id: 5,
-      name: "Software Engineering Basics",
-      acronym: "SE205",
-      ects: 6,
-      semester: "Winter",
-      studentsEnrolled: 25,
-      status: "Active"
-    },
-    {
-      id: 6,
-      name: "Object-Oriented Programming",
-      acronym: "OOP301",
-      ects: 6,
-      semester: "Winter",
-      studentsEnrolled: 42,
-      status: "Active"
-    },
-    {
-      id: 7,
-      name: "Computer Networks",
-      acronym: "CN204",
-      ects: 6,
-      semester: "Summer",
-      studentsEnrolled: 35,
-      status: "Active"
-    },
-    {
-      id: 8,
-      name: "Information Security",
-      acronym: "IS303",
-      ects: 6,
-      semester: "Summer",
-      studentsEnrolled: 30,
-      status: "Active"
+  // Data states
+  const [courses, setCourses] = React.useState<Course[]>([])
+  const [savedSchedules, setSavedSchedules] = React.useState<Schedule[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [saving, setSaving] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+
+  // Load data on component mount
+  React.useEffect(() => {
+    loadData()
+  }, [])
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const [coursesData, schedulesData] = await Promise.all([
+        scheduleService.getProfessorCourses(),
+        scheduleService.getSchedules()
+      ])
+      
+      setCourses(coursesData)
+      setSavedSchedules(schedulesData)
+    } catch (err) {
+      console.error('Failed to load data:', err)
+      setError('Failed to load courses and schedules')
+    } finally {
+      setLoading(false)
     }
-  ]
-
-  const getSemesterColor = (semester: string) => {
-    return semester === "Winter" 
-      ? "bg-blue-100 text-blue-800" 
-      : "bg-orange-100 text-orange-800"
   }
 
-  const getStatusColor = (status: string) => {
-    return status === "Active" 
-      ? "bg-green-100 text-green-800" 
-      : "bg-slate-100 text-slate-800"
-  }
-
-  const handleCourseClick = (course: any) => {
+  const handleCourseClick = (course: Course) => {
     setSelectedCourse(course)
-    setScheduleData({
-      lectures: [
-        { id: 1, week: 1, topic: "Course Introduction", description: "Overview of course objectives and syllabus", duration: "90 min", room: "Room 301" },
-        { id: 2, week: 2, topic: "Basic Concepts", description: "Fundamental principles and terminology", duration: "90 min", room: "Room 301" }
-      ],
-      practice: [
-        { id: 1, week: 1, topic: "Setup and Installation", description: "Setting up development environment", duration: "90 min", room: "Lab 205" },
-        { id: 2, week: 2, topic: "First Exercises", description: "Basic hands-on practice", duration: "90 min", room: "Lab 205" }
-      ]
-    })
+    setEditingScheduleId(null)
+    
+    // Check if there's already a saved schedule for this course
+    const existingSchedule = savedSchedules.find(s => s.courseId === course.id)
+    
+    if (existingSchedule) {
+      // Load existing schedule for editing
+      setEditingScheduleId(existingSchedule.id)
+      setScheduleData({
+        lectures: existingSchedule.lectures,
+        practice: existingSchedule.practice
+      })
+    } else {
+      // Create new schedule
+      setScheduleData({
+        lectures: [],
+        practice: []
+      })
+    }
+    
     setShowEditor(true)
+    setShowSavedView(false)
+  }
+
+  const handleViewSaved = () => {
+    setShowSavedView(true)
+    setShowEditor(false)
+    setSelectedCourse(null)
+  }
+
+  const handleEditSchedule = (schedule: Schedule) => {
+    const course = courses.find(c => c.id === schedule.courseId)
+    if (course) {
+      setSelectedCourse(course)
+      setEditingScheduleId(schedule.id)
+      setScheduleData({
+        lectures: schedule.lectures,
+        practice: schedule.practice
+      })
+      setShowEditor(true)
+      setShowSavedView(false)
+    }
   }
 
   const addLecture = () => {
-    const newLecture = {
+    const newLecture: ScheduleItem = {
       id: Date.now(),
       week: scheduleData.lectures.length + 1,
       topic: "",
       description: "",
       duration: "90 min",
-      room: "Room 301"
+      room: "Room 301",
+      type: "lecture"
     }
     setScheduleData({
       ...scheduleData,
@@ -129,13 +116,14 @@ export default function SchedulePlanningPage() {
   }
 
   const addPractice = () => {
-    const newPractice = {
+    const newPractice: ScheduleItem = {
       id: Date.now(),
       week: scheduleData.practice.length + 1,
       topic: "",
       description: "",
       duration: "90 min",
-      room: "Lab 205"
+      room: "Lab 205",
+      type: "practice"
     }
     setScheduleData({
       ...scheduleData,
@@ -143,19 +131,19 @@ export default function SchedulePlanningPage() {
     })
   }
 
-  const updateLecture = (id: number, field: string, value: string) => {
+  const updateLecture = (id: number, field: keyof ScheduleItem, value: string) => {
     setScheduleData({
       ...scheduleData,
-      lectures: scheduleData.lectures.map((lecture: any) =>
+      lectures: scheduleData.lectures.map((lecture) =>
         lecture.id === id ? { ...lecture, [field]: value } : lecture
       )
     })
   }
 
-  const updatePractice = (id: number, field: string, value: string) => {
+  const updatePractice = (id: number, field: keyof ScheduleItem, value: string) => {
     setScheduleData({
       ...scheduleData,
-      practice: scheduleData.practice.map((practice: any) =>
+      practice: scheduleData.practice.map((practice) =>
         practice.id === id ? { ...practice, [field]: value } : practice
       )
     })
@@ -164,273 +152,375 @@ export default function SchedulePlanningPage() {
   const removeLecture = (id: number) => {
     setScheduleData({
       ...scheduleData,
-      lectures: scheduleData.lectures.filter((lecture: any) => lecture.id !== id)
+      lectures: scheduleData.lectures.filter((lecture) => lecture.id !== id)
     })
   }
 
   const removePractice = (id: number) => {
     setScheduleData({
       ...scheduleData,
-      practice: scheduleData.practice.filter((practice: any) => practice.id !== id)
+      practice: scheduleData.practice.filter((practice) => practice.id !== id)
     })
   }
 
-  const handleSave = () => {
-    // TODO: Implement backend save functionality
-    console.log("Saving schedule for:", selectedCourse.name)
-    console.log("Schedule data:", scheduleData)
-    setShowEditor(false)
-    setSelectedCourse(null)
-    setScheduleData({ lectures: [], practice: [] })
+  const handleSave = async () => {
+    if (!selectedCourse) return
+    
+    try {
+      setSaving(true)
+      setError(null)
+      
+      const lectureData = scheduleData.lectures.map(({ id: _id, type: _type, ...rest }) => rest)
+      const practiceData = scheduleData.practice.map(({ id: _id2, type: _type2, ...rest }) => rest)
+      
+      if (editingScheduleId) {
+        // Update existing schedule
+        await scheduleService.updateSchedule({
+          id: editingScheduleId,
+          courseId: selectedCourse.id,
+          lectures: lectureData,
+          practice: practiceData
+        })
+      } else {
+        // Create new schedule
+        await scheduleService.createSchedule({
+          courseId: selectedCourse.id,
+          lectures: lectureData,
+          practice: practiceData
+        })
+      }
+      
+      // Refresh data and close editor
+      await loadData()
+      handleCancel()
+    } catch (err) {
+      console.error('Failed to save schedule:', err)
+      setError('Failed to save schedule. Please try again.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleCancel = () => {
     setShowEditor(false)
+    setShowSavedView(false)
     setSelectedCourse(null)
+    setEditingScheduleId(null)
     setScheduleData({ lectures: [], practice: [] })
   }
 
-  const totalStudents = teachingCourses.reduce((sum, course) => sum + course.studentsEnrolled, 0)
-  const totalEcts = teachingCourses.reduce((sum, course) => sum + course.ects, 0)
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">Schedule Planning</h1>
+          <p className="text-slate-600">Loading your courses...</p>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+          <span className="ml-2 text-slate-600">Loading courses and schedules...</span>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">Schedule Planning</h1>
+          <p className="text-slate-600">Plan course schedules and topics for each session</p>
+        </div>
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-6">
+            <div className="text-red-800">
+              <p className="font-medium">Error loading data</p>
+              <p className="text-sm mt-1">{error}</p>
+              <Button 
+                onClick={loadData} 
+                variant="outline" 
+                className="mt-3 border-red-300 text-red-700 hover:bg-red-100"
+              >
+                Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">Schedule Planning</h1>
-        <p className="text-slate-600">Plan schedule outcomes and topics for each session</p>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">Schedule Planning</h1>
+          <p className="text-slate-600">Plan course schedules and topics for each session</p>
+        </div>
+        <Button
+          onClick={handleViewSaved}
+          variant="outline"
+          className="gap-2"
+        >
+          <Eye className="h-4 w-4" />
+          View Saved ({savedSchedules.length})
+        </Button>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-slate-200">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-slate-900">{teachingCourses.length}</div>
-            <div className="text-sm text-slate-600">Active Courses</div>
+
+      {/* Course Selection - Always visible when no editor/saved view */}
+      {!showEditor && !showSavedView && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-medium text-slate-900">Select a Course to Plan</h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {courses.map((course) => {
+              const hasSchedule = savedSchedules.some(s => s.courseId === course.id)
+              return (
+                <Card 
+                  key={course.id} 
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => handleCourseClick(course)}
+                >
+                  <CardContent className="p-6">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-sm text-slate-600 bg-slate-100 px-2 py-1 rounded">
+                          {course.acronym}
+                        </span>
+                        {hasSchedule && (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                            ✓ Saved
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="font-medium text-slate-900">{course.name}</h3>
+                      <p className="text-sm text-slate-500">
+                        {course.studentsEnrolled} students • {course.ects} ECTS
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-slate-200">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-slate-900">{totalStudents}</div>
-            <div className="text-sm text-slate-600">Total Students</div>
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-slate-200">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-slate-900">{totalEcts}</div>
-            <div className="text-sm text-slate-600">Total ECTS</div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="bg-white rounded-lg border border-slate-200">
-        <div className="p-6 border-b border-slate-200">
-          <h2 className="text-lg font-semibold text-slate-900">Teaching Courses</h2>
-          <p className="text-sm text-slate-600 mt-1">Click on a course to plan its schedule</p>
-        </div>
-        
-        <div className="divide-y divide-slate-200">
-          {teachingCourses.map((course) => (
-            <div key={course.id} className="p-6 hover:bg-slate-50 transition-colors">
+      )}
+
+      {/* Saved Schedules View */}
+      {showSavedView && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="font-mono text-sm font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">
-                      {course.acronym}
-                    </span>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getSemesterColor(course.semester)}`}>
-                      {course.semester} Semester
-                    </span>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(course.status)}`}>
-                      {course.status}
-                    </span>
-                  </div>
-                  <h3 className="font-medium text-slate-900 text-lg mb-1">{course.name}</h3>
-                  <p className="text-sm text-slate-600">{course.ects} ECTS</p>
+                <div>
+                  <CardTitle className="text-xl">Saved Schedules</CardTitle>
+                  <p className="text-slate-600 mt-1">
+                    View and edit your saved course schedules
+                  </p>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-slate-900">{course.studentsEnrolled}</div>
-                    <div className="text-xs text-slate-500">Students</div>
-                  </div>
-                  <button
-                    onClick={() => handleCourseClick(course)}
-                    className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors flex items-center gap-2"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                    Plan Schedule
-                  </button>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCancel}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
+            </CardHeader>
+          </Card>
 
-      {showEditor && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] mx-4 flex flex-col">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900">Schedule Planning</h3>
-                <p className="text-sm text-slate-600">{selectedCourse?.name} ({selectedCourse?.acronym})</p>
-              </div>
-              <button
-                onClick={handleCancel}
-                className="p-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            
-            <div className="flex-1 p-6 overflow-y-auto">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Lectures Section */}
-                <div className="bg-slate-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold text-slate-900 flex items-center gap-2">
-                      <BookOpen className="h-4 w-4" />
-                      Lectures ({scheduleData.lectures.length})
-                    </h4>
-                    <button
-                      onClick={addLecture}
-                      className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {scheduleData.lectures.map((lecture: any) => (
-                      <div key={lecture.id} className="bg-white p-4 rounded border">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-medium text-slate-600">Week {lecture.week}</span>
-                          <button
-                            onClick={() => removeLecture(lecture.id)}
-                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
+          <div className="space-y-4">
+            {savedSchedules.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Calendar className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                  <h3 className="font-medium text-slate-900 mb-2">No Saved Schedules</h3>
+                  <p className="text-sm text-slate-500">
+                    You haven&apos;t created any schedules yet. Click on a course to start planning.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              savedSchedules.map((schedule) => (
+                <Card key={schedule.id} className="hover:shadow-sm transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-sm text-slate-600 bg-slate-100 px-2 py-1 rounded">
+                            {schedule.courseCode}
+                          </span>
+                          <span className="text-sm text-slate-500">
+                            {schedule.academicYear}
+                          </span>
                         </div>
-                        
-                        <div className="space-y-2">
-                          <input
-                            type="text"
-                            placeholder="Lecture topic"
-                            value={lecture.topic}
-                            onChange={(e) => updateLecture(lecture.id, 'topic', e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                          <textarea
-                            placeholder="Description"
-                            value={lecture.description}
-                            onChange={(e) => updateLecture(lecture.id, 'description', e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            rows={2}
-                          />
-                          <div className="grid grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              placeholder="Duration"
-                              value={lecture.duration}
-                              onChange={(e) => updateLecture(lecture.id, 'duration', e.target.value)}
-                              className="w-full p-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <input
-                              type="text"
-                              placeholder="Room"
-                              value={lecture.room}
-                              onChange={(e) => updateLecture(lecture.id, 'room', e.target.value)}
-                              className="w-full p-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          </div>
+                        <h3 className="font-medium text-slate-900">{schedule.courseName}</h3>
+                        <div className="flex items-center gap-4 text-sm text-slate-500">
+                          <span className="flex items-center gap-1">
+                            <BookOpen className="h-4 w-4" />
+                            {schedule.lectures.length} lectures
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {schedule.practice.length} practice sessions
+                          </span>
                         </div>
+                        <p className="text-xs text-slate-400">
+                          Updated: {new Date(schedule.updatedAt).toLocaleDateString()}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Practice Section */}
-                <div className="bg-slate-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold text-slate-900 flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Practice Sessions ({scheduleData.practice.length})
-                    </h4>
-                    <button
-                      onClick={addPractice}
-                      className="p-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {scheduleData.practice.map((practice: any) => (
-                      <div key={practice.id} className="bg-white p-4 rounded border">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-medium text-slate-600">Week {practice.week}</span>
-                          <button
-                            onClick={() => removePractice(practice.id)}
-                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <input
-                            type="text"
-                            placeholder="Practice topic"
-                            value={practice.topic}
-                            onChange={(e) => updatePractice(practice.id, 'topic', e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                          <textarea
-                            placeholder="Description"
-                            value={practice.description}
-                            onChange={(e) => updatePractice(practice.id, 'description', e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            rows={2}
-                          />
-                          <div className="grid grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              placeholder="Duration"
-                              value={practice.duration}
-                              onChange={(e) => updatePractice(practice.id, 'duration', e.target.value)}
-                              className="w-full p-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <input
-                              type="text"
-                              placeholder="Room"
-                              value={practice.room}
-                              onChange={(e) => updatePractice(practice.id, 'room', e.target.value)}
-                              className="w-full p-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-6 border-t border-slate-200 flex justify-end gap-3">
-              <button
-                onClick={handleCancel}
-                className="px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors"
-              >
-                Save Schedule
-              </button>
-            </div>
+                      <Button
+                        onClick={() => handleEditSchedule(schedule)}
+                        variant="outline"
+                        className="gap-2"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                        Edit
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </div>
+      )}
+
+      {/* Schedule Editor - Only when course selected */}
+      {showEditor && selectedCourse && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl">
+                  {selectedCourse?.name} ({selectedCourse?.acronym})
+                </CardTitle>
+                <p className="text-slate-600 text-sm mt-1">
+                  Plan your course schedule
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleCancel}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
+            {/* Combined Sessions List */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Course Sessions</h3>
+                <div className="flex gap-2">
+                  <Button onClick={addLecture} size="sm" className="gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    Add Lecture
+                  </Button>
+                  <Button onClick={addPractice} size="sm" variant="outline" className="gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Add Practice
+                  </Button>
+                </div>
+              </div>
+
+              {/* All Sessions in One List */}
+              <div className="space-y-3">
+                {[...scheduleData.lectures, ...scheduleData.practice]
+                  .sort((a, b) => a.week - b.week)
+                  .map((session) => (
+                  <div key={session.id} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                          session.type === 'lecture' 
+                            ? 'bg-blue-100 text-blue-700' 
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {session.type === 'lecture' ? 'Lecture' : 'Practice'} - Week {session.week}
+                        </span>
+                      </div>
+                      <Button
+                        onClick={() => session.type === 'lecture' ? removeLecture(session.id) : removePractice(session.id)}
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <div className="grid gap-3">
+                      <Input
+                        placeholder={`${session.type === 'lecture' ? 'Lecture' : 'Practice'} topic`}
+                        value={session.topic}
+                        onChange={(e) => session.type === 'lecture' 
+                          ? updateLecture(session.id, 'topic', e.target.value)
+                          : updatePractice(session.id, 'topic', e.target.value)
+                        }
+                      />
+                      <Textarea
+                        placeholder="Description..."
+                        value={session.description}
+                        onChange={(e) => session.type === 'lecture'
+                          ? updateLecture(session.id, 'description', e.target.value)
+                          : updatePractice(session.id, 'description', e.target.value)
+                        }
+                        rows={2}
+                        className="resize-none"
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <Input
+                          placeholder="Duration (e.g., 90 min)"
+                          value={session.duration}
+                          onChange={(e) => session.type === 'lecture'
+                            ? updateLecture(session.id, 'duration', e.target.value)
+                            : updatePractice(session.id, 'duration', e.target.value)
+                          }
+                        />
+                        <Input
+                          placeholder={session.type === 'lecture' ? 'Room (e.g., Room 301)' : 'Lab (e.g., Lab 205)'}
+                          value={session.room}
+                          onChange={(e) => session.type === 'lecture'
+                            ? updateLecture(session.id, 'room', e.target.value)
+                            : updatePractice(session.id, 'room', e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {scheduleData.lectures.length === 0 && scheduleData.practice.length === 0 && (
+                  <div className="text-center py-8 text-slate-500">
+                    <Calendar className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                    <h3 className="font-medium mb-2">No sessions added yet</h3>
+                    <p className="text-sm">Add lectures and practice sessions to plan your course</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Save Actions */}
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button variant="outline" onClick={handleCancel} disabled={saving}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={saving} className="gap-2">
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {editingScheduleId ? 'Updating...' : 'Saving...'}
+                  </>
+                ) : (
+                  <>
+                    {editingScheduleId ? 'Update Schedule' : 'Save Schedule'}
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   )

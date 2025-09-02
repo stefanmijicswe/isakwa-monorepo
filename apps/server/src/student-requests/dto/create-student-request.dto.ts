@@ -1,5 +1,5 @@
-import { IsString, IsNotEmpty, IsEnum } from 'class-validator';
-import { RequestType } from '@prisma/client';
+import { IsString, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
+import { RequestType, RequestCategory, NotificationPriority } from '@prisma/client';
 
 export class CreateStudentRequestDto {
   @IsEnum(RequestType)
@@ -13,4 +13,12 @@ export class CreateStudentRequestDto {
   @IsString()
   @IsNotEmpty()
   description: string;
+
+  @IsEnum(RequestCategory)
+  @IsOptional()
+  category?: RequestCategory;
+
+  @IsEnum(NotificationPriority)
+  @IsOptional()
+  priority?: NotificationPriority;
 }

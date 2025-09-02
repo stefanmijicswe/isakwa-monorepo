@@ -1,13 +1,47 @@
 "use client"
 
 import * as React from "react"
-import { User, BookOpen, Award, Calendar, Users, X, GraduationCap } from "lucide-react"
+import { BookOpen, GraduationCap, Calendar, Users, Star, Pin, PinOff, Eye } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
+interface Student {
+  id: string
+  name: string
+  email: string
+  year: number
+  status: string
+  averageGrade: number
+}
+
+interface Course {
+  id: number
+  name: string
+  acronym: string
+  ects: number
+  semester: string
+  studentsEnrolled: number
+  status: string
+  students: Student[]
+}
 
 export default function TeachingCoursesPage() {
   const [showStudentModal, setShowStudentModal] = React.useState(false)
-  const [selectedCourse, setSelectedCourse] = React.useState<any>(null)
+  const [showCourseDetailsModal, setShowCourseDetailsModal] = React.useState(false)
+  const [selectedCourse, setSelectedCourse] = React.useState<Course | null>(null)
+  const [pinnedCourses, setPinnedCourses] = React.useState<Set<number>>(() => {
+    // Load pinned courses from localStorage on component mount
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pinned-courses')
+      return saved ? new Set(JSON.parse(saved)) : new Set()
+    }
+    return new Set()
+  })
 
-  const teachingCourses = [
+  const teachingCourses: Course[] = React.useMemo(() => [
     {
       id: 1,
       name: "Introduction to Information Technologies",
@@ -163,157 +197,387 @@ export default function TeachingCoursesPage() {
         { id: "2021010", name: "Maria Martinez", email: "maria.martinez@student.edu", year: 3, status: "Active", averageGrade: 8.6 }
       ]
     }
-  ]
+  ], [])
 
-  const getSemesterColor = (semester: string) => {
-    return semester === "Winter" 
-      ? "bg-blue-100 text-blue-800" 
-      : "bg-orange-100 text-orange-800"
+
+
+  const handleCourseClick = (course: Course) => {
+    setSelectedCourse(course)
+    setShowCourseDetailsModal(true)
   }
 
-  const getStatusColor = (status: string) => {
-    return status === "Active" 
-      ? "bg-green-100 text-green-800" 
-      : "bg-slate-100 text-slate-800"
+
+
+  const togglePinCourse = (courseId: number) => {
+    setPinnedCourses(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(courseId)) {
+        newSet.delete(courseId)
+      } else {
+        newSet.add(courseId)
+      }
+      return newSet
+    })
   }
 
-  const handleCourseClick = (course: any) => {
+  const handleViewStudents = (course: Course) => {
     setSelectedCourse(course)
     setShowStudentModal(true)
   }
 
-  const closeModal = () => {
-    setShowStudentModal(false)
-    setSelectedCourse(null)
-  }
+  // Save pinned courses to localStorage whenever they change
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pinned-courses', JSON.stringify([...pinnedCourses]))
+    }
+  }, [pinnedCourses])
 
-  const totalStudents = teachingCourses.reduce((sum, course) => sum + course.studentsEnrolled, 0)
-  const totalEcts = teachingCourses.reduce((sum, course) => sum + course.ects, 0)
+  // Sort courses: pinned first, then by name
+  const sortedCourses = React.useMemo(() => {
+    return [...teachingCourses].sort((a, b) => {
+      const aPinned = pinnedCourses.has(a.id)
+      const bPinned = pinnedCourses.has(b.id)
+      
+      if (aPinned && !bPinned) return -1
+      if (!aPinned && bPinned) return 1
+      
+      return a.name.localeCompare(b.name)
+    })
+  }, [teachingCourses, pinnedCourses])
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">Teaching Courses</h1>
-        <p className="text-slate-600">Manage courses you are currently teaching</p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-slate-200">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-slate-900">{teachingCourses.length}</div>
-            <div className="text-sm text-slate-600">Active Courses</div>
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-slate-200">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-slate-900">{totalStudents}</div>
-            <div className="text-sm text-slate-600">Total Students</div>
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-slate-200">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-slate-900">{totalEcts}</div>
-            <div className="text-sm text-slate-600">Total ECTS</div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="bg-white rounded-lg border border-slate-200">
-        <div className="p-6 border-b border-slate-200">
-          <h2 className="text-lg font-semibold text-slate-900">Current Teaching Load</h2>
-          <p className="text-sm text-slate-600 mt-1">Click on a course to view enrolled students</p>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-semibold tracking-tight">Teaching Courses</h1>
+          <p className="text-muted-foreground">
+            Manage and track your current teaching assignments
+          </p>
         </div>
         
-        <div className="divide-y divide-slate-200">
-          {teachingCourses.map((course) => (
-            <div 
-              key={course.id} 
-              className="p-6 hover:bg-slate-50 transition-colors cursor-pointer"
-              onClick={() => handleCourseClick(course)}
+        {/* Pinned Courses Summary */}
+        {pinnedCourses.size > 0 && (
+          <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <Pin className="h-4 w-4 text-blue-600" />
+            <span className="text-sm text-blue-800">
+              <strong>{pinnedCourses.size}</strong> course{pinnedCourses.size === 1 ? '' : 's'} pinned
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setPinnedCourses(new Set())}
+              className="h-6 px-2 text-xs text-blue-600 hover:bg-blue-100 ml-auto"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="font-mono text-sm font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">
-                      {course.acronym}
-                    </span>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getSemesterColor(course.semester)}`}>
-                      {course.semester} Semester
-                    </span>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(course.status)}`}>
-                      {course.status}
-                    </span>
-                  </div>
-                  <h3 className="font-medium text-slate-900 text-lg mb-1">{course.name}</h3>
-                  <p className="text-sm text-slate-600">{course.ects} ECTS</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-slate-900">{course.studentsEnrolled}</div>
-                  <div className="text-xs text-slate-500">Students</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              Unpin All
+            </Button>
+          </div>
+        )}
       </div>
 
-      {showStudentModal && selectedCourse && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] mx-4 flex flex-col">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-semibold text-slate-900">Enrolled Students</h3>
-                <p className="text-sm text-slate-600">{selectedCourse.name} ({selectedCourse.acronym}) • {selectedCourse.studentsEnrolled} students</p>
-              </div>
-              <button
-                onClick={closeModal}
-                className="p-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            
-            <div className="flex-1 p-6 overflow-y-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {selectedCourse.students.map((student: any) => (
-                  <div key={student.id} className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
-                        <span className="text-slate-600 font-medium">{student.name.split(' ').map((n: string) => n[0]).join('')}</span>
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-slate-900">{student.name}</h4>
-                        <p className="text-xs text-slate-600">{student.email}</p>
-                      </div>
+      {/* Courses Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {sortedCourses.map((course) => {
+          const isPinned = pinnedCourses.has(course.id)
+          return (
+            <Card 
+              key={course.id} 
+              className={`group transition-all hover:shadow-md hover:border-gray-300 ${
+                isPinned ? 'ring-2 ring-blue-200 bg-blue-50/30' : ''
+              }`}
+            >
+              <CardContent className="p-6 space-y-4">
+                {/* Course Header with Pin Button */}
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-4 w-4 text-muted-foreground" />
+                      <Badge variant="secondary" className="text-xs font-mono">
+                        {course.acronym}
+                      </Badge>
+                      {isPinned && (
+                        <Badge variant="default" className="text-xs bg-blue-100 text-blue-800">
+                          <Pin className="h-3 w-3 mr-1" />
+                          Pinned
+                        </Badge>
+                      )}
                     </div>
-                    
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Student ID:</span>
-                        <span className="font-medium">{student.id}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Year:</span>
-                        <span className="font-medium">{student.year}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Status:</span>
-                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(student.status)}`}>
-                          {student.status}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Avg Grade:</span>
-                        <span className="font-medium">{student.averageGrade}</span>
-                      </div>
+                    <h3 className="font-medium leading-tight">
+                      {course.name}
+                    </h3>
+                  </div>
+                  
+                  {/* Pin Toggle Button */}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            togglePinCourse(course.id)
+                          }}
+                          className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-700"
+                        >
+                          {isPinned ? (
+                            <PinOff className="h-4 w-4 text-blue-600" />
+                          ) : (
+                            <Pin className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {isPinned ? 'Unpin course' : 'Pin course'}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
+                {/* Course Details */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      <span>{course.semester} Semester</span>
+                    </div>
+                    <Badge 
+                      variant={course.status === 'Active' ? 'default' : 'secondary'}
+                      className="text-xs"
+                    >
+                      {course.status}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Users className="h-3 w-3" />
+                      <span>{course.studentsEnrolled} students</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Star className="h-3 w-3" />
+                      <span>{course.ects} ECTS</span>
                     </div>
                   </div>
-                ))}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 pt-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleViewStudents(course)
+                          }}
+                          className="flex-1 text-xs"
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          View Students
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        View list of enrolled students
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleCourseClick(course)
+                          }}
+                          className="flex-1 text-xs"
+                        >
+                          Course Details
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        View detailed course information
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+
+                                                                                                               {/* Student Details Dialog */}
+           <Dialog open={showStudentModal} onOpenChange={setShowStudentModal}>
+             <DialogContent className="max-w-none max-h-[95vh] w-[95vw] h-[90vh] p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <GraduationCap className="h-5 w-5" />
+              <div>
+                <div className="text-lg">Enrolled Students</div>
+                <div className="text-sm font-normal text-muted-foreground">
+                  {selectedCourse?.name} ({selectedCourse?.acronym}) • {selectedCourse?.studentsEnrolled} students
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
+            </DialogTitle>
+          </DialogHeader>
+          
+                                                                                                                                                                               <div className="max-h-[75vh] overflow-y-auto">
+                <div className="border rounded-lg bg-white shadow-sm">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th className="px-8 py-5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                          Student
+                        </th>
+                        <th className="px-8 py-5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                          Student ID
+                        </th>
+                        <th className="px-8 py-5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                          Year
+                        </th>
+                        <th className="px-8 py-5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-8 py-5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                          Average Grade
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-100">
+                      {selectedCourse?.students.map((student: Student) => (
+                        <tr key={student.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-8 py-5">
+                            <div className="flex items-center">
+                              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center mr-4 flex-shrink-0 shadow-sm">
+                                <span className="text-blue-700 font-semibold text-base">
+                                  {student.name.split(' ').map((n: string) => n[0]).join('')}
+                                </span>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-lg font-semibold text-gray-900">{student.name}</div>
+                                <div className="text-base text-gray-600">{student.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-8 py-5 text-base text-gray-900 font-mono font-medium">
+                            {student.id}
+                          </td>
+                          <td className="px-8 py-5 text-lg text-gray-900 font-semibold">
+                            {student.year}
+                          </td>
+                          <td className="px-8 py-5">
+                            <Badge 
+                              variant={student.status === 'Active' ? 'default' : 'secondary'}
+                              className="text-base h-auto py-2 px-4 font-medium"
+                            >
+                              {student.status}
+                            </Badge>
+                            </td>
+                          <td className="px-8 py-5 text-lg text-gray-900 font-bold">
+                            {student.averageGrade}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+                 </DialogContent>
+       </Dialog>
+
+       {/* Course Details Dialog */}
+       <Dialog open={showCourseDetailsModal} onOpenChange={setShowCourseDetailsModal}>
+         <DialogContent className="max-w-4xl max-h-[80vh] p-6">
+           <DialogHeader>
+             <DialogTitle className="flex items-center gap-3">
+               <BookOpen className="h-5 w-5" />
+               <div>
+                 <div className="text-lg">Course Details</div>
+                 <div className="text-sm font-normal text-muted-foreground">
+                   {selectedCourse?.name} ({selectedCourse?.acronym})
+                 </div>
+               </div>
+             </DialogTitle>
+           </DialogHeader>
+           
+           <div className="space-y-6">
+             {/* Course Overview */}
+             <div className="grid grid-cols-2 gap-6">
+               <div className="space-y-4">
+                 <div className="bg-gray-50 p-4 rounded-lg">
+                   <h3 className="font-semibold text-gray-900 mb-3">Basic Information</h3>
+                   <div className="space-y-2">
+                     <div className="flex justify-between">
+                       <span className="text-gray-600">Course Name:</span>
+                       <span className="font-medium">{selectedCourse?.name}</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-gray-600">Acronym:</span>
+                       <span className="font-mono font-medium">{selectedCourse?.acronym}</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-gray-600">ECTS Credits:</span>
+                       <span className="font-medium">{selectedCourse?.ects}</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-gray-600">Semester:</span>
+                       <span className="font-medium">{selectedCourse?.semester}</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-gray-600">Status:</span>
+                       <Badge variant={selectedCourse?.status === 'Active' ? 'default' : 'secondary'}>
+                         {selectedCourse?.status}
+                       </Badge>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+               
+               <div className="space-y-4">
+                 <div className="bg-blue-50 p-4 rounded-lg">
+                   <h3 className="font-semibold text-blue-900 mb-3">Enrollment Statistics</h3>
+                   <div className="space-y-2">
+                     <div className="flex justify-between">
+                       <span className="text-blue-700">Total Students:</span>
+                       <span className="font-bold text-blue-900">{selectedCourse?.studentsEnrolled}</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-blue-700">Course ID:</span>
+                       <span className="font-mono font-medium text-blue-900">{selectedCourse?.id}</span>
+                     </div>
+                   </div>
+                 </div>
+                 
+                 <div className="bg-green-50 p-4 rounded-lg">
+                   <h3 className="font-semibold text-green-900 mb-3">Quick Actions</h3>
+                   <div className="space-y-2">
+                     <Button
+                       variant="outline"
+                       size="sm"
+                       onClick={() => {
+                         setShowCourseDetailsModal(false)
+                         handleViewStudents(selectedCourse!)
+                       }}
+                       className="w-full"
+                     >
+                       <Users className="h-4 w-4 mr-2" />
+                       View Students List
+                     </Button>
+                   </div>
+                 </div>
+               </div>
+             </div>
+             
+             
+           </div>
+         </DialogContent>
+       </Dialog>
+     </div>
+   )
+ }

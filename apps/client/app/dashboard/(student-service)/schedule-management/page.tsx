@@ -160,10 +160,10 @@ export default function ScheduleManagementPage() {
     }
   }, [activeTab]);
 
-  // Fetch evaluation instruments when switching to evaluation-tools tab
+  // Fetch evaluation instruments when switching to evaluation-instruments tab
   useEffect(() => {
-    if (activeTab === 'evaluation-tools') {
-      const fetchEvaluationTools = async () => {
+    if (activeTab === 'evaluation-instruments') {
+      const fetchEvaluationInstruments = async () => {
         try {
           const evaluationData = await getEvaluationInstruments();
           setEvaluationInstruments(evaluationData);
@@ -172,7 +172,7 @@ export default function ScheduleManagementPage() {
           setEvaluationInstruments([]);
         }
       };
-      fetchEvaluationTools();
+      fetchEvaluationInstruments();
     }
   }, [activeTab]);
 
@@ -236,8 +236,8 @@ export default function ScheduleManagementPage() {
       description: 'Plan and organize exam periods'
     },
     {
-      id: 'evaluation-tools',
-      title: 'Evaluation Tools',
+      id: 'evaluation-instruments',
+      title: 'Evaluation Instruments',
       icon: Target,
       description: 'Create and manage assessment instruments'
     }
@@ -473,7 +473,7 @@ export default function ScheduleManagementPage() {
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Schedule Management</h1>
           </div>
-          <p className="text-lg text-gray-600 ml-11">Manage course schedules, exam periods, and evaluation tools for academic planning</p>
+          <p className="text-lg text-gray-600 ml-11">Manage course schedules, exam periods, and evaluation instruments for academic planning</p>
         </div>
 
         {/* Tabs */}
@@ -1151,7 +1151,7 @@ export default function ScheduleManagementPage() {
             </div>
           )}
 
-          {activeTab === 'evaluation-tools' && (
+          {activeTab === 'evaluation-instruments' && (
             <div>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-3">
@@ -1268,14 +1268,14 @@ export default function ScheduleManagementPage() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-gray-900">Assessment Instruments</CardTitle>
                   <CardDescription className="text-xs text-gray-500">
-                    Create and manage evaluation tools for different subjects
+                    Create and manage evaluation instruments for different subjects
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
                   {evaluationInstruments.length === 0 ? (
                     <div className="text-center py-12 text-gray-500">
                       <Target className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                      <p className="text-base font-medium">No evaluation tools created yet</p>
+                      <p className="text-base font-medium">No evaluation instruments created yet</p>
                       <p className="text-sm text-gray-400 mt-2">Create assessment instruments to evaluate student performance</p>
                     </div>
                   ) : (

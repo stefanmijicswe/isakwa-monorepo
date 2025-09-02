@@ -59,12 +59,16 @@ export function LoginForm({
     }
 
     try {
-      await login(formData)
-      // Redirect to dashboard on successful login
-      router.push("/dashboard")
-    } catch (error: any) {
+      const userData = await login(formData)
+      // Redirect based on user role
+      if (userData?.role === 'PROFESSOR') {
+        router.push("/dashboard/teaching-courses")
+      } else {
+        router.push("/dashboard")
+      }
+    } catch (error: unknown) {
       console.error("Login failed:", error)
-      setSubmitError(error.message || "Login failed. Please try again.")
+      setSubmitError((error as Error)?.message || "Login failed. Please try again.")
     }
   }
 

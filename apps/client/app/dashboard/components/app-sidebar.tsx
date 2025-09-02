@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { 
-  Home, 
   BookOpen, 
   Users, 
   ChartBar, 
@@ -25,7 +24,8 @@ import {
   BookMarked,
   PenTool,
   Database,
-  Package
+  Package,
+  MessageSquare
 } from "lucide-react"
 import Image from "next/image"
 import { useAuth } from "../../../components/auth"
@@ -75,6 +75,12 @@ const navigationByRole = {
       description: "View academic history"
     },
     {
+      title: "Requests",
+      url: "/dashboard/requests",
+      icon: FileText,
+      description: "Submit and track requests"
+    },
+    {
       title: "Notifications",
       url: "/dashboard/notifications",
       icon: Bell,
@@ -83,22 +89,10 @@ const navigationByRole = {
   ],
   PROFESSOR: [
     {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: Home,
-      description: "Teaching overview"
-    },
-    {
       title: "Teaching Courses",
       url: "/dashboard/teaching-courses",
       icon: GraduationCap,
       description: "Manage your courses"
-    },
-    {
-      title: "Evaluation Tools",
-      url: "/dashboard/evaluation-tools",
-      icon: Target,
-      description: "Create assessments"
     },
     {
       title: "Evaluation Instruments",
@@ -106,23 +100,12 @@ const navigationByRole = {
       icon: PenTool,
       description: "Manage evaluation instruments"
     },
-    {
-      title: "Assignments",
-      url: "/dashboard/assignments",
-      icon: FileText,
-      description: "Create and manage assignments"
-    },
+
     {
       title: "Grade Entry",
       url: "/dashboard/grade-entry",
       icon: Award,
       description: "Enter student grades"
-    },
-    {
-      title: "Grading",
-      url: "/dashboard/grading",
-      icon: Award,
-      description: "Grade student submissions"
     },
     {
       title: "Student Search",
@@ -150,6 +133,12 @@ const navigationByRole = {
     },
   ],
   STUDENT_SERVICE: [
+    {
+      title: "Request Management",
+      url: "/dashboard/request-management",
+      icon: MessageSquare,
+      description: "Manage student requests"
+    },
     {
       title: "Student Enrollment",
       url: "/dashboard/enroll",
