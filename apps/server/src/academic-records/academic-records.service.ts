@@ -1247,4 +1247,119 @@ export class AcademicRecordsService {
       data: { isActive: false },
     });
   }
+
+  // Grade Entry Methods
+  async getProfessorCoursesWithExams(professorId: number) {
+    const assignments = await this.prisma.professorAssignment.findMany({
+      where: {
+        professorId,
+        isActive: true,
+      },
+      include: {
+        subject: {
+          include: {
+            grades: {
+              where: { isActive: true },
+              distinct: ['studentId'],
+            },
+            courseEnrollments: {
+              where: { isActive: true },
+              include: {
+                student: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                  }
+                }
+              }
+            },
+            examRegistrations: {
+              where: { isActive: true },
+              include: {
+                exam: {
+                  where: { isActive: true },
+                  orderBy: { examDate: 'desc' },
+                  take: 1,
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    return assignments.map(assignment => {
+      const subject = assignment.subject;
+      const latestExam = subject.examRegistrations[0]?.exam[0];
+      const enrolledStudents = subject.courseEnrollments.length;
+      
+      return {
+        id: subject.id,
+        name: subject.name,
+        code: subject.code,
+        semester: `${assignment.academicYear}`,
+        studentsEnrolled: enrolledStudents,
+        gradingDeadline: latestExam ? 
+          new Date(new Date(latestExam.examDate).getTime() + (15 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0] : 
+          null,
+        examDate: latestExam ? latestExam.examDate.toISOString().split('T')[0] : null,
+      };
+    });
+  }
+
+  async getCourseStudents(subjectId: number, professorId: number) {
+    // Verify professor is assigned to this subject
+    const assignment = await this.prisma.professorAssignment.findFirst({
+      where: {
+        professorId,
+        subjectId,
+        isActive: true,
+      },
+    });
+
+    if (!assignment) {
+      throw new ForbiddenException('Professor not assigned to this subject');
+    }
+
+    const enrollments = await this.prisma.courseEnrollment.findMany({
+      where: {
+        subjectId,
+        isActive: true,
+      },
+      include: {
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          }
+        }
+      }
+    });
+
+    return enrollments.map(enrollment => ({
+      id: enrollment.student.id,
+      firstName: enrollment.student.firstName,
+      lastName: enrollment.student.lastName,
+      indexNumber: `2021/${enrollment.student.id.toString().padStart(3, '0')}`, // Mock index number
+      email: enrollment.student.email,
+      courseId: subjectId,
+      enrollments: [{
+        id: enrollment.id,
+        courseId: subjectId,
+        course: {
+          id: subjectId,
+          name: 'Course Name', // Will be filled by frontend
+          code: 'Course Code' // Will be filled by frontend
+        },
+        attendance: 0,
+        assignments: 0,
+        midterm: 0,
+        final: 0,
+        status: 'Pending'
+      }]
+    }));
+  }
 }

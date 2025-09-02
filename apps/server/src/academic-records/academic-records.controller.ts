@@ -352,4 +352,20 @@ export class AcademicRecordsController {
   ) {
     return this.academicRecordsService.deleteSyllabusMaterial(parseInt(id), req.user.id);
   }
+
+  // Grade Entry endpoints
+  @Get('professor/courses')
+  @UseGuards(JwtAuthGuard)
+  async getProfessorCourses(@Request() req: any) {
+    return this.academicRecordsService.getProfessorCoursesWithExams(req.user.id);
+  }
+
+  @Get('professor/courses/:courseId/students')
+  @UseGuards(JwtAuthGuard)
+  async getCourseStudents(
+    @Param('courseId') courseId: string,
+    @Request() req: any,
+  ) {
+    return this.academicRecordsService.getCourseStudents(parseInt(courseId), req.user.id);
+  }
 }

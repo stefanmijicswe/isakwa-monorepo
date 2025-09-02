@@ -6,6 +6,7 @@ import { seedPerfectData } from './seed-perfect';
 import { seedLibraryInventoryData } from './seed-library-inventory';
 import { seedSimpleAcademicData } from './seed-simple-academic';
 import { seedProfessorSchedules } from './seed-professor-schedules';
+import { seedGradeEntryData } from './seed-grade-entry-data';
 
 async function main() {
   const prisma = new PrismaService();
@@ -32,6 +33,11 @@ async function main() {
     console.log('📅⏰ Step 4: Creating Professor schedules...');
     await seedProfessorSchedules();
     console.log('✅ Professor schedules completed');
+
+    // Step 5: Grade Entry Demo Data
+    console.log('📊🎯 Step 5: Creating Grade Entry demo data...');
+    const gradeEntryResults = await seedGradeEntryData();
+    console.log('✅ Grade Entry demo data completed:', gradeEntryResults);
 
     console.log('🎉 COMPREHENSIVE database seeding completed successfully!');
     console.log('📊 Final results:', {

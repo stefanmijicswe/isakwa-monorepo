@@ -119,54 +119,60 @@ class GradeEntryService {
 
   // Get professor's courses
   async getProfessorCourses(): Promise<Course[]> {
-    // Fixed courses with consistent exam dates for demonstration
-    return [
-      {
-        id: 1,
-        name: "Introduction to Information Technologies",
-        code: "IT101",
-        semester: "Winter 2024",
-        studentsEnrolled: 45,
-        gradingDeadline: "2024-12-30",
-        examDate: this.getConsistentExamDate(1)
-      },
-      {
-        id: 2,
-        name: "Programming Fundamentals", 
-        code: "PF102",
-        semester: "Winter 2024",
-        studentsEnrolled: 38,
-        gradingDeadline: "2024-12-25",
-        examDate: this.getConsistentExamDate(2)
-      },
-      {
-        id: 3,
-        name: "Web Technologies",
-        code: "WT202", 
-        semester: "Summer 2024",
-        studentsEnrolled: 32,
-        gradingDeadline: "2025-01-15",
-        examDate: this.getConsistentExamDate(3)
-      },
-      {
-        id: 4,
-        name: "Database Systems",
-        code: "DB301", 
-        semester: "Winter 2024",
-        studentsEnrolled: 28,
-        gradingDeadline: "2025-01-10",
-        examDate: this.getConsistentExamDate(4)
-      },
-      {
-        id: 5,
-        name: "Software Engineering",
-        code: "SE401", 
-        semester: "Winter 2024",
-        studentsEnrolled: 35,
-        gradingDeadline: "2024-12-28",
-        examDate: this.getConsistentExamDate(5)
-      }
-    ]
+    try {
+      const response = await this.request<Course[]>('/academic-records/professor/courses')
+      return response
+    } catch (error) {
+      console.error('Failed to fetch professor courses from API, using fallback data:', error)
+      // Fallback to consistent mock data if API fails
+      return [
+        {
+          id: 1,
+          name: "Introduction to Information Technologies",
+          code: "IT101",
+          semester: "Winter 2024",
+          studentsEnrolled: 45,
+          gradingDeadline: "2024-12-30",
+          examDate: this.getConsistentExamDate(1)
+        },
+        {
+          id: 2,
+          name: "Programming Fundamentals", 
+          code: "PF102",
+          semester: "Winter 2024",
+          studentsEnrolled: 38,
+          gradingDeadline: "2024-12-25",
+          examDate: this.getConsistentExamDate(2)
+        },
+        {
+          id: 3,
+          name: "Web Technologies",
+          code: "WT202", 
+          semester: "Summer 2024",
+          studentsEnrolled: 32,
+          gradingDeadline: "2025-01-15",
+          examDate: this.getConsistentExamDate(3)
+        },
+        {
+          id: 4,
+          name: "Database Systems",
+          code: "DB301", 
+          semester: "Winter 2024",
+          studentsEnrolled: 28,
+          gradingDeadline: "2025-01-10",
+          examDate: this.getConsistentExamDate(4)
+        },
+        {
+          id: 5,
+          name: "Software Engineering",
+          code: "SE401", 
+          semester: "Winter 2024",
+          studentsEnrolled: 35,
+          gradingDeadline: "2024-12-28",
+          examDate: this.getConsistentExamDate(5)
+        }
+      ]
+    }
   }
 
   // Get students enrolled in a course
