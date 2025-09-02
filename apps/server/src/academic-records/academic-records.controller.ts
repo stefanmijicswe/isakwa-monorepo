@@ -355,13 +355,15 @@ export class AcademicRecordsController {
 
   // Grade Entry endpoints
   @Get('professor/courses')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
   async getProfessorCourses(@Request() req: any) {
     return this.academicRecordsService.getProfessorCoursesWithExams(req.user.id);
   }
 
   @Get('professor/courses/:courseId/students')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
   async getCourseStudents(
     @Param('courseId') courseId: string,
     @Request() req: any,

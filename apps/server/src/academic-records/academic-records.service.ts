@@ -1250,62 +1250,70 @@ export class AcademicRecordsService {
 
   // Grade Entry Methods
   async getProfessorCoursesWithExams(professorId: number) {
-    const assignments = await this.prisma.professorAssignment.findMany({
-      where: {
-        professorId,
-        isActive: true,
-      },
-      include: {
-        subject: {
-          include: {
-            grades: {
-              where: { isActive: true },
-              distinct: ['studentId'],
-            },
-            courseEnrollments: {
-              where: { isActive: true },
-              include: {
-                student: {
-                  select: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                  }
-                }
-              }
-            },
-            examRegistrations: {
-              where: { isActive: true },
-              include: {
-                exam: {
-                  where: { isActive: true },
-                  orderBy: { examDate: 'desc' },
-                  take: 1,
-                }
+    console.log('🔍 Fetching courses for professor ID:', professorId);
+    
+    try {
+      const assignments = await this.prisma.professorAssignment.findMany({
+        where: {
+          professorId,
+          isActive: true,
+        },
+        include: {
+          subject: {
+            include: {
+              courseEnrollments: {
+                where: { isActive: true }
               }
             }
           }
         }
-      }
-    });
+      });
 
-    return assignments.map(assignment => {
-      const subject = assignment.subject;
-      const latestExam = subject.examRegistrations[0]?.exam[0];
-      const enrolledStudents = subject.courseEnrollments.length;
-      
-      return {
-        id: subject.id,
-        name: subject.name,
-        code: subject.code,
-        semester: `${assignment.academicYear}`,
-        studentsEnrolled: enrolledStudents,
-        gradingDeadline: latestExam ? 
-          new Date(new Date(latestExam.examDate).getTime() + (15 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0] : 
-          null,
-        examDate: latestExam ? latestExam.examDate.toISOString().split('T')[0] : null,
-      };
-    });
+      console.log('📚 Found assignments:', assignments.length);
+
+      if (assignments.length === 0) {
+        console.log('⚠️ No assignments found for professor');
+        return [];
+      }
+
+      const result = [];
+
+      for (const assignment of assignments) {
+        const subject = assignment.subject;
+        
+        // Find the latest exam for this subject
+        const latestExam = await this.prisma.exam.findFirst({
+          where: {
+            subjectId: subject.id,
+            isActive: true
+          },
+          orderBy: {
+            examDate: 'desc'
+          }
+        });
+
+        const enrolledStudents = subject.courseEnrollments.length;
+        
+        result.push({
+          id: subject.id,
+          name: subject.name,
+          code: subject.code,
+          semester: `${assignment.academicYear || 'Winter 2024'}`,
+          studentsEnrolled: enrolledStudents,
+          gradingDeadline: latestExam ? 
+            new Date(new Date(latestExam.examDate).getTime() + (15 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0] : 
+            null,
+          examDate: latestExam ? latestExam.examDate.toISOString().split('T')[0] : null,
+        });
+      }
+
+      console.log('✅ Returning courses:', result);
+      return result;
+
+    } catch (error) {
+      console.error('❌ Error in getProfessorCoursesWithExams:', error);
+      throw error;
+    }
   }
 
   async getCourseStudents(subjectId: number, professorId: number) {
