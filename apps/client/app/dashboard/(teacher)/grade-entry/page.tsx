@@ -288,6 +288,51 @@ export default function GradeEntryPage() {
         </CardHeader>
       </Card>
 
+      {/* Course Information Card */}
+      {selectedCourse !== "all" && (
+        <Card>
+          <CardContent className="pt-6">
+            {(() => {
+              const course = courses.find(c => c.id.toString() === selectedCourse)
+              if (!course) return null
+              
+              const gradeStatus = gradeEntryService.isGradeEntryAllowed(course.examDate)
+              const examDate = new Date(course.examDate).toLocaleDateString('sr-RS', {
+                day: 'numeric',
+                month: 'long', 
+                year: 'numeric'
+              })
+              
+              return (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-slate-900">{course.code} - {course.name}</h3>
+                      <p className="text-sm text-slate-600 mt-1">Datum ispita: {examDate}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant={gradeStatus.allowed ? "default" : "destructive"}>
+                          {gradeStatus.allowed ? "Aktivno" : "Zatvoreno"}
+                        </Badge>
+                        <span className="text-sm text-slate-700 font-medium">
+                          {gradeStatus.allowed 
+                            ? `Preostalo ${15 - gradeStatus.daysElapsed} dan/a`
+                            : `Isteklo pre ${gradeStatus.daysElapsed - 15} dan/a`
+                          }
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-slate-900">{course.studentsEnrolled}</div>
+                      <div className="text-sm text-slate-600">studenata</div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader className="pb-4">
           <CardTitle className="text-lg">Student Grades</CardTitle>
@@ -388,9 +433,26 @@ export default function GradeEntryPage() {
                     </td>
                     
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <Badge variant={getStatusVariantForStudent(getStudentStatus(student))}>
-                        {getStudentStatus(student)}
-                      </Badge>
+                      <div className="flex flex-col items-center gap-1">
+                        <Badge variant={getStatusVariantForStudent(getStudentStatus(student))}>
+                          {getStudentStatus(student)}
+                        </Badge>
+                        {(() => {
+                          if (selectedCourse === "all") return null
+                          const course = courses.find(c => c.id.toString() === selectedCourse)
+                          if (!course) return null
+                          
+                          const gradeStatus = gradeEntryService.isGradeEntryAllowed(course.examDate)
+                          return (
+                            <div className="text-xs text-slate-500">
+                              {gradeStatus.allowed 
+                                ? `Preostalo ${15 - gradeStatus.daysElapsed} dan/a`
+                                : `Isteklo pre ${gradeStatus.daysElapsed - 15} dan/a`
+                              }
+                            </div>
+                          )
+                        })()}
+                      </div>
                     </td>
                     
                     <td className="px-6 py-4 whitespace-nowrap text-center">

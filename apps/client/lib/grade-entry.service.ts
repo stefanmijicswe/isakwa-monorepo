@@ -98,9 +98,17 @@ class GradeEntryService {
     }
   }
 
+  // Helper function to generate random exam date within last 1-15 days
+  private generateRandomExamDate(): string {
+    const currentDate = new Date()
+    const randomDaysAgo = Math.floor(Math.random() * 15) + 1 // 1-15 days ago
+    const examDate = new Date(currentDate.getTime() - (randomDaysAgo * 24 * 60 * 60 * 1000))
+    return examDate.toISOString().split('T')[0] // Return YYYY-MM-DD format
+  }
+
   // Get professor's courses
   async getProfessorCourses(): Promise<Course[]> {
-    // For now return mock data, will be replaced with real API call
+    // Generate courses with random exam dates for demonstration
     return [
       {
         id: 1,
@@ -109,7 +117,7 @@ class GradeEntryService {
         semester: "Winter 2024",
         studentsEnrolled: 45,
         gradingDeadline: "2024-12-30",
-        examDate: "2024-02-01" // Recent exam, within 15 days
+        examDate: this.generateRandomExamDate()
       },
       {
         id: 2,
@@ -118,7 +126,7 @@ class GradeEntryService {
         semester: "Winter 2024",
         studentsEnrolled: 38,
         gradingDeadline: "2024-12-25",
-        examDate: "2024-01-05" // Old exam, beyond 15 days
+        examDate: this.generateRandomExamDate()
       },
       {
         id: 3,
@@ -127,7 +135,25 @@ class GradeEntryService {
         semester: "Summer 2024",
         studentsEnrolled: 32,
         gradingDeadline: "2025-01-15",
-        examDate: "2024-02-08" // Very recent exam
+        examDate: this.generateRandomExamDate()
+      },
+      {
+        id: 4,
+        name: "Database Systems",
+        code: "DB301", 
+        semester: "Winter 2024",
+        studentsEnrolled: 28,
+        gradingDeadline: "2025-01-10",
+        examDate: this.generateRandomExamDate()
+      },
+      {
+        id: 5,
+        name: "Software Engineering",
+        code: "SE401", 
+        semester: "Winter 2024",
+        studentsEnrolled: 35,
+        gradingDeadline: "2024-12-28",
+        examDate: this.generateRandomExamDate()
       }
     ]
   }
