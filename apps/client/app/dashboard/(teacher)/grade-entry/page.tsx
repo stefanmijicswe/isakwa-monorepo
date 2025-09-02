@@ -244,12 +244,12 @@ export default function GradeEntryPage() {
       <Card>
         <CardHeader className="pb-4">
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
+            <div className="md:flex-1 md:max-w-sm">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
                 <Input
                   type="text"
-                  placeholder="Search students by name or index number..."
+                  placeholder="Search students..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -257,9 +257,9 @@ export default function GradeEntryPage() {
               </div>
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex gap-2 md:flex-1">
               <Select value={selectedCourse} onValueChange={setSelectedCourse}>
-                <SelectTrigger className="w-64">
+                <SelectTrigger className="w-full md:min-w-80">
                   <SelectValue placeholder="All Courses" />
                 </SelectTrigger>
                 <SelectContent>

@@ -98,17 +98,28 @@ class GradeEntryService {
     }
   }
 
-  // Helper function to generate random exam date within last 1-15 days
-  private generateRandomExamDate(): string {
+  // Helper function to generate consistent exam date for each course
+  private getConsistentExamDate(courseId: number): string {
+    // Use courseId as seed for consistent dates across refreshes
+    const fixedDates = {
+      1: this.getDaysAgoDate(3),   // IT101 - 3 days ago (12 days remaining)
+      2: this.getDaysAgoDate(8),   // PF102 - 8 days ago (7 days remaining)  
+      3: this.getDaysAgoDate(1),   // WT202 - 1 day ago (14 days remaining)
+      4: this.getDaysAgoDate(12),  // DB301 - 12 days ago (3 days remaining)
+      5: this.getDaysAgoDate(6)    // SE401 - 6 days ago (9 days remaining)
+    }
+    return fixedDates[courseId as keyof typeof fixedDates] || this.getDaysAgoDate(5)
+  }
+
+  private getDaysAgoDate(daysAgo: number): string {
     const currentDate = new Date()
-    const randomDaysAgo = Math.floor(Math.random() * 15) + 1 // 1-15 days ago
-    const examDate = new Date(currentDate.getTime() - (randomDaysAgo * 24 * 60 * 60 * 1000))
+    const examDate = new Date(currentDate.getTime() - (daysAgo * 24 * 60 * 60 * 1000))
     return examDate.toISOString().split('T')[0] // Return YYYY-MM-DD format
   }
 
   // Get professor's courses
   async getProfessorCourses(): Promise<Course[]> {
-    // Generate courses with random exam dates for demonstration
+    // Fixed courses with consistent exam dates for demonstration
     return [
       {
         id: 1,
@@ -117,7 +128,7 @@ class GradeEntryService {
         semester: "Winter 2024",
         studentsEnrolled: 45,
         gradingDeadline: "2024-12-30",
-        examDate: this.generateRandomExamDate()
+        examDate: this.getConsistentExamDate(1)
       },
       {
         id: 2,
@@ -126,7 +137,7 @@ class GradeEntryService {
         semester: "Winter 2024",
         studentsEnrolled: 38,
         gradingDeadline: "2024-12-25",
-        examDate: this.generateRandomExamDate()
+        examDate: this.getConsistentExamDate(2)
       },
       {
         id: 3,
@@ -135,7 +146,7 @@ class GradeEntryService {
         semester: "Summer 2024",
         studentsEnrolled: 32,
         gradingDeadline: "2025-01-15",
-        examDate: this.generateRandomExamDate()
+        examDate: this.getConsistentExamDate(3)
       },
       {
         id: 4,
@@ -144,7 +155,7 @@ class GradeEntryService {
         semester: "Winter 2024",
         studentsEnrolled: 28,
         gradingDeadline: "2025-01-10",
-        examDate: this.generateRandomExamDate()
+        examDate: this.getConsistentExamDate(4)
       },
       {
         id: 5,
@@ -153,7 +164,7 @@ class GradeEntryService {
         semester: "Winter 2024",
         studentsEnrolled: 35,
         gradingDeadline: "2024-12-28",
-        examDate: this.generateRandomExamDate()
+        examDate: this.getConsistentExamDate(5)
       }
     ]
   }
