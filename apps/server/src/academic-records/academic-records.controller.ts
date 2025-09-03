@@ -113,6 +113,8 @@ export class AcademicRecordsController {
     return this.academicRecordsService.gradeExam(gradeExamDto);
   }
 
+
+
   @Get('students/search')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PROFESSOR, UserRole.STUDENT_SERVICE, UserRole.ADMIN)

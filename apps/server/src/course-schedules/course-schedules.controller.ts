@@ -46,13 +46,34 @@ export class CourseSchedulesController {
     return this.courseSchedulesService.getCourseSchedules(filters, req.user.id, req.user.role);
   }
 
+  @Get('my-schedules')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
+  async getMySchedules(
+    @Request() req: any,
+    @Query('academicYear') academicYear?: string,
+  ) {
+    return this.courseSchedulesService.getSchedulesByProfessor(
+      req.user.id,
+      academicYear,
+    );
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async getCourseScheduleById(
     @Param('id') id: string,
     @Request() req: any,
   ) {
-    return this.courseSchedulesService.getCourseScheduleById(parseInt(id), req.user.id, req.user.role);
+    console.log('🔍 Controller getCourseScheduleById called with id:', id, 'type:', typeof id)
+    const numericId = parseInt(id);
+    console.log('🔍 Parsed ID:', numericId, 'isNaN:', isNaN(numericId))
+    
+    if (isNaN(numericId)) {
+      throw new Error(`Invalid ID parameter: ${id}. Expected a number.`);
+    }
+    
+    return this.courseSchedulesService.getCourseScheduleById(numericId, req.user.id, req.user.role);
   }
 
   @Put(':id')
@@ -149,19 +170,6 @@ export class CourseSchedulesController {
   ) {
     return this.courseSchedulesService.getSchedulesByProfessor(
       parseInt(professorId),
-      academicYear,
-    );
-  }
-
-  @Get('my-schedules')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.PROFESSOR)
-  async getMySchedules(
-    @Request() req: any,
-    @Query('academicYear') academicYear?: string,
-  ) {
-    return this.courseSchedulesService.getSchedulesByProfessor(
-      req.user.id,
       academicYear,
     );
   }

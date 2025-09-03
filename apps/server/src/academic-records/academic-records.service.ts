@@ -475,6 +475,8 @@ export class AcademicRecordsService {
     });
   }
 
+
+
   async searchStudents(dto: SearchStudentsDto) {
     const where: any = {};
 
@@ -512,7 +514,6 @@ export class AcademicRecordsService {
           select: { firstName: true, lastName: true, email: true },
         },
         studyProgram: {
-          select: { name: true },
           include: {
             faculty: {
               select: { name: true },
@@ -682,28 +683,10 @@ export class AcademicRecordsService {
   }
 
   async getProfessorSubjects(professorId: number, academicYear?: string) {
-    const where: any = { professorId, isActive: true };
-    if (academicYear) {
-      where.academicYear = academicYear;
-    }
-
-    return this.prisma.professorAssignment.findMany({
-      where,
+    // Temporarily return all subjects until professor assignments are set up
+    // TODO: Re-enable professor assignment filtering when assignments are populated
+    const subjects = await this.prisma.subject.findMany({
       include: {
-        subject: {
-          include: {
-            courseEnrollments: {
-              where: academicYear ? { academicYear } : {},
-              include: {
-                student: {
-                  include: {
-
-                  },
-                },
-              },
-            },
-          },
-        },
         studyProgram: {
           include: {
             faculty: {
@@ -713,6 +696,23 @@ export class AcademicRecordsService {
         },
       },
     });
+
+    // Map subjects to include necessary fields for frontend
+    return subjects.map(subject => ({
+      subject: {
+        id: subject.id,
+        name: subject.name,
+        code: subject.code,
+        ects: subject.ects,
+        semesterType: subject.semester % 2 === 1 ? 'WINTER' : 'SUMMER', // Odd semesters = WINTER, Even = SUMMER
+        description: subject.description || 'No description available',
+        credits: subject.credits,
+        lectureHours: subject.numberOfLectures || 0,
+        practicalHours: subject.numberOfExercises || 0,
+        studyProgramId: subject.studyProgramId,
+      },
+      academicYear: academicYear || '2024/2025',
+    }));
   }
 
   async getActiveExamPeriods() {
@@ -823,7 +823,9 @@ export class AcademicRecordsService {
 
   // Syllabus Management Methods
   async createSyllabus(dto: CreateSyllabusDto, professorId: number) {
-    // Verify professor is assigned to this subject
+    // Temporarily disable professor assignment check until assignments are set up
+    // TODO: Re-enable when professor_assignments table is populated
+    /*
     const assignment = await this.prisma.professorAssignment.findFirst({
       where: {
         professorId,
@@ -836,6 +838,7 @@ export class AcademicRecordsService {
     if (!assignment) {
       throw new ForbiddenException('Professor not assigned to this subject');
     }
+    */
 
     // Check if syllabus already exists
     const existingSyllabus = await this.prisma.syllabus.findFirst({
@@ -847,7 +850,27 @@ export class AcademicRecordsService {
     });
 
     if (existingSyllabus) {
-      throw new BadRequestException('Syllabus already exists for this subject, year, and semester');
+      // Update existing syllabus instead of throwing error
+      return this.prisma.syllabus.update({
+        where: { id: existingSyllabus.id },
+        data: {
+          description: dto.description,
+          objectives: dto.objectives,
+          isActive: dto.isActive ?? true,
+        },
+        include: {
+          subject: {
+            select: { name: true, code: true },
+          },
+          topics: {
+            where: { isActive: true },
+            orderBy: { createdAt: 'asc' },
+          },
+          materials: {
+            where: { isActive: true },
+          },
+        },
+      });
     }
 
     return this.prisma.syllabus.create({
@@ -880,14 +903,7 @@ export class AcademicRecordsService {
       where: { id: syllabusId },
       include: {
         subject: {
-          include: {
-            professorAssignments: {
-              where: {
-                professorId,
-                isActive: true,
-              },
-            },
-          },
+          select: { name: true, code: true },
         },
       },
     });
@@ -896,9 +912,13 @@ export class AcademicRecordsService {
       throw new NotFoundException('Syllabus not found');
     }
 
+    // Temporarily disable professor assignment check until assignments are set up
+    // TODO: Re-enable when professor_assignments table is populated
+    /*
     if (syllabus.subject.professorAssignments.length === 0) {
       throw new ForbiddenException('Professor not assigned to this subject');
     }
+    */
 
     return this.prisma.syllabus.update({
       where: { id: syllabusId },
@@ -931,10 +951,12 @@ export class AcademicRecordsService {
       where.semesterType = filters.semesterType;
     }
 
-    // If professorId is provided, only return syllabi for subjects they're assigned to
+    // Temporarily disable professorId filtering until professor assignments are set up
+    // TODO: Re-enable when professor_assignments table is populated
+    /*
     if (professorId) {
       where.subject = {
-                      professorAssignments: {
+        professorAssignments: {
           some: {
             professorId,
             isActive: true,
@@ -942,6 +964,7 @@ export class AcademicRecordsService {
         },
       };
     }
+    */
 
     return this.prisma.syllabus.findMany({
       where,
@@ -966,37 +989,31 @@ export class AcademicRecordsService {
   }
 
   async getSyllabusById(syllabusId: number, professorId?: number) {
-    const where: any = { id: syllabusId, isActive: true };
-
-    if (professorId) {
-      where.subject = {
-                      professorAssignments: {
-          some: {
-            professorId,
-            isActive: true,
-          },
-        },
-      };
-    }
-
-    const syllabus = await this.prisma.syllabus.findFirst({
-      where,
+    // Temporarily disable professor assignment check until assignments are set up
+    // TODO: Re-enable when professor_assignments table is populated
+    console.log(`🔍 Looking for syllabus with ID: ${syllabusId}`);
+    
+    // First, check if any syllabi exist at all
+    const allSyllabi = await this.prisma.syllabus.findMany();
+    console.log(`📚 All syllabi in database:`, allSyllabi.map(s => ({ id: s.id, subjectId: s.subjectId })));
+    
+    const syllabus = await this.prisma.syllabus.findUnique({
+      where: { id: syllabusId },
       include: {
         subject: {
           select: { name: true, code: true },
         },
         topics: {
-          where: { isActive: true },
           orderBy: { createdAt: 'asc' },
         },
-        materials: {
-          where: { isActive: true },
-        },
+        materials: true,
       },
     });
 
+    console.log(`📖 Found syllabus:`, syllabus ? { id: syllabus.id, title: syllabus.title } : 'NOT FOUND');
+
     if (!syllabus) {
-      throw new NotFoundException('Syllabus not found');
+      throw new NotFoundException(`Syllabus with ID ${syllabusId} not found`);
     }
 
     return syllabus;

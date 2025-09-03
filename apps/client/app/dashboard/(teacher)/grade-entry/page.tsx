@@ -297,7 +297,7 @@ export default function GradeEntryPage() {
               if (!course) return null
               
               const gradeStatus = gradeEntryService.isGradeEntryAllowed(course.examDate)
-              const examDate = new Date(course.examDate).toLocaleDateString('sr-RS', {
+              const examDate = new Date(course.examDate).toLocaleDateString('en-US', {
                 day: 'numeric',
                 month: 'long', 
                 year: 'numeric'
@@ -308,22 +308,22 @@ export default function GradeEntryPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-semibold text-slate-900">{course.code} - {course.name}</h3>
-                      <p className="text-sm text-slate-600 mt-1">Datum ispita: {examDate}</p>
+                      <p className="text-sm text-slate-600 mt-1">Exam Date: {examDate}</p>
                       <div className="flex items-center gap-2 mt-2">
                         <Badge variant={gradeStatus.allowed ? "default" : "destructive"}>
-                          {gradeStatus.allowed ? "Aktivno" : "Zatvoreno"}
+                          {gradeStatus.allowed ? "Active" : "Closed"}
                         </Badge>
                         <span className="text-sm text-slate-700 font-medium">
                           {gradeStatus.allowed 
-                            ? `Preostalo ${15 - gradeStatus.daysElapsed} dan/a`
-                            : `Isteklo pre ${gradeStatus.daysElapsed - 15} dan/a`
+                            ? `${15 - gradeStatus.daysElapsed} days remaining`
+                            : `Expired ${gradeStatus.daysElapsed - 15} days ago`
                           }
                         </span>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-2xl font-bold text-slate-900">{course.studentsEnrolled}</div>
-                      <div className="text-sm text-slate-600">studenata</div>
+                      <div className="text-sm text-slate-600">students</div>
                     </div>
                   </div>
                 </div>
@@ -446,8 +446,8 @@ export default function GradeEntryPage() {
                           return (
                             <div className="text-xs text-slate-500">
                               {gradeStatus.allowed 
-                                ? `Preostalo ${15 - gradeStatus.daysElapsed} dan/a`
-                                : `Isteklo pre ${gradeStatus.daysElapsed - 15} dan/a`
+                                ? `${15 - gradeStatus.daysElapsed} days left`
+                                : `Expired ${gradeStatus.daysElapsed - 15} days ago`
                               }
                             </div>
                           )

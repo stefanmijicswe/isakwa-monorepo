@@ -293,11 +293,7 @@ class StudentSearchService {
   async getStudents(facultyFilter?: string): Promise<Student[]> {
     console.log('Getting students with faculty filter:', facultyFilter)
     
-    // For now, always use mock data to avoid API issues
-    // This ensures the presentation works even if backend is not running
-    return this.getMockStudents(facultyFilter)
-
-    /* TODO: Enable API integration when auth is properly set up
+    // Try real API first
     try {
       const token = localStorage.getItem('auth_token')
       if (!token) {
@@ -337,7 +333,15 @@ class StudentSearchService {
         status: apiStudent.status,
         email: apiStudent.user?.email || apiStudent.email,
         enrollmentYear: apiStudent.enrollmentYear,
-        coursesEnrolled: 0
+        coursesEnrolled: 0,
+        studyProgram: apiStudent.studyProgram,
+        // Transform passed exams from grades that backend provides
+        passedExams: apiStudent.grades?.map((grade: any) => ({
+          subject: grade.exam?.subject?.name || 'Unknown Subject',
+          date: grade.exam?.date || grade.createdAt,
+          grade: grade.grade,
+          points: grade.points || (grade.grade * 10) // Fallback calculation
+        })) || []
       }))
 
       // Apply faculty filter on frontend if needed
@@ -351,10 +355,9 @@ class StudentSearchService {
       return filteredStudents
 
     } catch (error) {
-      console.error('Error fetching students from API:', error)
+      console.error('⚠️ Error fetching students from API, using mock data:', error)
       return this.getMockStudents(facultyFilter)
     }
-    */
   }
 
   // Fallback method to get mock students

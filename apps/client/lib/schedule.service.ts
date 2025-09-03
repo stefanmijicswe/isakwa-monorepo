@@ -82,35 +82,34 @@ class ScheduleService {
   async getProfessorCourses(): Promise<Course[]> {
     console.log('Getting professor courses for schedule planning')
     
-    // Return mock courses for presentation
-    return this.getMockCourses()
-    
-    /* TODO: Enable API when auth is properly set up
-    return this.request<Course[]>('/academic-records/my-subjects')
-    */
+    try {
+      // Try to get from real API first
+      const assignments = await this.request<any[]>('/academic-records/my-subjects')
+      
+      // Map assignments to Course format
+      return assignments.map(assignment => ({
+        id: assignment.subject.id,
+        name: assignment.subject.name,
+        code: assignment.subject.code,
+        semester: assignment.academicYear,
+        credits: assignment.subject.ects,
+        students: 0, // Will be populated later if needed
+        type: assignment.subject.semesterType || 'WINTER'
+      }))
+    } catch (error) {
+      console.warn('API not available, using mock data:', error)
+      
+      // Fallback to mock courses
+      return this.getMockCourses()
+    }
   }
 
     // Get saved schedules
   async getSchedules(): Promise<Schedule[]> {
     console.log('Getting saved schedules')
 
-    // For now, always use mock data to avoid API errors during development
-    console.log('📱 Using mock data for stable demonstration')
-    const storedSchedules = this.getStoredSchedules()
-    const mockSchedules = this.getMockSchedules()
-
-    const allSchedules = [...storedSchedules]
-    mockSchedules.forEach(mockSchedule => {
-      if (!storedSchedules.find(s => s.courseId === mockSchedule.courseId)) {
-        allSchedules.push(mockSchedule)
-      }
-    })
-
-    return allSchedules
-
-    /* TODO: Re-enable API when backend is properly configured
     try {
-      // Try to get from API first
+      // Try to get from real API first
       const apiSchedules = await this.request<any[]>('/course-schedules/my-schedules')
       console.log('✅ Retrieved schedules from API:', apiSchedules.length)
       
@@ -162,7 +161,6 @@ class ScheduleService {
 
       return allSchedules
     }
-    */
   }
 
   // Get schedule by ID
@@ -186,91 +184,103 @@ class ScheduleService {
   async createSchedule(data: CreateScheduleDto): Promise<Schedule> {
     console.log('Creating schedule:', data)
 
-    // Use localStorage for stable demonstration
-    console.log('📱 Using localStorage for schedule creation')
-    const course = this.getMockCourses().find(c => c.id === data.courseId)
-    const newSchedule: Schedule = {
-      id: Date.now(),
-      courseId: data.courseId,
-      courseName: course?.name || 'Unknown Course',
-      courseCode: course?.acronym || 'UNK',
-      academicYear: '2024/2025',
-      lectures: data.lectures.map((lecture, index) => ({
-        ...lecture,
-        id: Date.now() + index,
-        type: 'lecture' as const
-      })),
-      practice: data.practice.map((practice, index) => ({
-        ...practice,
-        id: Date.now() + index + 1000,
-        type: 'practice' as const
-      })),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-
-    // Save to localStorage
-    this.saveSchedulesToStorage([...this.getStoredSchedules(), newSchedule])
-    return newSchedule
-
-    /* TODO: Re-enable API when backend is properly configured
     try {
-      // Prepare API payload
-      const apiPayload = {
+      // Step 1: Create CourseSchedule
+      const schedulePayload = {
         subjectId: data.courseId,
         academicYear: '2024/2025',
         semesterType: 'WINTER',
-        sessions: [
-          // Add lectures
-          ...data.lectures.map((lecture) => ({
-            title: lecture.topic,
-            description: lecture.description,
-            sessionType: 'LECTURE',
-            dayOfWeek: 1, // Monday
-            startTime: '09:00',
-            endTime: '10:30',
-            room: lecture.room || 'TBD'
-          })),
-          // Add practice sessions
-          ...data.practice.map((practice) => ({
-            title: practice.topic,
-            description: practice.description,
-            sessionType: 'EXERCISE',
-            dayOfWeek: 3, // Wednesday
-            startTime: '11:00',
-            endTime: '12:30',
-            room: practice.room || 'TBD'
-          }))
-        ]
+        isActive: true
       }
 
-      const apiResponse = await this.request<any>('/course-schedules', {
+      const scheduleResponse = await this.request<any>('/course-schedules', {
         method: 'POST',
-        body: JSON.stringify(apiPayload),
+        body: JSON.stringify(schedulePayload),
       })
 
-      console.log('✅ Schedule created via API:', apiResponse.id)
+      console.log('✅ Schedule created via API:', scheduleResponse.id)
+      
+      // Step 2: Create sessions for lectures and practice
+      const allSessions = []
+      
+      // Add lectures
+      for (const lecture of data.lectures) {
+        const sessionPayload = {
+          scheduleId: scheduleResponse.id,
+          title: lecture.topic,
+          description: lecture.description,
+          sessionType: 'LECTURE',
+          sessionDate: '2024-09-09', // Default date
+          startTime: '09:00',
+          endTime: '10:30',
+          room: lecture.room || 'TBD',
+          isActive: true
+        }
+        
+        const sessionResponse = await this.request<any>('/course-schedules/sessions', {
+          method: 'POST',
+          body: JSON.stringify(sessionPayload),
+        })
+        
+        allSessions.push(sessionResponse)
+        console.log('✅ Lecture session created:', sessionResponse.id)
+      }
+      
+      // Add practice sessions  
+      for (const practice of data.practice) {
+        const sessionPayload = {
+          scheduleId: scheduleResponse.id,
+          title: practice.topic,
+          description: practice.description,
+          sessionType: 'EXERCISE',
+          sessionDate: '2024-09-11', // Default date
+          startTime: '11:00',
+          endTime: '12:30',
+          room: practice.room || 'TBD',
+          isActive: true
+        }
+        
+        const sessionResponse = await this.request<any>('/course-schedules/sessions', {
+          method: 'POST',
+          body: JSON.stringify(sessionPayload),
+        })
+        
+        allSessions.push(sessionResponse)
+        console.log('✅ Practice session created:', sessionResponse.id)
+      }
 
       // Transform API response to our Schedule format
       const course = this.getMockCourses().find(c => c.id === data.courseId)
       return {
-        id: apiResponse.id,
+        id: scheduleResponse.id,
         courseId: data.courseId,
         courseName: course?.name || 'Unknown Course',
         courseCode: course?.acronym || 'UNK',
-        academicYear: apiResponse.academicYear,
-        lectures: data.lectures.map((lecture, index) => ({
-          ...lecture,
-          id: Date.now() + index,
-          type: 'lecture' as const
-        })),
-        practice: data.practice.map((practice, index) => ({
-          ...practice,
-          id: Date.now() + index + 1000,
-          type: 'practice' as const
-        })),
-        createdAt: apiResponse.createdAt,
-        updatedAt: apiResponse.updatedAt
+        academicYear: scheduleResponse.academicYear,
+        lectures: allSessions
+          ?.filter((session: any) => session.sessionType === 'LECTURE')
+          ?.map((session: any, index: number) => ({
+            id: session.id,
+            week: index + 1,
+            topic: session.title,
+            description: session.description || '',
+            duration: '90 min',
+            room: session.room || 'TBD',
+            type: 'lecture' as const
+          })) || [],
+        practice: allSessions
+          ?.filter((session: any) => session.sessionType === 'EXERCISE')
+          ?.map((session: any, index: number) => ({
+            id: session.id,
+            week: index + 1,
+            topic: session.title,
+            description: session.description || '',
+            duration: '90 min',
+            room: session.room || 'TBD',
+            type: 'practice' as const
+          })) || [],
+        createdAt: scheduleResponse.createdAt,
+        updatedAt: scheduleResponse.updatedAt
       }
     } catch (error) {
       console.warn('⚠️ API not available, falling back to localStorage')
@@ -301,7 +311,6 @@ class ScheduleService {
       this.saveSchedulesToStorage([...this.getStoredSchedules(), newSchedule])
       return newSchedule
     }
-    */
   }
 
     // Update existing schedule

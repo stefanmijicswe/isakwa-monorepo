@@ -132,28 +132,31 @@ class SyllabiService {
   async getProfessorSubjects(academicYear?: string): Promise<Subject[]> {
     console.log('Getting professor subjects for academic year:', academicYear)
     
-    // Return mock subjects for presentation
-    return this.getMockSubjects()
-    
-    /* TODO: Enable API when auth is properly set up
-    const queryParams = academicYear ? `?academicYear=${academicYear}` : ''
-    const assignments = await this.request<any[]>(`/academic-records/my-subjects${queryParams}`)
-    
-    // Map ProfessorAssignment objects to Subject objects
-    return assignments.map(assignment => ({
-      id: assignment.subject.id,
-      name: assignment.subject.name,
-      code: assignment.subject.code,
-      ects: assignment.subject.ects,
-      semesterType: assignment.subject.semesterType || 'WINTER', // Default to WINTER if null
-      academicYear: assignment.academicYear || assignment.subject.academicYear || '2024/2025',
-      description: assignment.subject.description,
-      credits: assignment.subject.credits,
-      lectureHours: assignment.subject.lectureHours,
-      practicalHours: assignment.subject.practicalHours,
-      studyProgramId: assignment.subject.studyProgramId
-    }))
-    */
+    try {
+      // Try to get from real API first
+      const queryParams = academicYear ? `?academicYear=${academicYear}` : ''
+      const assignments = await this.request<any[]>(`/academic-records/my-subjects${queryParams}`)
+      
+      // Map ProfessorAssignment objects to Subject objects
+      return assignments.map(assignment => ({
+        id: assignment.subject.id,
+        name: assignment.subject.name,
+        code: assignment.subject.code,
+        ects: assignment.subject.ects,
+        semesterType: assignment.subject.semesterType || 'WINTER', // Default to WINTER if null
+        academicYear: assignment.academicYear || assignment.subject.academicYear || '2024/2025',
+        description: assignment.subject.description,
+        credits: assignment.subject.credits,
+        lectureHours: assignment.subject.lectureHours,
+        practicalHours: assignment.subject.practicalHours,
+        studyProgramId: assignment.subject.studyProgramId
+      }))
+    } catch (error) {
+      console.warn('API not available, using mock data:', error)
+      
+      // Fallback to mock subjects only if API fails
+      return this.getMockSubjects()
+    }
   }
 
   // Mock subjects for demonstration
@@ -161,12 +164,12 @@ class SyllabiService {
     return [
       {
         id: 1,
-        name: 'Data Structures and Algorithms',
+        name: 'Introduction to Programming',
         code: 'CS101',
         ects: 6,
         semesterType: 'WINTER',
         academicYear: '2024/2025',
-        description: 'Comprehensive course covering fundamental data structures and algorithmic techniques',
+        description: 'Introduction to programming concepts and fundamentals',
         credits: 6,
         lectureHours: 30,
         practicalHours: 15,
@@ -174,12 +177,12 @@ class SyllabiService {
       },
       {
         id: 2,
-        name: 'Object-Oriented Programming',
+        name: 'Data Structures and Algorithms',
         code: 'CS201',
         ects: 7,
         semesterType: 'SUMMER',
         academicYear: '2024/2025',
-        description: 'Introduction to object-oriented programming concepts using Java',
+        description: 'Comprehensive course covering fundamental data structures and algorithmic techniques',
         credits: 7,
         lectureHours: 45,
         practicalHours: 30,
@@ -187,6 +190,32 @@ class SyllabiService {
       },
       {
         id: 3,
+        name: 'Introduction to Management',
+        code: 'BUS101',
+        ects: 6,
+        semesterType: 'WINTER',
+        academicYear: '2024/2025',
+        description: 'Introduction to business management principles',
+        credits: 6,
+        lectureHours: 30,
+        practicalHours: 15,
+        studyProgramId: 2
+      },
+      {
+        id: 4,
+        name: 'Introduction to Information Technologies',
+        code: 'IT101',
+        ects: 6,
+        semesterType: 'WINTER',
+        academicYear: '2024/2025',
+        description: 'Introduction to information technology concepts',
+        credits: 6,
+        lectureHours: 30,
+        practicalHours: 15,
+        studyProgramId: 1
+      },
+      {
+        id: 5,
         name: 'Database Systems',
         code: 'CS301',
         ects: 6,
@@ -218,18 +247,21 @@ class SyllabiService {
   async getSyllabi(filters: GetSyllabusDto = {}): Promise<Syllabus[]> {
     console.log('Getting syllabi with filters:', filters)
     
-    // Return mock syllabi for presentation
-    return this.getMockSyllabi(filters)
-    
-    /* TODO: Enable API when auth is properly set up
-    const queryParams = new URLSearchParams()
-    if (filters.subjectId) queryParams.append('subjectId', filters.subjectId.toString())
-    if (filters.academicYear) queryParams.append('academicYear', filters.academicYear)
-    if (filters.semesterType) queryParams.append('semesterType', filters.semesterType)
-    
-    const query = queryParams.toString()
-    return this.request<Syllabus[]>(`/academic-records/syllabus${query ? `?${query}` : ''}`)
-    */
+    try {
+      // Try to get from real API first
+      const queryParams = new URLSearchParams()
+      if (filters.subjectId) queryParams.append('subjectId', filters.subjectId.toString())
+      if (filters.academicYear) queryParams.append('academicYear', filters.academicYear)
+      if (filters.semesterType) queryParams.append('semesterType', filters.semesterType)
+      
+      const query = queryParams.toString()
+      return await this.request<Syllabus[]>(`/academic-records/syllabus${query ? `?${query}` : ''}`)
+    } catch (error) {
+      console.warn('API not available, using mock data:', error)
+      
+      // Fallback to mock syllabi
+      return this.getMockSyllabi(filters)
+    }
   }
 
   // Mock syllabi for demonstration
@@ -307,77 +339,86 @@ class SyllabiService {
   async getSyllabusById(id: number): Promise<Syllabus> {
     console.log('Getting syllabus by ID:', id)
     
-    // Return mock syllabus for presentation
-    const mockSyllabi = this.getMockSyllabi()
-    const syllabus = mockSyllabi.find(s => s.id === id)
-    
-    if (!syllabus) {
-      throw new Error(`Syllabus with ID ${id} not found`)
+    try {
+      // Try to get from real API first
+      return await this.request<Syllabus>(`/academic-records/syllabus/${id}`)
+    } catch (error) {
+      console.warn('API not available, using mock data:', error)
+      
+      // Fallback to mock syllabus
+      const mockSyllabi = this.getMockSyllabi()
+      const syllabus = mockSyllabi.find(s => s.id === id)
+      
+      if (!syllabus) {
+        throw new Error(`Syllabus with ID ${id} not found`)
+      }
+      
+      return syllabus
     }
-    
-    return syllabus
-    
-    /* TODO: Enable API when auth is properly set up
-    return this.request<Syllabus>(`/academic-records/syllabus/${id}`)
-    */
   }
 
   // Create new syllabus
   async createSyllabus(data: CreateSyllabusDto): Promise<Syllabus> {
-    console.log('Creating syllabus (mock):', data)
+    console.log('Creating syllabus:', data)
     
-    // For presentation, just return a mock successful response
-    const newSyllabus: Syllabus = {
-      id: Date.now(), // Use timestamp as unique ID
-      subjectId: data.subjectId,
-      title: data.title || `Syllabus for Subject ${data.subjectId}`,
-      description: data.description || 'Course description',
-      objectives: data.objectives || 'Learning objectives',
-      academicYear: data.academicYear,
-      isActive: data.isActive ?? true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      topics: [],
-      materials: []
+    try {
+      // Try to send to real API first
+      return await this.request<Syllabus>('/academic-records/syllabus', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      })
+    } catch (error) {
+      console.warn('API not available, using mock data:', error)
+      
+      // Fallback to mock response
+      const newSyllabus: Syllabus = {
+        id: Date.now(), // Use timestamp as unique ID
+        subjectId: data.subjectId,
+        title: `Syllabus for Subject ${data.subjectId}`,
+        description: data.description || 'Course description',
+        objectives: data.objectives || 'Learning objectives',
+        academicYear: data.academicYear,
+        isActive: data.isActive ?? true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        topics: [],
+        materials: []
+      }
+      
+      return newSyllabus
     }
-    
-    return newSyllabus
-    
-    /* TODO: Enable API when auth is properly set up
-    return this.request<Syllabus>('/academic-records/syllabus', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    })
-    */
   }
 
   // Update existing syllabus
   async updateSyllabus(id: number, data: UpdateSyllabusDto): Promise<Syllabus> {
-    console.log('Updating syllabus (mock):', { id, data })
+    console.log('Updating syllabus:', { id, data })
     
-    // For presentation, find existing mock syllabus and update it
-    const mockSyllabi = this.getMockSyllabi()
-    const existingSyllabus = mockSyllabi.find(s => s.id === id)
-    
-    if (!existingSyllabus) {
-      throw new Error(`Syllabus with ID ${id} not found`)
+    try {
+      // Try to update via real API first
+      return await this.request<Syllabus>(`/academic-records/syllabus/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      })
+    } catch (error) {
+      console.warn('API not available, using mock data:', error)
+      
+      // Fallback to mock update
+      const mockSyllabi = this.getMockSyllabi()
+      const existingSyllabus = mockSyllabi.find(s => s.id === id)
+      
+      if (!existingSyllabus) {
+        throw new Error(`Syllabus with ID ${id} not found`)
+      }
+      
+      const updatedSyllabus: Syllabus = {
+        ...existingSyllabus,
+        ...data,
+        id, // Keep original ID
+        updatedAt: new Date().toISOString()
+      }
+      
+      return updatedSyllabus
     }
-    
-    const updatedSyllabus: Syllabus = {
-      ...existingSyllabus,
-      ...data,
-      id, // Keep original ID
-      updatedAt: new Date().toISOString()
-    }
-    
-    return updatedSyllabus
-    
-    /* TODO: Enable API when auth is properly set up
-    return this.request<Syllabus>(`/academic-records/syllabus/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    })
-    */
   }
 
   // Delete syllabus

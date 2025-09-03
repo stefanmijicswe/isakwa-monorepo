@@ -412,14 +412,14 @@ export default function TeachingCoursesPage() {
         })}
       </div>
 
-                                                                                                               {/* Student Details Dialog */}
-           <Dialog open={showStudentModal} onOpenChange={setShowStudentModal}>
-             <DialogContent className="max-w-none max-h-[95vh] w-[95vw] h-[90vh] p-6">
-          <DialogHeader>
+      {/* Student Details Dialog */}
+      <Dialog open={showStudentModal} onOpenChange={setShowStudentModal}>
+        <DialogContent className="max-w-[90vw] w-[90vw] h-auto max-h-[85vh] p-6 my-8">
+          <DialogHeader className="pb-6">
             <DialogTitle className="flex items-center gap-3">
-              <GraduationCap className="h-5 w-5" />
+              <GraduationCap className="h-6 w-6" />
               <div>
-                <div className="text-lg">Enrolled Students</div>
+                <div className="text-xl">Enrolled Students</div>
                 <div className="text-sm font-normal text-muted-foreground">
                   {selectedCourse?.name} ({selectedCourse?.acronym}) • {selectedCourse?.studentsEnrolled} students
                 </div>
@@ -427,69 +427,69 @@ export default function TeachingCoursesPage() {
             </DialogTitle>
           </DialogHeader>
           
-                                                                                                                                                                               <div className="max-h-[75vh] overflow-y-auto">
-                <div className="border rounded-lg bg-white shadow-sm">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b">
-                      <tr>
-                        <th className="px-8 py-5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                          Student
-                        </th>
-                        <th className="px-8 py-5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                          Student ID
-                        </th>
-                        <th className="px-8 py-5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                          Year
-                        </th>
-                        <th className="px-8 py-5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-8 py-5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                          Average Grade
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-100">
-                      {selectedCourse?.students.map((student: Student) => (
-                        <tr key={student.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-8 py-5">
-                            <div className="flex items-center">
-                              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center mr-4 flex-shrink-0 shadow-sm">
-                                <span className="text-blue-700 font-semibold text-base">
-                                  {student.name.split(' ').map((n: string) => n[0]).join('')}
-                                </span>
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="text-lg font-semibold text-gray-900">{student.name}</div>
-                                <div className="text-base text-gray-600">{student.email}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-8 py-5 text-base text-gray-900 font-mono font-medium">
-                            {student.id}
-                          </td>
-                          <td className="px-8 py-5 text-lg text-gray-900 font-semibold">
-                            {student.year}
-                          </td>
-                          <td className="px-8 py-5">
-                            <Badge 
-                              variant={student.status === 'Active' ? 'default' : 'secondary'}
-                              className="text-base h-auto py-2 px-4 font-medium"
-                            >
-                              {student.status}
-                            </Badge>
-                            </td>
-                          <td className="px-8 py-5 text-lg text-gray-900 font-bold">
-                            {student.averageGrade}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-                 </DialogContent>
-       </Dialog>
+          <div className="w-full overflow-auto max-h-[65vh]">
+            <div className="border rounded-lg bg-white shadow-sm">
+              <table className="w-full table-fixed">
+                <thead className="bg-gray-50 border-b sticky top-0">
+                  <tr>
+                    <th className="w-2/5 px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Student
+                    </th>
+                    <th className="w-1/5 px-2 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Student ID
+                    </th>
+                    <th className="w-1/12 px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Year
+                    </th>
+                    <th className="w-1/6 px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="w-1/6 px-2 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Grade
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {selectedCourse?.students.map((student: Student) => (
+                    <tr key={student.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="w-2/5 px-3 py-3">
+                        <div className="flex items-center">
+                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center mr-2 flex-shrink-0 shadow-sm">
+                            <span className="text-blue-700 font-semibold text-xs">
+                              {student.name.split(' ').map((n: string) => n[0]).join('')}
+                            </span>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-semibold text-gray-900 truncate">{student.name}</div>
+                            <div className="text-xs text-gray-600 truncate">{student.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="w-1/5 px-2 py-3 text-sm text-gray-900 font-mono font-medium">
+                        {student.id}
+                      </td>
+                      <td className="w-1/12 px-2 py-3 text-sm text-gray-900 font-semibold text-center">
+                        {student.year}
+                      </td>
+                      <td className="w-1/6 px-2 py-3 text-center">
+                        <Badge 
+                          variant={student.status === 'Active' ? 'default' : 'secondary'}
+                          className="text-xs h-auto py-1 px-2 font-medium"
+                        >
+                          {student.status}
+                        </Badge>
+                      </td>
+                      <td className="w-1/6 px-2 py-3 text-sm text-gray-900 font-bold text-center">
+                        {student.averageGrade}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
        {/* Course Details Dialog */}
        <Dialog open={showCourseDetailsModal} onOpenChange={setShowCourseDetailsModal}>

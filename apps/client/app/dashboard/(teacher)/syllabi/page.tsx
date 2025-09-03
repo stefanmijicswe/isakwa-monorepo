@@ -36,12 +36,15 @@ export default function SyllabiPage() {
       // Fetch professor's subjects
       const subjects = await syllabiService.getProfessorSubjects(currentYear)
       
-      // Fetch existing syllabi for these subjects
+      // Fetch existing syllabi for these subjects individually
       const syllabi = await syllabiService.getSyllabi({ academicYear: currentYear })
+      console.log('🔍 Retrieved syllabi from backend:', syllabi)
+      console.log('📚 Retrieved subjects:', subjects)
       
       // Combine subjects with their syllabi
       const coursesWithSyllabi: CourseWithSyllabus[] = subjects.map(subject => {
         const syllabus = syllabi.find(s => s.subjectId === subject.id)
+        console.log(`🔗 Subject ${subject.id} (${subject.name}):`, { syllabus, exists: !!syllabus })
         return {
           ...subject,
           syllabus,
