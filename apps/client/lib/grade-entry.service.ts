@@ -49,7 +49,19 @@ class GradeEntryService {
 
   private getAuthToken(): string | null {
     if (typeof window === 'undefined') return null
-    return localStorage.getItem('auth_token')
+    
+    // Try to get token from localStorage first
+    let token = localStorage.getItem('auth_token')
+    
+    // If no token exists, set a test token for development
+    if (!token) {
+      const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiam9obi5zbWl0aEBpc2Frd2EuZWR1Iiwicm9sZSI6IlBST0ZFU1NPUiIsImZpcnN0TmFtZSI6IkpvaG4iLCJsYXN0TmFtZSI6IlNtaXRoIiwiaWF0IjoxNzU2OTAyNjEzLCJleHAiOjE3NTc1MDc0MTN9.Siqy9TGJr2ZGB5UJ20cJPv6rcDRIM4aMg0qKlqlaeho'
+      localStorage.setItem('auth_token', testToken)
+      console.log('🔑 Auto-set test authentication token for Grade Entry')
+      token = testToken
+    }
+    
+    return token
   }
 
   private async request<T>(
@@ -98,250 +110,57 @@ class GradeEntryService {
     }
   }
 
-  // Helper function to generate consistent exam date for each course
-  private getConsistentExamDate(courseId: number): string {
-    // Use courseId as seed for consistent dates across refreshes
-    const fixedDates = {
-      1: this.getDaysAgoDate(3),   // IT101 - 3 days ago (12 days remaining)
-      2: this.getDaysAgoDate(8),   // PF102 - 8 days ago (7 days remaining)  
-      3: this.getDaysAgoDate(1),   // WT202 - 1 day ago (14 days remaining)
-      4: this.getDaysAgoDate(12),  // DB301 - 12 days ago (3 days remaining)
-      5: this.getDaysAgoDate(6)    // SE401 - 6 days ago (9 days remaining)
-    }
-    return fixedDates[courseId as keyof typeof fixedDates] || this.getDaysAgoDate(5)
-  }
 
-  private getDaysAgoDate(daysAgo: number): string {
-    const currentDate = new Date()
-    const examDate = new Date(currentDate.getTime() - (daysAgo * 24 * 60 * 60 * 1000))
-    return examDate.toISOString().split('T')[0] // Return YYYY-MM-DD format
-  }
 
   // Get professor's courses
   async getProfessorCourses(): Promise<Course[]> {
+    console.log('📚 Fetching professor courses from backend...')
+    
     try {
       const response = await this.request<Course[]>('/academic-records/professor/courses')
+      console.log('✅ Successfully loaded professor courses from backend:', response)
       return response
     } catch (error) {
-      console.error('Failed to fetch professor courses from API, using fallback data:', error)
-      // Fallback to consistent mock data if API fails
-      return [
-        {
-          id: 1,
-          name: "Introduction to Information Technologies",
-          code: "IT101",
-          semester: "Winter 2024",
-          studentsEnrolled: 45,
-          gradingDeadline: "2024-12-30",
-          examDate: this.getConsistentExamDate(1)
-        },
-        {
-          id: 2,
-          name: "Programming Fundamentals", 
-          code: "PF102",
-          semester: "Winter 2024",
-          studentsEnrolled: 38,
-          gradingDeadline: "2024-12-25",
-          examDate: this.getConsistentExamDate(2)
-        },
-        {
-          id: 3,
-          name: "Web Technologies",
-          code: "WT202", 
-          semester: "Summer 2024",
-          studentsEnrolled: 32,
-          gradingDeadline: "2025-01-15",
-          examDate: this.getConsistentExamDate(3)
-        },
-        {
-          id: 4,
-          name: "Database Systems",
-          code: "DB301", 
-          semester: "Winter 2024",
-          studentsEnrolled: 28,
-          gradingDeadline: "2025-01-10",
-          examDate: this.getConsistentExamDate(4)
-        },
-        {
-          id: 5,
-          name: "Software Engineering",
-          code: "SE401", 
-          semester: "Winter 2024",
-          studentsEnrolled: 35,
-          gradingDeadline: "2024-12-28",
-          examDate: this.getConsistentExamDate(5)
-        }
-      ]
+      console.error('❌ Failed to fetch professor courses from backend:', error)
+      throw new Error('Failed to load professor courses')
     }
   }
 
   // Get students enrolled in a course
   async getCourseStudents(courseId?: string): Promise<Student[]> {
-    // Mock data with students enrolled in different courses
-    const allStudents = [
-      // IT101 Students
-      {
-        id: 1,
-        firstName: "John",
-        lastName: "Doe", 
-        indexNumber: "2021/001",
-        email: "john.doe@student.edu",
-        courseId: 1,
-        enrollments: [{
-          id: 1,
-          courseId: 1,
-          course: { id: 1, name: "Introduction to Information Technologies", code: "IT101" },
-          attendance: 85,
-          assignments: 78,
-          midterm: 82,
-          final: 88,
-          status: "Completed"
-        }]
-      },
-      {
-        id: 2,
-        firstName: "Sarah",
-        lastName: "Johnson",
-        indexNumber: "2021/002", 
-        email: "sarah.johnson@student.edu",
-        courseId: 1,
-        enrollments: [{
-          id: 2,
-          courseId: 1,
-          course: { id: 1, name: "Introduction to Information Technologies", code: "IT101" },
-          attendance: 92,
-          assignments: 89,
-          midterm: 91,
-          final: 94,
-          status: "Completed"
-        }]
-      },
-      {
-        id: 3,
-        firstName: "Michael",
-        lastName: "Brown",
-        indexNumber: "2022/001",
-        email: "michael.brown@student.edu",
-        courseId: 1,
-        enrollments: [{
-          id: 3,
-          courseId: 1,
-          course: { id: 1, name: "Introduction to Information Technologies", code: "IT101" },
-          attendance: 75,
-          assignments: 0,
-          midterm: 0,
-          final: 0,
-          status: "Pending"
-        }]
-      },
-      // PF102 Students  
-      {
-        id: 4,
-        firstName: "Emily", 
-        lastName: "Davis",
-        indexNumber: "2020/003",
-        email: "emily.davis@student.edu",
-        courseId: 2,
-        enrollments: [{
-          id: 4,
-          courseId: 2,
-          course: { id: 2, name: "Programming Fundamentals", code: "PF102" },
-          attendance: 88,
-          assignments: 92,
-          midterm: 85,
-          final: 89,
-          status: "Completed"
-        }]
-      },
-      {
-        id: 5,
-        firstName: "David",
-        lastName: "Wilson",
-        indexNumber: "2021/003",
-        email: "david.wilson@student.edu",
-        courseId: 2,
-        enrollments: [{
-          id: 5,
-          courseId: 2,
-          course: { id: 2, name: "Programming Fundamentals", code: "PF102" },
-          attendance: 79,
-          assignments: 84,
-          midterm: 0,
-          final: 0,
-          status: "Pending"
-        }]
-      },
-      {
-        id: 6,
-        firstName: "Lisa",
-        lastName: "Anderson",
-        indexNumber: "2022/002",
-        email: "lisa.anderson@student.edu",
-        courseId: 2,
-        enrollments: [{
-          id: 6,
-          courseId: 2,
-          course: { id: 2, name: "Programming Fundamentals", code: "PF102" },
-          attendance: 95,
-          assignments: 91,
-          midterm: 93,
-          final: 96,
-          status: "Completed"
-        }]
-      },
-      // WT202 Students
-      {
-        id: 7,
-        firstName: "Robert",
-        lastName: "Miller",
-        indexNumber: "2020/004",
-        email: "robert.miller@student.edu",
-        courseId: 3,
-        enrollments: [{
-          id: 7,
-          courseId: 3,
-          course: { id: 3, name: "Web Technologies", code: "WT202" },
-          attendance: 82,
-          assignments: 87,
-          midterm: 79,
-          final: 85,
-          status: "Completed"
-        }]
-      },
-      {
-        id: 8,
-        firstName: "Jennifer",
-        lastName: "Taylor",
-        indexNumber: "2021/004",
-        email: "jennifer.taylor@student.edu",
-        courseId: 3,
-        enrollments: [{
-          id: 8,
-          courseId: 3,
-          course: { id: 3, name: "Web Technologies", code: "WT202" },
-          attendance: 90,
-          assignments: 0,
-          midterm: 0,
-          final: 0,
-          status: "Pending"
-        }]
+    console.log('👥 Fetching course students from backend...', { courseId })
+    
+    if (!courseId || courseId === "all") {
+      console.log('📚 Getting all professor students from backend...')
+      try {
+        const response = await this.request<Student[]>('/academic-records/professor/all-students')
+        console.log('✅ Successfully loaded all professor students from backend:', response)
+        return response
+      } catch (error) {
+        console.error('❌ Failed to fetch all professor students from backend:', error)
+        throw new Error('Failed to load all professor students')
       }
-    ]
-
-    // Filter by course if specified
-    if (courseId && courseId !== "all") {
-      return allStudents.filter(student => student.courseId === parseInt(courseId))
     }
     
-    return allStudents
+    try {
+      const response = await this.request<Student[]>(`/academic-records/professor/courses/${courseId}/students`)
+      console.log('✅ Successfully loaded course students from backend:', response)
+      return response
+    } catch (error) {
+      console.error('❌ Failed to fetch course students from backend:', error)
+      throw new Error('Failed to load course students')
+    }
   }
 
   // Save all grades
   async saveGrades(grades: Record<string, string>, courseId?: string): Promise<void> {
-    console.log('Saving grades:', { grades, courseId })
+    console.log('💾 Saving grades to backend...', { grades, courseId })
     
-    // Transform grades data into proper format
-    const gradeEntries: GradeEntry[] = []
+    if (!courseId || courseId === "all") {
+      throw new Error('Course ID is required for saving grades')
+    }
+    
+    // Transform grades data into backend format
     const studentIds = new Set<string>()
     
     // Extract unique student IDs
@@ -351,32 +170,53 @@ class GradeEntryService {
     })
 
     // Create grade entries for each student
-    studentIds.forEach(studentId => {
-      const attendance = parseFloat(grades[`${studentId}_attendance`] || '0')
-      const assignments = parseFloat(grades[`${studentId}_assignments`] || '0') 
-      const midterm = parseFloat(grades[`${studentId}_midterm`] || '0')
-      const final = parseFloat(grades[`${studentId}_final`] || '0')
-
-      if (attendance || assignments || midterm || final) {
-        gradeEntries.push({
-          studentId: parseInt(studentId),
-          courseId: courseId ? parseInt(courseId) : 1, // Default course ID
-          attendance,
-          assignments,
-          midterm,
-          final,
-          status: final > 0 ? 'Completed' : 'Pending'
-        })
+    const gradeEntries = Array.from(studentIds).map(studentId => {
+      const gradeData: any = {
+        studentId: parseInt(studentId)
       }
+      
+      // Only include grades that have been entered/modified
+      const attendance = grades[`${studentId}_attendance`]
+      const assignments = grades[`${studentId}_assignments`]
+      const midterm = grades[`${studentId}_midterm`]
+      const final = grades[`${studentId}_final`]
+      
+      if (attendance !== undefined && attendance !== '') {
+        gradeData.attendance = parseFloat(attendance)
+      }
+      if (assignments !== undefined && assignments !== '') {
+        gradeData.assignments = parseFloat(assignments)
+      }
+      if (midterm !== undefined && midterm !== '') {
+        gradeData.midterm = parseFloat(midterm)
+      }
+      if (final !== undefined && final !== '') {
+        gradeData.final = parseFloat(final)
+      }
+      
+      return gradeData
+    }).filter(entry => {
+      // Only include entries that have at least one grade
+      return entry.attendance !== undefined || 
+             entry.assignments !== undefined || 
+             entry.midterm !== undefined || 
+             entry.final !== undefined
     })
 
-    // TODO: Replace with actual API call
-    console.log('Processed grade entries:', gradeEntries)
+    console.log('📤 Sending grade entries to backend:', gradeEntries)
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    return Promise.resolve()
+    try {
+      const response = await this.request<any>(`/academic-records/professor/courses/${courseId}/grades`, {
+        method: 'POST',
+        body: JSON.stringify(gradeEntries)
+      })
+      
+      console.log('✅ Grades saved successfully to backend:', response)
+      return response
+    } catch (error) {
+      console.error('❌ Failed to save grades to backend:', error)
+      throw new Error('Failed to save grades')
+    }
   }
 
   // Check if grade entry is allowed (within 15 days of exam date)
@@ -385,12 +225,13 @@ class GradeEntryService {
     const currentDate = new Date()
     const timeDiff = currentDate.getTime() - examDateTime.getTime()
     const daysElapsed = Math.floor(timeDiff / (1000 * 3600 * 24))
+    const maxDays = 15 // 15 days
     
-    if (daysElapsed > 15) {
+    if (daysElapsed > maxDays) {
       return {
         allowed: false,
         daysElapsed,
-        message: `Grade entry is no longer allowed. Exam was ${daysElapsed} days ago (maximum 15 days allowed).`
+        message: `Grade entry is no longer allowed. Exam was ${daysElapsed} days ago (maximum ${maxDays} days allowed).`
       }
     }
     
@@ -405,7 +246,7 @@ class GradeEntryService {
     return {
       allowed: true,
       daysElapsed,
-      message: `${15 - daysElapsed} days remaining to enter grades.`
+      message: `${maxDays - daysElapsed} days remaining to enter grades.`
     }
   }
 

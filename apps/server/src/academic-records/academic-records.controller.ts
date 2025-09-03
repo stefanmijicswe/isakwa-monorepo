@@ -363,6 +363,13 @@ export class AcademicRecordsController {
     return this.academicRecordsService.getProfessorCoursesWithExams(req.user.id);
   }
 
+  @Get('professor/all-students')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
+  async getAllProfessorStudents(@Request() req: any) {
+    return this.academicRecordsService.getAllProfessorStudents(req.user.id);
+  }
+
   @Get('professor/courses/:courseId/students')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PROFESSOR)
@@ -371,5 +378,22 @@ export class AcademicRecordsController {
     @Request() req: any,
   ) {
     return this.academicRecordsService.getCourseStudents(parseInt(courseId), req.user.id);
+  }
+
+  @Post('professor/courses/:courseId/grades')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROFESSOR)
+  async saveGrades(
+    @Param('courseId') courseId: string,
+    @Body() gradeData: Array<{
+      studentId: number;
+      attendance?: number;
+      assignments?: number;
+      midterm?: number;
+      final?: number;
+    }>,
+    @Request() req: any,
+  ) {
+    return this.academicRecordsService.saveGrades(parseInt(courseId), req.user.id, gradeData);
   }
 }

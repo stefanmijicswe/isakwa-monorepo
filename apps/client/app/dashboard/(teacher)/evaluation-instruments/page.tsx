@@ -65,17 +65,40 @@ export default function EvaluationInstrumentsPage() {
     try {
       setLoading(true)
       setError(null)
-      const [instrumentsData, subjectsData, submissionsData] = await Promise.all([
-        evaluationInstrumentsService.getEvaluationInstruments(),
-        evaluationInstrumentsService.getProfessorSubjects(),
-        evaluationInstrumentsService.getEvaluationSubmissions()
-      ])
-      setInstruments(instrumentsData)
-      setSubjects(subjectsData)
-      setSubmissions(submissionsData.slice(0, 10)) // Last 10 submissions
+      
+      // Load data separately with individual error handling
+      let instrumentsData: any[] = []
+      let subjectsData: any[] = []
+      let submissionsData: any[] = []
+      
+      try {
+        instrumentsData = await evaluationInstrumentsService.getEvaluationInstruments()
+      } catch (err) {
+        console.warn('Failed to load instruments:', err)
+      }
+      
+      try {
+        subjectsData = await evaluationInstrumentsService.getProfessorSubjects()
+      } catch (err) {
+        console.warn('Failed to load subjects:', err)
+      }
+      
+      try {
+        submissionsData = await evaluationInstrumentsService.getEvaluationSubmissions()
+      } catch (err) {
+        console.warn('Failed to load submissions:', err)
+      }
+      
+      setInstruments(instrumentsData || [])
+      setSubjects(subjectsData || [])
+      setSubmissions((submissionsData || []).slice(0, 10)) // Last 10 submissions
     } catch (err: any) {
       console.error('Failed to load data:', err)
       setError(err.message || 'Failed to load data')
+      // Set empty arrays as fallback
+      setInstruments([])
+      setSubjects([])
+      setSubmissions([])
     } finally {
       setLoading(false)
     }
@@ -208,9 +231,14 @@ export default function EvaluationInstrumentsPage() {
   const getTypeColor = (type: string) => {
     switch (type) {
       case "EXAM": return "bg-red-100 text-red-800"
+      case "MIDTERM": return "bg-red-200 text-red-900"
+      case "FINAL": return "bg-red-300 text-red-900"
       case "TEST": return "bg-blue-100 text-blue-800"
       case "QUIZ": return "bg-green-100 text-green-800"
       case "PROJECT": return "bg-purple-100 text-purple-800"
+      case "ASSIGNMENT": return "bg-orange-100 text-orange-800"
+      case "LABORATORY": return "bg-indigo-100 text-indigo-800"
+      case "PRESENTATION": return "bg-pink-100 text-pink-800"
       default: return "bg-slate-100 text-slate-800"
     }
   }
@@ -334,10 +362,7 @@ export default function EvaluationInstrumentsPage() {
                           <BarChart3 className="h-4 w-4" />
                           <span>Points: {instrument.maxPoints}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-slate-600">
-                          <FileText className="h-4 w-4" />
-                          <span>Questions: {instrument.questions}</span>
-                        </div>
+
                         {instrument.duration && (
                           <div className="flex items-center gap-2 text-sm text-slate-600">
                             <Clock className="h-4 w-4" />
@@ -346,7 +371,7 @@ export default function EvaluationInstrumentsPage() {
                         )}
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <Users className="h-4 w-4" />
-                          <span>Submissions: {instrument.submissions}</span>
+                          <span>Submissions: {instrument.submissions?.length || 0}</span>
                         </div>
                       </div>
 
@@ -500,11 +525,13 @@ export default function EvaluationInstrumentsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="EXAM">Exam</SelectItem>
-                    <SelectItem value="PROJECT">Project</SelectItem>
+                    <SelectItem value="MIDTERM">Midterm</SelectItem>
+                    <SelectItem value="FINAL">Final</SelectItem>
+                    <SelectItem value="TEST">Test</SelectItem>
                     <SelectItem value="QUIZ">Quiz</SelectItem>
+                    <SelectItem value="PROJECT">Project</SelectItem>
                     <SelectItem value="ASSIGNMENT">Assignment</SelectItem>
-                    <SelectItem value="HOMEWORK">Homework</SelectItem>
-                    <SelectItem value="LAB_EXERCISE">Lab Exercise</SelectItem>
+                    <SelectItem value="LABORATORY">Laboratory</SelectItem>
                     <SelectItem value="PRESENTATION">Presentation</SelectItem>
                   </SelectContent>
                 </Select>

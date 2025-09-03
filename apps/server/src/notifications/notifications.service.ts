@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
+import { CreateCourseNotificationDto } from './dto/create-course-notification.dto';
 import { NotificationType, NotificationPriority } from '@prisma/client';
 
 @Injectable()
@@ -148,6 +149,143 @@ export class NotificationsService {
     // Delete the notification
     return this.prisma.notification.delete({
       where: { id: notificationId },
+    });
+  }
+
+  async createCourseNotification(createCourseNotificationDto: CreateCourseNotificationDto, professorId: number) {
+    console.log('📢 Creating course notification:', createCourseNotificationDto);
+    console.log('👨‍🏫 Professor ID:', professorId);
+
+    // Verify professor teaches this subject if subjectId is provided
+    if (createCourseNotificationDto.subjectId) {
+      const assignment = await this.prisma.professorAssignment.findFirst({
+        where: {
+          professorId: professorId,
+          subjectId: createCourseNotificationDto.subjectId,
+          isActive: true,
+        },
+        include: {
+          subject: true
+        }
+      });
+
+      if (!assignment) {
+        throw new Error('You are not authorized to create notifications for this subject');
+      }
+
+      console.log('✅ Professor is authorized for subject:', assignment.subject.name);
+    }
+
+    // Create the notification
+    const notification = await this.prisma.notification.create({
+      data: {
+        title: createCourseNotificationDto.title,
+        message: createCourseNotificationDto.message,
+        type: createCourseNotificationDto.type || NotificationType.GENERAL,
+        priority: createCourseNotificationDto.priority || NotificationPriority.NORMAL,
+        createdBy: professorId,
+      },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        },
+      },
+    });
+
+    console.log('✅ Notification created:', notification);
+
+    // Determine recipients based on subject
+    let recipientUserIds: number[] = [];
+
+    if (createCourseNotificationDto.subjectId) {
+      // Get all students enrolled in this subject
+      const enrollments = await this.prisma.courseEnrollment.findMany({
+        where: {
+          subjectId: createCourseNotificationDto.subjectId,
+          isActive: true,
+        },
+        select: {
+          studentId: true,
+        },
+      });
+
+      recipientUserIds = enrollments.map(enrollment => enrollment.studentId);
+      console.log(`📚 Found ${recipientUserIds.length} students enrolled in subject ${createCourseNotificationDto.subjectId}`);
+    } else {
+      // If no specific subject, send to all students of professor's subjects
+      const professorAssignments = await this.prisma.professorAssignment.findMany({
+        where: {
+          professorId: professorId,
+          isActive: true,
+        },
+        select: {
+          subjectId: true,
+        },
+      });
+
+      const subjectIds = professorAssignments.map(assignment => assignment.subjectId);
+
+      const enrollments = await this.prisma.courseEnrollment.findMany({
+        where: {
+          subjectId: { in: subjectIds },
+          isActive: true,
+        },
+        select: {
+          studentId: true,
+        },
+      });
+
+      recipientUserIds = [...new Set(enrollments.map(enrollment => enrollment.studentId))]; // Remove duplicates
+      console.log(`📚 Found ${recipientUserIds.length} unique students across professor's ${subjectIds.length} subjects`);
+    }
+
+    // Also include the professor as a recipient
+    recipientUserIds.push(professorId);
+
+    // Create notification recipients
+    if (recipientUserIds.length > 0) {
+      const recipients = recipientUserIds.map(userId => ({
+        notificationId: notification.id,
+        userId: userId,
+      }));
+
+      await this.prisma.notificationRecipient.createMany({
+        data: recipients,
+      });
+
+      console.log(`📤 Created notification recipients for ${recipientUserIds.length} users`);
+    }
+
+    // Return notification with recipients included
+    return this.prisma.notification.findUnique({
+      where: { id: notification.id },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        },
+        recipients: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+              },
+            },
+          },
+        },
+      },
     });
   }
 }

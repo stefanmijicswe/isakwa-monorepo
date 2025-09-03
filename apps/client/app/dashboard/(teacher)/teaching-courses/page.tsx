@@ -1,203 +1,76 @@
 "use client"
 
 import * as React from "react"
-import { BookOpen, GraduationCap, Calendar, Users, Star, Pin, PinOff, Eye } from "lucide-react"
+import { BookOpen, GraduationCap, Calendar, Users, Star, Pin, PinOff, Eye, Loader2, RefreshCw, AlertCircle } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-
-interface Student {
-  id: string
-  name: string
-  email: string
-  year: number
-  status: string
-  averageGrade: number
-}
-
-interface Course {
-  id: number
-  name: string
-  acronym: string
-  ects: number
-  semester: string
-  studentsEnrolled: number
-  status: string
-  students: Student[]
-}
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { teachingCoursesService, type Course, type Student } from "@/lib/teaching-courses.service"
 
 export default function TeachingCoursesPage() {
   const [showStudentModal, setShowStudentModal] = React.useState(false)
   const [showCourseDetailsModal, setShowCourseDetailsModal] = React.useState(false)
   const [selectedCourse, setSelectedCourse] = React.useState<Course | null>(null)
-  const [pinnedCourses, setPinnedCourses] = React.useState<Set<number>>(() => {
-    // Load pinned courses from localStorage on component mount
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('pinned-courses')
-      return saved ? new Set(JSON.parse(saved)) : new Set()
-    }
-    return new Set()
-  })
+  const [pinnedCourses, setPinnedCourses] = React.useState<Set<number>>(new Set())
+  
+  // Data states
+  const [courses, setCourses] = React.useState<Course[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
+  const [refreshing, setRefreshing] = React.useState(false)
+  const [pinnedLoading, setPinnedLoading] = React.useState(false)
 
-  const teachingCourses: Course[] = React.useMemo(() => [
-    {
-      id: 1,
-      name: "Introduction to Information Technologies",
-      acronym: "IT101",
-      ects: 6,
-      semester: "Winter",
-      studentsEnrolled: 45,
-      status: "Active",
-      students: [
-        { id: "2021001", name: "John Doe", email: "john.doe@student.edu", year: 1, status: "Active", averageGrade: 8.5 },
-        { id: "2021002", name: "Jane Smith", email: "jane.smith@student.edu", year: 1, status: "Active", averageGrade: 9.2 },
-        { id: "2021003", name: "Mike Johnson", email: "mike.johnson@student.edu", year: 1, status: "Active", averageGrade: 7.8 },
-        { id: "2021004", name: "Sarah Wilson", email: "sarah.wilson@student.edu", year: 1, status: "Active", averageGrade: 8.9 },
-        { id: "2021005", name: "David Brown", email: "david.brown@student.edu", year: 1, status: "Active", averageGrade: 8.1 },
-        { id: "2021006", name: "Emily Davis", email: "emily.davis@student.edu", year: 1, status: "Active", averageGrade: 9.0 },
-        { id: "2021007", name: "Robert Miller", email: "robert.miller@student.edu", year: 1, status: "Active", averageGrade: 7.9 },
-        { id: "2021008", name: "Lisa Garcia", email: "lisa.garcia@student.edu", year: 1, status: "Active", averageGrade: 8.7 },
-        { id: "2021009", name: "James Rodriguez", email: "james.rodriguez@student.edu", year: 1, status: "Active", averageGrade: 8.3 },
-        { id: "2021010", name: "Maria Martinez", email: "maria.martinez@student.edu", year: 1, status: "Active", averageGrade: 8.6 }
-      ]
-    },
-    {
-      id: 2,
-      name: "Programming Fundamentals",
-      acronym: "PF102",
-      ects: 6,
-      semester: "Winter",
-      studentsEnrolled: 38,
-      status: "Active",
-      students: [
-        { id: "2021001", name: "John Doe", email: "john.doe@student.edu", year: 1, status: "Active", averageGrade: 8.5 },
-        { id: "2021002", name: "Jane Smith", email: "jane.smith@student.edu", year: 1, status: "Active", averageGrade: 9.2 },
-        { id: "2021003", name: "Mike Johnson", email: "mike.johnson@student.edu", year: 1, status: "Active", averageGrade: 7.8 },
-        { id: "2021004", name: "Sarah Wilson", email: "sarah.wilson@student.edu", year: 1, status: "Active", averageGrade: 8.9 },
-        { id: "2021005", name: "David Brown", email: "david.brown@student.edu", year: 1, status: "Active", averageGrade: 8.1 },
-        { id: "2021006", name: "Emily Davis", email: "emily.davis@student.edu", year: 1, status: "Active", averageGrade: 9.0 },
-        { id: "2021007", name: "Robert Miller", email: "robert.miller@student.edu", year: 1, status: "Active", averageGrade: 7.9 },
-        { id: "2021008", name: "Lisa Garcia", email: "lisa.garcia@student.edu", year: 1, status: "Active", averageGrade: 8.7 }
-      ]
-    },
-    {
-      id: 3,
-      name: "Web Technologies",
-      acronym: "WT202",
-      ects: 6,
-      semester: "Summer",
-      studentsEnrolled: 32,
-      status: "Active",
-      students: [
-        { id: "2021001", name: "John Doe", email: "john.doe@student.edu", year: 2, status: "Active", averageGrade: 8.5 },
-        { id: "2021002", name: "Jane Smith", email: "jane.smith@student.edu", year: 2, status: "Active", averageGrade: 9.2 },
-        { id: "2021003", name: "Mike Johnson", email: "mike.johnson@student.edu", year: 2, status: "Active", averageGrade: 7.8 },
-        { id: "2021004", name: "Sarah Wilson", email: "sarah.wilson@student.edu", year: 2, status: "Active", averageGrade: 8.9 },
-        { id: "2021005", name: "David Brown", email: "david.brown@student.edu", year: 2, status: "Active", averageGrade: 8.1 },
-        { id: "2021006", name: "Emily Davis", email: "emily.davis@student.edu", year: 2, status: "Active", averageGrade: 9.0 },
-        { id: "2021007", name: "Robert Miller", email: "robert.miller@student.edu", year: 2, status: "Active", averageGrade: 7.9 },
-        { id: "2021008", name: "Lisa Garcia", email: "lisa.garcia@student.edu", year: 2, status: "Active", averageGrade: 8.7 }
-      ]
-    },
-    {
-      id: 4,
-      name: "Database Systems",
-      acronym: "DB203",
-      ects: 6,
-      semester: "Summer",
-      studentsEnrolled: 28,
-      status: "Active",
-      students: [
-        { id: "2021001", name: "John Doe", email: "john.doe@student.edu", year: 2, status: "Active", averageGrade: 8.5 },
-        { id: "2021002", name: "Jane Smith", email: "jane.smith@student.edu", year: 2, status: "Active", averageGrade: 9.2 },
-        { id: "2021003", name: "Mike Johnson", email: "mike.johnson@student.edu", year: 2, status: "Active", averageGrade: 7.8 },
-        { id: "2021004", name: "Sarah Wilson", email: "sarah.wilson@student.edu", year: 2, status: "Active", averageGrade: 8.9 },
-        { id: "2021005", name: "David Brown", email: "david.brown@student.edu", year: 2, status: "Active", averageGrade: 8.1 },
-        { id: "2021006", name: "Emily Davis", email: "emily.davis@student.edu", year: 2, status: "Active", averageGrade: 9.0 },
-        { id: "2021007", name: "Robert Miller", email: "robert.miller@student.edu", year: 2, status: "Active", averageGrade: 7.9 }
-      ]
-    },
-    {
-      id: 5,
-      name: "Software Engineering Basics",
-      acronym: "SE205",
-      ects: 6,
-      semester: "Winter",
-      studentsEnrolled: 25,
-      status: "Active",
-      students: [
-        { id: "2021001", name: "John Doe", email: "john.doe@student.edu", year: 2, status: "Active", averageGrade: 8.5 },
-        { id: "2021002", name: "Jane Smith", email: "jane.smith@student.edu", year: 2, status: "Active", averageGrade: 9.2 },
-        { id: "2021003", name: "Mike Johnson", email: "mike.johnson@student.edu", year: 2, status: "Active", averageGrade: 7.8 },
-        { id: "2021004", name: "Sarah Wilson", email: "sarah.wilson@student.edu", year: 2, status: "Active", averageGrade: 8.9 },
-        { id: "2021005", name: "David Brown", email: "david.brown@student.edu", year: 2, status: "Active", averageGrade: 8.1 }
-      ]
-    },
-    {
-      id: 6,
-      name: "Object-Oriented Programming",
-      acronym: "OOP301",
-      ects: 6,
-      semester: "Winter",
-      studentsEnrolled: 42,
-      status: "Active",
-      students: [
-        { id: "2021001", name: "John Doe", email: "john.doe@student.edu", year: 3, status: "Active", averageGrade: 8.5 },
-        { id: "2021002", name: "Jane Smith", email: "jane.smith@student.edu", year: 3, status: "Active", averageGrade: 9.2 },
-        { id: "2021003", name: "Mike Johnson", email: "mike.johnson@student.edu", year: 3, status: "Active", averageGrade: 7.8 },
-        { id: "2021004", name: "Sarah Wilson", email: "sarah.wilson@student.edu", year: 3, status: "Active", averageGrade: 8.9 },
-        { id: "2021005", name: "David Brown", email: "david.brown@student.edu", year: 3, status: "Active", averageGrade: 8.1 },
-        { id: "2021006", name: "Emily Davis", email: "emily.davis@student.edu", year: 3, status: "Active", averageGrade: 9.0 },
-        { id: "2021007", name: "Robert Miller", email: "robert.miller@student.edu", year: 3, status: "Active", averageGrade: 7.9 },
-        { id: "2021008", name: "Lisa Garcia", email: "lisa.garcia@student.edu", year: 3, status: "Active", averageGrade: 8.7 },
-        { id: "2021009", name: "James Rodriguez", email: "james.rodriguez@student.edu", year: 3, status: "Active", averageGrade: 8.3 },
-        { id: "2021010", name: "Maria Martinez", email: "maria.martinez@student.edu", year: 3, status: "Active", averageGrade: 8.6 }
-      ]
-    },
-    {
-      id: 7,
-      name: "Computer Networks",
-      acronym: "CN204",
-      ects: 6,
-      semester: "Summer",
-      studentsEnrolled: 35,
-      status: "Active",
-      students: [
-        { id: "2021001", name: "John Doe", email: "john.doe@student.edu", year: 2, status: "Active", averageGrade: 8.5 },
-        { id: "2021002", name: "Jane Smith", email: "jane.smith@student.edu", year: 2, status: "Active", averageGrade: 9.2 },
-        { id: "2021003", name: "Mike Johnson", email: "mike.johnson@student.edu", year: 2, status: "Active", averageGrade: 7.8 },
-        { id: "2021004", name: "Sarah Wilson", email: "sarah.wilson@student.edu", year: 2, status: "Active", averageGrade: 8.9 },
-        { id: "2021005", name: "David Brown", email: "david.brown@student.edu", year: 2, status: "Active", averageGrade: 8.1 },
-        { id: "2021006", name: "Emily Davis", email: "emily.davis@student.edu", year: 2, status: "Active", averageGrade: 9.0 },
-        { id: "2021007", name: "Robert Miller", email: "robert.miller@student.edu", year: 2, status: "Active", averageGrade: 7.9 },
-        { id: "2021008", name: "Lisa Garcia", email: "lisa.garcia@student.edu", year: 2, status: "Active", averageGrade: 8.7 },
-        { id: "2021009", name: "James Rodriguez", email: "james.rodriguez@student.edu", year: 2, status: "Active", averageGrade: 8.3 }
-      ]
-    },
-    {
-      id: 8,
-      name: "Information Security",
-      acronym: "IS303",
-      ects: 6,
-      semester: "Summer",
-      studentsEnrolled: 30,
-      status: "Active",
-      students: [
-        { id: "2021001", name: "John Doe", email: "john.doe@student.edu", year: 3, status: "Active", averageGrade: 8.5 },
-        { id: "2021002", name: "Jane Smith", email: "jane.smith@student.edu", year: 3, status: "Active", averageGrade: 9.2 },
-        { id: "2021003", name: "Mike Johnson", email: "mike.johnson@student.edu", year: 3, status: "Active", averageGrade: 7.8 },
-        { id: "2021004", name: "Sarah Wilson", email: "sarah.wilson@student.edu", year: 3, status: "Active", averageGrade: 8.9 },
-        { id: "2021005", name: "David Brown", email: "david.brown@student.edu", year: 3, status: "Active", averageGrade: 8.1 },
-        { id: "2021006", name: "Emily Davis", email: "emily.davis@student.edu", year: 3, status: "Active", averageGrade: 9.0 },
-        { id: "2021007", name: "Robert Miller", email: "robert.miller@student.edu", year: 3, status: "Active", averageGrade: 7.9 },
-        { id: "2021008", name: "Lisa Garcia", email: "lisa.garcia@student.edu", year: 3, status: "Active", averageGrade: 8.7 },
-        { id: "2021009", name: "James Rodriguez", email: "james.rodriguez@student.edu", year: 3, status: "Active", averageGrade: 8.3 },
-        { id: "2021010", name: "Maria Martinez", email: "maria.martinez@student.edu", year: 3, status: "Active", averageGrade: 8.6 }
-      ]
+  // Load data on component mount
+  React.useEffect(() => {
+    loadData()
+    loadPinnedCourses()
+  }, [])
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      console.log('🎓 Loading teaching courses from backend...')
+      
+      const coursesData = await teachingCoursesService.getTeachingCourses()
+      setCourses(coursesData)
+      console.log('✅ Teaching courses loaded successfully:', coursesData.length)
+      
+    } catch (err: any) {
+      console.error('❌ Failed to load teaching courses:', err)
+      setError(err.message || 'Failed to load teaching courses')
+    } finally {
+      setLoading(false)
     }
-  ], [])
+  }
+
+  const loadPinnedCourses = async () => {
+    try {
+      console.log('📌 Loading pinned courses...')
+      const pinned = await teachingCoursesService.getPinnedCourses()
+      setPinnedCourses(new Set(pinned))
+      console.log('✅ Pinned courses loaded:', pinned)
+    } catch (err) {
+      console.warn('⚠️ Failed to load pinned courses:', err)
+      // Fallback to empty set
+      setPinnedCourses(new Set())
+    }
+  }
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    try {
+      await loadData()
+      console.log('🔄 Data refreshed successfully')
+    } catch (err) {
+      console.error('❌ Failed to refresh data:', err)
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
 
 
@@ -208,16 +81,21 @@ export default function TeachingCoursesPage() {
 
 
 
-  const togglePinCourse = (courseId: number) => {
-    setPinnedCourses(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(courseId)) {
-        newSet.delete(courseId)
-      } else {
-        newSet.add(courseId)
-      }
-      return newSet
-    })
+  const togglePinCourse = async (courseId: number) => {
+    try {
+      setPinnedLoading(true)
+      console.log(`📌 Toggling pin for course ${courseId}...`)
+      
+      const newPinned = await teachingCoursesService.togglePinCourse(courseId)
+      setPinnedCourses(new Set(newPinned))
+      console.log('✅ Pin status updated successfully')
+      
+    } catch (err) {
+      console.error('❌ Failed to toggle pin status:', err)
+      // Show error message or revert optimistic update
+    } finally {
+      setPinnedLoading(false)
+    }
   }
 
   const handleViewStudents = (course: Course) => {
@@ -225,16 +103,25 @@ export default function TeachingCoursesPage() {
     setShowStudentModal(true)
   }
 
-  // Save pinned courses to localStorage whenever they change
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('pinned-courses', JSON.stringify([...pinnedCourses]))
+  const handleClearPinnedCourses = async () => {
+    try {
+      setPinnedLoading(true)
+      console.log('🗑️ Clearing all pinned courses...')
+      
+      await teachingCoursesService.clearPinnedCourses()
+      setPinnedCourses(new Set())
+      console.log('✅ All pinned courses cleared')
+      
+    } catch (err) {
+      console.error('❌ Failed to clear pinned courses:', err)
+    } finally {
+      setPinnedLoading(false)
     }
-  }, [pinnedCourses])
+  }
 
   // Sort courses: pinned first, then by name
   const sortedCourses = React.useMemo(() => {
-    return [...teachingCourses].sort((a, b) => {
+    return [...courses].sort((a, b) => {
       const aPinned = pinnedCourses.has(a.id)
       const bPinned = pinnedCourses.has(b.id)
       
@@ -243,18 +130,46 @@ export default function TeachingCoursesPage() {
       
       return a.name.localeCompare(b.name)
     })
-  }, [teachingCourses, pinnedCourses])
+  }, [courses, pinnedCourses])
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="space-y-4">
+        <div className="flex items-center justify-between">
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight">Teaching Courses</h1>
           <p className="text-muted-foreground">
             Manage and track your current teaching assignments
           </p>
         </div>
+          <Button
+            onClick={handleRefresh}
+            disabled={loading || refreshing}
+            variant="outline"
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+        </div>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert className="border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              {error}
+              <Button
+                onClick={handleRefresh}
+                variant="link"
+                className="h-auto p-0 ml-2 text-red-600"
+              >
+                Try again
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
         
         {/* Pinned Courses Summary */}
         {pinnedCourses.size > 0 && (
@@ -266,16 +181,39 @@ export default function TeachingCoursesPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setPinnedCourses(new Set())}
+              onClick={handleClearPinnedCourses}
+              disabled={pinnedLoading}
               className="h-6 px-2 text-xs text-blue-600 hover:bg-blue-100 ml-auto"
             >
-              Unpin All
+              {pinnedLoading ? 'Clearing...' : 'Unpin All'}
             </Button>
           </div>
         )}
       </div>
 
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+          <span className="ml-3 text-slate-600">Loading your teaching courses...</span>
+        </div>
+      )}
+
+      {/* No Courses State */}
+      {!loading && !error && courses.length === 0 && (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <BookOpen className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="font-medium text-slate-900 mb-2">No Teaching Assignments</h3>
+            <p className="text-sm text-slate-500">
+              You don&apos;t have any teaching assignments for this academic year.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Courses Grid */}
+      {!loading && !error && courses.length > 0 && (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {sortedCourses.map((course) => {
           const isPinned = pinnedCourses.has(course.id)
@@ -318,9 +256,12 @@ export default function TeachingCoursesPage() {
                             e.stopPropagation()
                             togglePinCourse(course.id)
                           }}
+                          disabled={pinnedLoading}
                           className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-700"
                         >
-                          {isPinned ? (
+                          {pinnedLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                          ) : isPinned ? (
                             <PinOff className="h-4 w-4 text-blue-600" />
                           ) : (
                             <Pin className="h-4 w-4 text-muted-foreground" />
@@ -411,6 +352,7 @@ export default function TeachingCoursesPage() {
           )
         })}
       </div>
+      )}
 
       {/* Student Details Dialog */}
       <Dialog open={showStudentModal} onOpenChange={setShowStudentModal}>

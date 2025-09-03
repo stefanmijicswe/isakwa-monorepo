@@ -299,12 +299,14 @@ export class AcademicRecordsService {
     return this.prisma.exam.findMany({
       where: {
         status: 'ACTIVE',
-        subject: {
-          courseEnrollments: {
-            some: {
-              studentId: studentId
-            }
-          }
+        subjectId: {
+          in: await this.prisma.courseEnrollment.findMany({
+            where: {
+              studentId: studentId,
+              isActive: true
+            },
+            select: { subjectId: true }
+          }).then(enrollments => enrollments.map(e => e.subjectId))
         },
         examPeriod: {
           isActive: true,
@@ -577,6 +579,16 @@ export class AcademicRecordsService {
       include: {
         user: {
           select: { firstName: true, lastName: true, email: true },
+          include: {
+            courseEnrollments: {
+              where: { isActive: true },
+              include: {
+                subject: {
+                  select: { name: true, code: true, credits: true },
+                },
+              },
+            },
+          },
         },
         studyProgram: {
           include: {
@@ -585,17 +597,10 @@ export class AcademicRecordsService {
             },
           },
         },
-        enrollments: {
+        studentEnrollments: {
           include: {
             studyProgram: {
               select: { name: true },
-            },
-          },
-        },
-        courseEnrollments: {
-          include: {
-            subject: {
-              select: { name: true, code: true, credits: true },
             },
           },
         },
@@ -650,7 +655,7 @@ export class AcademicRecordsService {
       passedSubjects: passedGrades,
       failedAttempts: failedGrades,
       currentEnrollments: await Promise.all(
-        student.courseEnrollments.filter(e => e.isActive).map(async (enrollment) => {
+        student.user.courseEnrollments.map(async (enrollment) => {
           // Find professor for this subject
           const professorAssignment = await this.prisma.professorAssignment.findFirst({
             where: {
@@ -683,35 +688,54 @@ export class AcademicRecordsService {
   }
 
   async getProfessorSubjects(professorId: number, academicYear?: string) {
-    // Temporarily return all subjects until professor assignments are set up
-    // TODO: Re-enable professor assignment filtering when assignments are populated
-    const subjects = await this.prisma.subject.findMany({
+    // Get subjects assigned to this professor through ProfessorAssignment
+    const assignments = await this.prisma.professorAssignment.findMany({
+      where: {
+        professorId: professorId,
+        isActive: true,
+        ...(academicYear && { academicYear: academicYear }),
+      },
       include: {
-        studyProgram: {
+        subject: {
           include: {
-            faculty: {
-              select: { name: true },
+            studyProgram: {
+              include: {
+                faculty: {
+                  select: { name: true },
+                },
+              },
             },
+          },
+        },
+        professor: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },
     });
 
-    // Map subjects to include necessary fields for frontend
-    return subjects.map(subject => ({
+    // Map assignments to include necessary fields for frontend
+    return assignments.map(assignment => ({
       subject: {
-        id: subject.id,
-        name: subject.name,
-        code: subject.code,
-        ects: subject.ects,
-        semesterType: subject.semester % 2 === 1 ? 'WINTER' : 'SUMMER', // Odd semesters = WINTER, Even = SUMMER
-        description: subject.description || 'No description available',
-        credits: subject.credits,
-        lectureHours: subject.numberOfLectures || 0,
-        practicalHours: subject.numberOfExercises || 0,
-        studyProgramId: subject.studyProgramId,
+        id: assignment.subject.id,
+        name: assignment.subject.name,
+        code: assignment.subject.code,
+        ects: assignment.subject.ects,
+        semesterType: assignment.subject.semester % 2 === 1 ? 'WINTER' : 'SUMMER', // Odd semesters = WINTER, Even = SUMMER
+        description: assignment.subject.description || 'No description available',
+        credits: assignment.subject.credits,
+        lectureHours: assignment.subject.numberOfLectures || 0,
+        practicalHours: assignment.subject.numberOfExercises || 0,
+        studyProgramId: assignment.subject.studyProgramId,
       },
-      academicYear: academicYear || '2024/2025',
+      academicYear: assignment.academicYear || academicYear || '2024/2025',
+      professorId: assignment.professorId,
+      professor: assignment.professor,
+      teachingType: assignment.teachingType,
+      assignmentId: assignment.id,
     }));
   }
 
@@ -951,9 +975,7 @@ export class AcademicRecordsService {
       where.semesterType = filters.semesterType;
     }
 
-    // Temporarily disable professorId filtering until professor assignments are set up
-    // TODO: Re-enable when professor_assignments table is populated
-    /*
+    // Filter by professor assignments if professorId is provided
     if (professorId) {
       where.subject = {
         professorAssignments: {
@@ -964,7 +986,6 @@ export class AcademicRecordsService {
         },
       };
     }
-    */
 
     return this.prisma.syllabus.findMany({
       where,
@@ -1276,13 +1297,7 @@ export class AcademicRecordsService {
           isActive: true,
         },
         include: {
-          subject: {
-            include: {
-              courseEnrollments: {
-                where: { isActive: true }
-              }
-            }
-          }
+          subject: true
         }
       });
 
@@ -1309,7 +1324,13 @@ export class AcademicRecordsService {
           }
         });
 
-        const enrolledStudents = subject.courseEnrollments.length;
+        // Count enrolled students for this subject
+        const enrolledStudents = await this.prisma.courseEnrollment.count({
+          where: {
+            subjectId: subject.id,
+            isActive: true
+          }
+        });
         
         result.push({
           id: subject.id,
@@ -1368,7 +1389,7 @@ export class AcademicRecordsService {
       id: enrollment.student.id,
       firstName: enrollment.student.firstName,
       lastName: enrollment.student.lastName,
-      indexNumber: `2021/${enrollment.student.id.toString().padStart(3, '0')}`, // Mock index number
+      indexNumber: `2021/${enrollment.student.id.toString().padStart(3, '0')}`, // Generated index number
       email: enrollment.student.email,
       courseId: subjectId,
       enrollments: [{
@@ -1379,12 +1400,178 @@ export class AcademicRecordsService {
           name: 'Course Name', // Will be filled by frontend
           code: 'Course Code' // Will be filled by frontend
         },
-        attendance: 0,
-        assignments: 0,
-        midterm: 0,
-        final: 0,
-        status: 'Pending'
+        attendance: enrollment.attendance || 0,
+        assignments: enrollment.assignments || 0,
+        midterm: enrollment.midterm || 0,
+        final: enrollment.final || 0,
+        status: enrollment.status || 'Pending'
       }]
     }));
+  }
+
+  async getAllProfessorStudents(professorId: number) {
+    console.log('👥 Fetching all students for professor ID:', professorId);
+    
+    try {
+      // Get all subjects assigned to this professor
+      const assignments = await this.prisma.professorAssignment.findMany({
+        where: {
+          professorId,
+          isActive: true,
+        },
+        include: {
+          subject: true
+        }
+      });
+
+      if (assignments.length === 0) {
+        console.log('⚠️ No subject assignments found for professor');
+        return [];
+      }
+
+      const subjectIds = assignments.map(assignment => assignment.subjectId);
+      
+      // Get all enrollments for professor's subjects
+      const enrollments = await this.prisma.courseEnrollment.findMany({
+        where: {
+          subjectId: { in: subjectIds },
+          isActive: true,
+        },
+        include: {
+          student: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            }
+          },
+          subject: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            }
+          }
+        }
+      });
+
+      // Group enrollments by student
+      const studentMap = new Map();
+      
+      enrollments.forEach(enrollment => {
+        const studentId = enrollment.student.id;
+        
+        if (!studentMap.has(studentId)) {
+          studentMap.set(studentId, {
+            id: enrollment.student.id,
+            firstName: enrollment.student.firstName,
+            lastName: enrollment.student.lastName,
+            indexNumber: `2021/${enrollment.student.id.toString().padStart(3, '0')}`,
+            email: enrollment.student.email,
+            enrollments: []
+          });
+        }
+        
+        studentMap.get(studentId).enrollments.push({
+          id: enrollment.id,
+          courseId: enrollment.subjectId,
+          course: {
+            id: enrollment.subject.id,
+            name: enrollment.subject.name,
+            code: enrollment.subject.code
+          },
+          attendance: enrollment.attendance || 0,
+          assignments: enrollment.assignments || 0,
+          midterm: enrollment.midterm || 0,
+          final: enrollment.final || 0,
+          status: enrollment.status || 'Pending'
+        });
+      });
+
+      const result = Array.from(studentMap.values());
+      console.log(`✅ Found ${result.length} unique students across ${assignments.length} subjects`);
+      return result;
+
+    } catch (error) {
+      console.error('❌ Error in getAllProfessorStudents:', error);
+      throw error;
+    }
+  }
+
+  async saveGrades(subjectId: number, professorId: number, grades: Array<{
+    studentId: number;
+    attendance?: number;
+    assignments?: number;
+    midterm?: number;
+    final?: number;
+  }>) {
+    console.log('💾 Saving grades for subject:', subjectId, 'professor:', professorId);
+    
+    // Verify professor is assigned to this subject
+    const assignment = await this.prisma.professorAssignment.findFirst({
+      where: {
+        professorId,
+        subjectId,
+        isActive: true,
+      },
+    });
+
+    if (!assignment) {
+      throw new ForbiddenException('Professor not assigned to this subject');
+    }
+
+    // Process each grade update
+    const updatePromises = grades.map(async (gradeData) => {
+      // Find the enrollment
+      const enrollment = await this.prisma.courseEnrollment.findFirst({
+        where: {
+          studentId: gradeData.studentId,
+          subjectId,
+          isActive: true,
+        },
+      });
+
+      if (!enrollment) {
+        console.warn(`No enrollment found for student ${gradeData.studentId} in subject ${subjectId}`);
+        return null;
+      }
+
+      // Prepare update data
+      const updateData: any = {};
+      if (gradeData.attendance !== undefined) updateData.attendance = gradeData.attendance;
+      if (gradeData.assignments !== undefined) updateData.assignments = gradeData.assignments;
+      if (gradeData.midterm !== undefined) updateData.midterm = gradeData.midterm;
+      if (gradeData.final !== undefined) updateData.final = gradeData.final;
+      
+      // Determine status
+      const hasAllGrades = (gradeData.attendance || enrollment.attendance) &&
+                          (gradeData.assignments || enrollment.assignments) &&
+                          (gradeData.midterm || enrollment.midterm) &&
+                          (gradeData.final || enrollment.final);
+      
+      if (hasAllGrades) {
+        updateData.status = 'Completed';
+        updateData.gradedBy = professorId;
+        updateData.gradedAt = new Date();
+      }
+
+      // Update the enrollment
+      return this.prisma.courseEnrollment.update({
+        where: { id: enrollment.id },
+        data: updateData,
+      });
+    });
+
+    const results = await Promise.all(updatePromises);
+    const successfulUpdates = results.filter(result => result !== null);
+    
+    console.log(`✅ Updated ${successfulUpdates.length} enrollments out of ${grades.length} requests`);
+    
+    return {
+      updated: successfulUpdates.length,
+      total: grades.length,
+      results: successfulUpdates
+    };
   }
 }

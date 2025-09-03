@@ -186,6 +186,7 @@ model User {
   gradedSubmissions      EvaluationSubmission[]  @relation("GradedSubmissions")
   studentViolations      StudentViolation[]      @relation("StudentViolations")
   gradedGrades           Grade[]                 @relation("GradeGrader")
+  gradedEnrollments      CourseEnrollment[]      @relation("CourseEnrollmentGrader")
   
   @@map("users")
 }
@@ -217,7 +218,7 @@ model StudentProfile {
   status             StudentStatus       @default(ACTIVE)
   enrollmentYear     String?
   jmbg               String              @unique
-  courseEnrollments  CourseEnrollment[]      @relation("StudentCourseEnrollments")
+
   examRegistrations  ExamRegistration[]      @relation("StudentExamRegistrations")
   grades             Grade[]                 @relation("StudentGrades")
   studentEnrollments StudentEnrollment[]     @relation("StudentEnrollmentProfile")
@@ -473,12 +474,21 @@ model CourseEnrollment {
   studentId   Int
   subjectId   Int
   academicYear String?
+  // Grade components
+  attendance  Float?         @default(0)
+  assignments Float?         @default(0)
+  midterm     Float?         @default(0)
+  final       Float?         @default(0)
+  // Meta fields
+  status      String         @default("Pending") // Pending, Completed, Overdue
+  gradedBy    Int?
+  gradedAt    DateTime?
   isActive    Boolean        @default(true)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   student     User           @relation(fields: [studentId], references: [id])
   subject     Subject        @relation(fields: [subjectId], references: [id])
-  studentProfile StudentProfile? @relation("StudentCourseEnrollments", fields: [studentId], references: [userId])
+  grader      User?          @relation("CourseEnrollmentGrader", fields: [gradedBy], references: [id])
   
   @@map("course_enrollments")
 }

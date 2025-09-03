@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, UseGuards, Request, Param, Patch, Delete } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
+import { CreateCourseNotificationDto } from './dto/create-course-notification.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -16,6 +17,13 @@ export class NotificationsController {
   @Roles(UserRole.ADMIN, UserRole.STUDENT_SERVICE)
   async createNotification(@Body() createNotificationDto: CreateNotificationDto, @Request() req) {
     return this.notificationsService.createNotification(createNotificationDto, req.user.id);
+  }
+
+  @Post('course')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.PROFESSOR)
+  async createCourseNotification(@Body() createNotificationDto: CreateCourseNotificationDto, @Request() req) {
+    return this.notificationsService.createCourseNotification(createNotificationDto, req.user.id);
   }
 
   @Get()

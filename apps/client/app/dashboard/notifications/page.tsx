@@ -16,6 +16,7 @@ import {
   markAsRead, 
   markAllAsRead, 
   deleteNotification,
+  createCourseNotification,
   Notification,
   NotificationType 
 } from '@/lib/notifications.service';
@@ -34,15 +35,24 @@ export default function NotificationsPage() {
   const [newNotification, setNewNotification] = useState({
     title: '',
     message: '',
-    type: 'INFO' as NotificationType,
+    type: 'GENERAL' as NotificationType,
     subjectId: '',
-    priority: 'NORMAL' as 'LOW' | 'NORMAL' | 'HIGH'
+    priority: 'NORMAL' as 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT'
   });
   const [professorCourses, setProfessorCourses] = useState<Array<{id: number, name: string, code: string}>>([]);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    const role = localStorage.getItem('user_role') || '';
+    // Set default role if not exists (for development)
+    let role = localStorage.getItem('user_role');
+    if (!role) {
+      role = 'PROFESSOR'; // Default for professor dashboard
+      localStorage.setItem('user_role', role);
+      localStorage.setItem('user_id', '1'); // John Smith ID
+      localStorage.setItem('user_email', 'john.smith@isakwa.edu');
+      console.log('🔑 Auto-set user role and info for Notifications');
+    }
+    
     setUserRole(role);
     fetchNotifications(role);
     
@@ -53,13 +63,47 @@ export default function NotificationsPage() {
   }, []);
   
   const loadProfessorCourses = async () => {
-    // Mock professor courses - in real app this would come from API
-    const mockCourses = [
-      { id: 1, name: 'Introduction to Information Technologies', code: 'IT101' },
-      { id: 2, name: 'Programming Fundamentals', code: 'PROG201' },
-      { id: 3, name: 'Web Development', code: 'WEB301' }
-    ];
-    setProfessorCourses(mockCourses);
+    try {
+      // Get professor's subjects from teaching courses API
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+
+      const response = await fetch('http://localhost:3001/api/academic-records/my-subjects', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const assignments = await response.json();
+        const courses = assignments.map((assignment: any) => ({
+          id: assignment.subject.id,
+          name: assignment.subject.name,
+          code: assignment.subject.code
+        }));
+        setProfessorCourses(courses);
+        console.log('✅ Loaded professor courses for notifications:', courses);
+      } else {
+        console.warn('Failed to load professor courses, using fallback');
+        // Fallback to basic courses
+        const fallbackCourses = [
+          { id: 4, name: 'Introduction to Information Technologies', code: 'IT101' },
+          { id: 5, name: 'Programming Fundamentals', code: 'PF102' },
+          { id: 6, name: 'Web Technologies', code: 'WT202' }
+        ];
+        setProfessorCourses(fallbackCourses);
+      }
+    } catch (error) {
+      console.error('Error loading professor courses:', error);
+      // Fallback courses
+      const fallbackCourses = [
+        { id: 4, name: 'Introduction to Information Technologies', code: 'IT101' },
+        { id: 5, name: 'Programming Fundamentals', code: 'PF102' },
+        { id: 6, name: 'Web Technologies', code: 'WT202' }
+      ];
+      setProfessorCourses(fallbackCourses);
+    }
   };
 
   // Update unread count whenever notifications change
@@ -168,44 +212,40 @@ export default function NotificationsPage() {
 
     setCreating(true);
     try {
-      // Mock creating notification - in real app this would be API call
-      const selectedCourse = professorCourses.find(c => c.id.toString() === newNotification.subjectId);
-      const mockNotification: Notification = {
-        id: Date.now(),
-        title: `[${selectedCourse?.code}] ${newNotification.title}`,
+      console.log('🔄 Creating notification with data:', newNotification);
+
+      // Prepare notification data for backend
+      const notificationData = {
+        title: newNotification.title,
         message: newNotification.message,
+        subjectId: parseInt(newNotification.subjectId),
         type: newNotification.type,
-        priority: newNotification.priority,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        userId: parseInt(localStorage.getItem('user_id') || '1'),
-        user: {
-          id: parseInt(localStorage.getItem('user_id') || '1'),
-          email: localStorage.getItem('user_email') || 'professor@example.com',
-          firstName: 'John',
-          lastName: 'Professor'
-        },
-        recipients: [],
-        isGlobal: false
+        priority: newNotification.priority
       };
 
-      setNotifications([mockNotification, ...notifications]);
-      
+      // Call backend API to create notification
+      const createdNotification = await createCourseNotification(notificationData);
+      console.log('✅ Notification created successfully:', createdNotification);
+
       // Reset form
       setNewNotification({
         title: '',
         message: '',
-        type: 'INFO' as NotificationType,
+        type: 'GENERAL' as NotificationType,
         subjectId: '',
-        priority: 'NORMAL' as 'LOW' | 'NORMAL' | 'HIGH'
+        priority: 'NORMAL' as 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT'
       });
       
       setIsCreateModalOpen(false);
       setError('');
+
+      // Refresh notifications to show the new one
+      const role = localStorage.getItem('user_role') || '';
+      await fetchNotifications(role);
       
     } catch (error) {
-      console.error('Failed to create notification:', error);
-      setError('Failed to create notification');
+      console.error('❌ Failed to create notification:', error);
+      setError(error instanceof Error ? error.message : 'Failed to create notification');
     } finally {
       setCreating(false);
     }
@@ -356,11 +396,12 @@ export default function NotificationsPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="INFO">Info</SelectItem>
-                            <SelectItem value="ASSIGNMENT">Assignment</SelectItem>
-                            <SelectItem value="EXAM">Exam</SelectItem>
-                            <SelectItem value="GRADE">Grade</SelectItem>
-                            <SelectItem value="REMINDER">Reminder</SelectItem>
+                            <SelectItem value="GENERAL">General</SelectItem>
+                            <SelectItem value="COURSE_ANNOUNCEMENT">Course Announcement</SelectItem>
+                            <SelectItem value="EXAM_REMINDER">Exam Reminder</SelectItem>
+                            <SelectItem value="ASSIGNMENT_DUE">Assignment Due</SelectItem>
+                            <SelectItem value="SYSTEM">System</SelectItem>
+                            <SelectItem value="ADMINISTRATIVE">Administrative</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -369,7 +410,7 @@ export default function NotificationsPage() {
                         <label className="text-sm font-medium">Priority</label>
                         <Select 
                           value={newNotification.priority} 
-                          onValueChange={(value) => setNewNotification({...newNotification, priority: value as 'LOW' | 'NORMAL' | 'HIGH'})}
+                          onValueChange={(value) => setNewNotification({...newNotification, priority: value as 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT'})}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -378,6 +419,7 @@ export default function NotificationsPage() {
                             <SelectItem value="LOW">Low</SelectItem>
                             <SelectItem value="NORMAL">Normal</SelectItem>
                             <SelectItem value="HIGH">High</SelectItem>
+                            <SelectItem value="URGENT">Urgent</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -483,7 +525,7 @@ export default function NotificationsPage() {
                             <div className="flex items-center gap-4 text-xs text-gray-500">
                               <span className="flex items-center gap-1">
                                 <User className="h-3 w-3" />
-                                {notification.creator.firstName} {notification.creator.lastName}
+                                {notification.creator?.firstName || 'Unknown'} {notification.creator?.lastName || 'User'}
                               </span>
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />

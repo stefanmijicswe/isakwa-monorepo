@@ -94,9 +94,14 @@ export default function GradeEntryPage() {
   }
 
   const handleSaveAll = async () => {
+    if (selectedCourse === "all") {
+      alert("Please select a specific course to save grades. When viewing all courses, you must save grades individually for each student.")
+      return
+    }
+
     try {
       setSaving(true)
-      await gradeEntryService.saveGrades(grades, selectedCourse === "all" ? undefined : selectedCourse)
+      await gradeEntryService.saveGrades(grades, selectedCourse)
       alert("Grades saved successfully!")
     } catch (error) {
       console.error("Failed to save grades:", error)
@@ -143,6 +148,12 @@ export default function GradeEntryPage() {
   }
 
   const handleSaveStudent = async (studentId: number) => {
+    // Check if "All Courses" is selected
+    if (selectedCourse === "all") {
+      alert("Cannot save grades when viewing all courses. Please select a specific course to edit and save grades.")
+      return
+    }
+
     // Check if grade entry is allowed
     if (gradeEntryStatus && !gradeEntryStatus.allowed) {
       alert(gradeEntryStatus.message || "Grade entry is not allowed at this time.")
@@ -167,7 +178,7 @@ export default function GradeEntryPage() {
       }
       
       // Save grades
-      await gradeEntryService.saveGrades(studentGrades, selectedCourse === "all" ? undefined : selectedCourse)
+      await gradeEntryService.saveGrades(studentGrades, selectedCourse)
       
       // Update student status to completed if all grades are entered
       const hasAllGrades = attendance && assignments && midterm && final
@@ -271,7 +282,12 @@ export default function GradeEntryPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button className="gap-2" onClick={handleSaveAll} disabled={saving}>
+              <Button 
+                className="gap-2" 
+                onClick={handleSaveAll} 
+                disabled={saving || selectedCourse === "all"}
+                title={selectedCourse === "all" ? "Select a specific course to save all grades" : undefined}
+              >
                 <Save className="h-4 w-4" />
                 {saving ? "Saving..." : "Save All"}
               </Button>
@@ -336,7 +352,19 @@ export default function GradeEntryPage() {
       <Card>
         <CardHeader className="pb-4">
           <CardTitle className="text-lg">Student Grades</CardTitle>
-          <p className="text-sm text-slate-600 mt-1">Enter grades for each student component</p>
+          <p className="text-sm text-slate-600 mt-1">
+            {selectedCourse === "all" 
+              ? "Select a specific course from the dropdown to edit and save grades" 
+              : "Enter grades for each student component"
+            }
+          </p>
+          {selectedCourse === "all" && (
+            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Viewing all students across courses.</strong> To edit grades, please select a specific course from the dropdown menu above.
+              </p>
+            </div>
+          )}
         </CardHeader>
         
         <CardContent className="p-0">
@@ -389,7 +417,7 @@ export default function GradeEntryPage() {
                         onChange={(e) => handleGradeChange(student.id.toString(), "attendance", e.target.value)}
                         className="w-16 text-center"
                         placeholder="0"
-                        disabled={editingStudent !== student.id || (gradeEntryStatus && !gradeEntryStatus.allowed)}
+                        disabled={editingStudent !== student.id || (gradeEntryStatus && !gradeEntryStatus.allowed) || selectedCourse === "all"}
                       />
                     </td>
                     
@@ -402,7 +430,7 @@ export default function GradeEntryPage() {
                         onChange={(e) => handleGradeChange(student.id.toString(), "assignments", e.target.value)}
                         className="w-16 text-center"
                         placeholder="0"
-                        disabled={editingStudent !== student.id || (gradeEntryStatus && !gradeEntryStatus.allowed)}
+                        disabled={editingStudent !== student.id || (gradeEntryStatus && !gradeEntryStatus.allowed) || selectedCourse === "all"}
                       />
                     </td>
                     
@@ -415,7 +443,7 @@ export default function GradeEntryPage() {
                         onChange={(e) => handleGradeChange(student.id.toString(), "midterm", e.target.value)}
                         className="w-16 text-center"
                         placeholder="0"
-                        disabled={editingStudent !== student.id || (gradeEntryStatus && !gradeEntryStatus.allowed)}
+                        disabled={editingStudent !== student.id || (gradeEntryStatus && !gradeEntryStatus.allowed) || selectedCourse === "all"}
                       />
                     </td>
                     
@@ -428,7 +456,7 @@ export default function GradeEntryPage() {
                         onChange={(e) => handleGradeChange(student.id.toString(), "final", e.target.value)}
                         className="w-16 text-center"
                         placeholder="0"
-                        disabled={editingStudent !== student.id || (gradeEntryStatus && !gradeEntryStatus.allowed)}
+                        disabled={editingStudent !== student.id || (gradeEntryStatus && !gradeEntryStatus.allowed) || selectedCourse === "all"}
                       />
                     </td>
                     
@@ -489,9 +517,15 @@ export default function GradeEntryPage() {
                             variant="ghost" 
                             size="sm"
                             onClick={() => handleEditStudent(student.id)}
-                            disabled={gradeEntryStatus && !gradeEntryStatus.allowed}
+                            disabled={(gradeEntryStatus && !gradeEntryStatus.allowed) || selectedCourse === "all"}
                             className="gap-1"
-                            title={gradeEntryStatus && !gradeEntryStatus.allowed ? gradeEntryStatus.message : undefined}
+                            title={
+                              selectedCourse === "all" 
+                                ? "Select a specific course to edit grades" 
+                                : gradeEntryStatus && !gradeEntryStatus.allowed 
+                                  ? gradeEntryStatus.message 
+                                  : undefined
+                            }
                           >
                             <Edit3 className="h-3 w-3" />
                             Edit

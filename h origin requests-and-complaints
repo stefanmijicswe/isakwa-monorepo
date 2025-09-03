@@ -1,0 +1,5 @@
+[33m727ed48[m[33m ([m[1;36mHEAD -> [m[1;32mrequests-and-complaints[m[33m, [m[1;31morigin/requests-and-complaints[m[33m)[m feat: add ui changes to professor dashboard
+[33m880a41c[m fix: Add debugging and proper roles to professor courses API
+[33mccb4e60[m feat: Add persistent grade entry data with database seeding
+[33mba6fa1c[m fix: Make exam date countdown consistent and improve UI layout
+[33m41c210c[m feat: Add exam date display and countdown in grade entry

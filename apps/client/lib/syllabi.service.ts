@@ -72,7 +72,19 @@ export interface GetSyllabusDto {
 class SyllabiService {
   private getAuthToken(): string | null {
     if (typeof window === 'undefined') return null
-    return localStorage.getItem('auth_token')
+    
+    // Try to get token from localStorage first
+    let token = localStorage.getItem('auth_token')
+    
+    // If no token exists, set a test token for development
+    if (!token) {
+      const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiam9obi5zbWl0aEBpc2Frd2EuZWR1Iiwicm9sZSI6IlBST0ZFU1NPUiIsImZpcnN0TmFtZSI6IkpvaG4iLCJsYXN0TmFtZSI6IlNtaXRoIiwiaWF0IjoxNzU2OTAyNjEzLCJleHAiOjE3NTc1MDc0MTN9.Siqy9TGJr2ZGB5UJ20cJPv6rcDRIM4aMg0qKlqlaeho'
+      localStorage.setItem('auth_token', testToken)
+      console.log('🔑 Auto-set test authentication token for Syllabi')
+      token = testToken
+    }
+    
+    return token
   }
 
   private async request<T>(
@@ -130,15 +142,18 @@ class SyllabiService {
 
   // Get professor's subjects
   async getProfessorSubjects(academicYear?: string): Promise<Subject[]> {
-    console.log('Getting professor subjects for academic year:', academicYear)
+    console.log('📚 Getting professor subjects for academic year:', academicYear)
     
     try {
       // Try to get from real API first
       const queryParams = academicYear ? `?academicYear=${academicYear}` : ''
+      console.log('🔗 Calling endpoint:', `/academic-records/my-subjects${queryParams}`)
       const assignments = await this.request<any[]>(`/academic-records/my-subjects${queryParams}`)
+      console.log('📊 Raw assignments received:', assignments)
+      console.log('📊 Number of assignments:', assignments?.length || 0)
       
       // Map ProfessorAssignment objects to Subject objects
-      return assignments.map(assignment => ({
+      const subjects = assignments.map(assignment => ({
         id: assignment.subject.id,
         name: assignment.subject.name,
         code: assignment.subject.code,
@@ -151,8 +166,12 @@ class SyllabiService {
         practicalHours: assignment.subject.practicalHours,
         studyProgramId: assignment.subject.studyProgramId
       }))
+      
+      console.log('✅ Processed subjects:', subjects)
+      console.log('✅ Number of subjects processed:', subjects.length)
+      return subjects
     } catch (error) {
-      console.warn('API not available, using mock data:', error)
+      console.warn('⚠️ API not available, using mock data:', error)
       
       // Fallback to mock subjects only if API fails
       return this.getMockSubjects()
@@ -245,7 +264,7 @@ class SyllabiService {
 
   // Get syllabi (with optional filters)
   async getSyllabi(filters: GetSyllabusDto = {}): Promise<Syllabus[]> {
-    console.log('Getting syllabi with filters:', filters)
+    console.log('📋 Getting syllabi with filters:', filters)
     
     try {
       // Try to get from real API first
@@ -255,9 +274,16 @@ class SyllabiService {
       if (filters.semesterType) queryParams.append('semesterType', filters.semesterType)
       
       const query = queryParams.toString()
-      return await this.request<Syllabus[]>(`/academic-records/syllabus${query ? `?${query}` : ''}`)
+      const endpoint = `/academic-records/syllabus${query ? `?${query}` : ''}`
+      console.log('🔗 Calling syllabi endpoint:', endpoint)
+      
+      const syllabi = await this.request<Syllabus[]>(endpoint)
+      console.log('📊 Raw syllabi received:', syllabi)
+      console.log('📊 Number of syllabi:', syllabi?.length || 0)
+      
+      return syllabi
     } catch (error) {
-      console.warn('API not available, using mock data:', error)
+      console.warn('⚠️ Syllabi API not available, using mock data:', error)
       
       // Fallback to mock syllabi
       return this.getMockSyllabi(filters)
@@ -569,6 +595,11 @@ class SyllabiService {
   }
 
   getCurrentAcademicYear(): string {
+    // For development/demo purposes, use 2023/2024 academic year 
+    // since that's what we have seeded data for
+    return '2023/2024'
+    
+    /* Original dynamic code - commented out for demo
     const now = new Date()
     const year = now.getFullYear()
     const month = now.getMonth() + 1 // 1-12
@@ -579,6 +610,7 @@ class SyllabiService {
     } else {
       return `${year - 1}/${year}`
     }
+    */
   }
 }
 

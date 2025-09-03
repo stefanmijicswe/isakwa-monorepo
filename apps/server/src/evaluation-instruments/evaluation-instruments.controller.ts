@@ -22,6 +22,7 @@ import {
   CreateEvaluationSubmissionDto,
   UpdateEvaluationSubmissionDto
 } from './dto';
+import { QueryEvaluationInstrumentsDto, QueryEvaluationSubmissionsDto } from './dto/query-evaluation-instruments.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -58,8 +59,21 @@ export class EvaluationInstrumentsController {
     @Query('type') type?: string,
     @Query('isActive') isActive?: string,
   ) {
-    const parsedSubjectId = subjectId ? parseInt(subjectId, 10) : undefined;
-    const parsedIsActive = isActive ? isActive === 'true' : undefined;
+    // Safe parsing with validation - ignore any validation errors
+    let parsedSubjectId: number | undefined;
+    let parsedIsActive: boolean | undefined;
+    
+    try {
+      parsedSubjectId = subjectId && !isNaN(parseInt(subjectId, 10)) ? parseInt(subjectId, 10) : undefined;
+    } catch (e) {
+      parsedSubjectId = undefined;
+    }
+    
+    try {
+      parsedIsActive = isActive ? isActive === 'true' : undefined;
+    } catch (e) {
+      parsedIsActive = undefined;
+    }
     
     return this.evaluationInstrumentsService.findAllEvaluationInstruments(
       parsedSubjectId,
@@ -68,51 +82,55 @@ export class EvaluationInstrumentsController {
     );
   }
 
-  @Get(':id')
-  async findEvaluationInstrumentById(@Param('id', ParseIntPipe) id: number) {
-    return this.evaluationInstrumentsService.findEvaluationInstrumentById(id);
-  }
-
-  @Patch(':id')
-  @Roles(UserRole.PROFESSOR, UserRole.ADMIN, UserRole.STUDENT_SERVICE)
-  async updateEvaluationInstrument(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateDto: UpdateEvaluationInstrumentDto,
+  // Evaluation Submissions endpoints (MUST be before :id routes)
+  @Get('submissions')
+  async findAllEvaluationSubmissionsNew(
+    @Query() query: QueryEvaluationSubmissionsDto,
   ) {
-    this.logger.log(`Updating evaluation instrument: ${id}`);
-    return this.evaluationInstrumentsService.updateEvaluationInstrument(id, updateDto);
+    this.logger.log('Getting all submissions - new endpoint');
+    
+    try {
+      // Parse optional parameters safely from query DTO
+      let parsedInstrumentId: number | undefined;
+      let parsedStudentId: number | undefined;
+      let parsedPassed: boolean | undefined;
+      
+      try {
+        parsedInstrumentId = query.instrumentId && !isNaN(parseInt(query.instrumentId, 10)) ? parseInt(query.instrumentId, 10) : undefined;
+      } catch (e) {
+        parsedInstrumentId = undefined;
+      }
+      
+      try {
+        parsedStudentId = query.studentId && !isNaN(parseInt(query.studentId, 10)) ? parseInt(query.studentId, 10) : undefined;
+      } catch (e) {
+        parsedStudentId = undefined;
+      }
+      
+      try {
+        parsedPassed = query.passed ? query.passed === 'true' : undefined;
+      } catch (e) {
+        parsedPassed = undefined;
+      }
+      
+      const submissions = await this.evaluationInstrumentsService.findAllEvaluationSubmissions(
+        parsedInstrumentId,
+        parsedStudentId,
+        parsedPassed
+      );
+      this.logger.log(`Service returned ${submissions.length} submissions`);
+      return submissions;
+    } catch (error) {
+      this.logger.error('Error getting submissions:', error);
+      return [];
+    }
   }
 
-  @Delete(':id')
-  @Roles(UserRole.PROFESSOR, UserRole.ADMIN, UserRole.STUDENT_SERVICE)
-  async deleteEvaluationInstrument(@Param('id', ParseIntPipe) id: number) {
-    this.logger.log(`Deleting evaluation instrument: ${id}`);
-    return this.evaluationInstrumentsService.deleteEvaluationInstrument(id);
-  }
-
-  // Evaluation Submissions endpoints
   @Post('submissions')
   @Roles(UserRole.PROFESSOR, UserRole.ADMIN)
   async createEvaluationSubmission(@Body() createDto: CreateEvaluationSubmissionDto) {
     this.logger.log(`Creating evaluation submission for student: ${createDto.studentId}`);
     return this.evaluationInstrumentsService.createEvaluationSubmission(createDto);
-  }
-
-  @Get('submissions')
-  async findAllEvaluationSubmissions(
-    @Query('instrumentId') instrumentId?: string,
-    @Query('studentId') studentId?: string,
-    @Query('passed') passed?: string,
-  ) {
-    const parsedInstrumentId = instrumentId ? parseInt(instrumentId, 10) : undefined;
-    const parsedStudentId = studentId ? parseInt(studentId, 10) : undefined;
-    const parsedPassed = passed ? passed === 'true' : undefined;
-    
-    return this.evaluationInstrumentsService.findAllEvaluationSubmissions(
-      parsedInstrumentId,
-      parsedStudentId,
-      parsedPassed,
-    );
   }
 
   @Get('submissions/:id')
@@ -135,6 +153,29 @@ export class EvaluationInstrumentsController {
   async deleteEvaluationSubmission(@Param('id', ParseIntPipe) id: number) {
     this.logger.log(`Deleting evaluation submission: ${id}`);
     return this.evaluationInstrumentsService.deleteEvaluationSubmission(id);
+  }
+
+  // Evaluation Instruments endpoints with :id (MUST be after specific routes)
+  @Get(':id')
+  async findEvaluationInstrumentById(@Param('id', ParseIntPipe) id: number) {
+    return this.evaluationInstrumentsService.findEvaluationInstrumentById(id);
+  }
+
+  @Patch(':id')
+  @Roles(UserRole.PROFESSOR, UserRole.ADMIN, UserRole.STUDENT_SERVICE)
+  async updateEvaluationInstrument(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateDto: UpdateEvaluationInstrumentDto,
+  ) {
+    this.logger.log(`Updating evaluation instrument: ${id}`);
+    return this.evaluationInstrumentsService.updateEvaluationInstrument(id, updateDto);
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.PROFESSOR, UserRole.ADMIN, UserRole.STUDENT_SERVICE)
+  async deleteEvaluationInstrument(@Param('id', ParseIntPipe) id: number) {
+    this.logger.log(`Deleting evaluation instrument: ${id}`);
+    return this.evaluationInstrumentsService.deleteEvaluationInstrument(id);
   }
 
   // Statistics and reporting endpoints
