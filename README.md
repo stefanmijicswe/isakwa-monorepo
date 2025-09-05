@@ -48,3 +48,10 @@ Primijenili smo **GitHub Flow** metodologiju razvoja:
 - stabilne verzije merge-ovane na `main`  
 
 Na ovaj način obezbijedili smo jasnu podjelu rada, preglednost i kontrolu kvaliteta koda.  
+
+
+## Pokretanje projekta
+
+klonirati repo
+yarn install
+yarn dev:server-client
