@@ -1371,9 +1371,16 @@ export class AcademicRecordsService {
       }
 
       const result = [];
+      const seenSubjectIds = new Set();
 
       for (const assignment of assignments) {
         const subject = assignment.subject;
+
+        // Skip if we've already processed this subject
+        if (seenSubjectIds.has(subject.id)) {
+          continue;
+        }
+        seenSubjectIds.add(subject.id);
 
         // Find the latest exam for this subject
         const latestExam = await this.prisma.exam.findFirst({

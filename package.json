@@ -20,11 +20,15 @@
     "fuseki:start": "cd infra/docker && docker-compose up -d",
     "fuseki:stop": "cd infra/docker && docker-compose down",
     "fuseki:logs": "cd infra/docker && docker-compose logs -f fuseki",
-    "dev:backend:full": "yarn fuseki:start && yarn backend:dev"
+    "dev:backend:full": "yarn fuseki:start && yarn backend:dev",
+    "dev:server-client": "concurrently --kill-others --names \"SERVER,CLIENT\" -c \"bgBlue.bold,bgGreen.bold\" \"yarn dev:backend:full\" \"wait-on http://localhost:3001/api/health && yarn client:dev\"",
+    "client:dev": "cd apps/client && yarn dev"
   },
   "devDependencies": {
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "turbo": "^2.5.6"
+    "concurrently": "^8.2.2",
+    "turbo": "^2.5.6",
+    "wait-on": "^8.0.1"
   }
 }

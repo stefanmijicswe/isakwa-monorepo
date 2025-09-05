@@ -6,7 +6,7 @@ export async function seedGradeEntryData() {
   console.log('🎓 Starting Grade Entry seeding...');
 
   try {
-    // First, ensure we have professor john.smith
+    // First, ensure we have professor john.smith with ID=1 for compatibility with test token
     let professor = await prisma.user.findUnique({
       where: { email: 'john.smith@isakwa.edu' },
       include: { professorProfile: true }
@@ -119,6 +119,7 @@ export async function seedGradeEntryData() {
     }
 
     // Create subjects with consistent naming matching frontend
+    // Only courses with active grading period (within 15 days of exam date)
     const subjects = [
       {
         name: 'Introduction to Information Technologies',
@@ -127,7 +128,7 @@ export async function seedGradeEntryData() {
         credits: 6,
         ects: 6,
         semester: 1,
-        daysAgo: 3 // 12 days remaining
+        daysAgo: 2 // 13 days remaining (ACTIVE - good for testing)
       },
       {
         name: 'Programming Fundamentals',
@@ -136,7 +137,7 @@ export async function seedGradeEntryData() {
         credits: 8,
         ects: 8,
         semester: 1,
-        daysAgo: 8 // 7 days remaining
+        daysAgo: 7 // 8 days remaining (ACTIVE - mid-range)
       },
       {
         name: 'Web Technologies',
@@ -145,7 +146,7 @@ export async function seedGradeEntryData() {
         credits: 6,
         ects: 6,
         semester: 2,
-        daysAgo: 1 // 14 days remaining
+        daysAgo: 0 // 15 days remaining (ACTIVE - fresh, just finished exam)
       },
       {
         name: 'Database Systems',
@@ -154,7 +155,7 @@ export async function seedGradeEntryData() {
         credits: 7,
         ects: 7,
         semester: 3,
-        daysAgo: 12 // 3 days remaining
+        daysAgo: 13 // 2 days remaining (ACTIVE - urgent, almost expired)
       },
       {
         name: 'Software Engineering',
@@ -163,7 +164,16 @@ export async function seedGradeEntryData() {
         credits: 8,
         ects: 8,
         semester: 4,
-        daysAgo: 6 // 9 days remaining
+        daysAgo: 10 // 5 days remaining (ACTIVE - moderate urgency)
+      },
+      {
+        name: 'Operating Systems',
+        code: 'OS501',
+        description: 'Operating systems concepts and implementation',
+        credits: 7,
+        ects: 7,
+        semester: 5,
+        daysAgo: 20 // EXPIRED (5 days past deadline - no longer available for grading)
       }
     ];
 
@@ -278,12 +288,45 @@ export async function seedGradeEntryData() {
     }
 
     console.log('Grade Entry seeding completed successfully!');
+    console.log('📚 Created demo courses for professor dashboard:');
+    console.log('  ✅ ACTIVE courses (within 15-day grading period):');
+    createdSubjects.forEach(subject => {
+      const daysRemaining = 15 - subject.daysAgo;
+      if (daysRemaining > 0) {
+        console.log(`     - ${subject.code}: ${daysRemaining} days remaining`);
+      }
+    });
+    console.log('  ❌ EXPIRED courses (past 15-day deadline):');
+    createdSubjects.forEach(subject => {
+      const daysRemaining = 15 - subject.daysAgo;
+      if (daysRemaining <= 0) {
+        console.log(`     - ${subject.code}: expired ${Math.abs(daysRemaining)} days ago`);
+      }
+    });
+    
+    // Generate test token for this professor
+    console.log('🔑 Test token for frontend (professor ID=' + professor.id + '):');
+    const jwt = await import('jsonwebtoken');
+    const testToken = jwt.sign(
+      {
+        sub: professor.id,
+        email: professor.email,
+        role: professor.role,
+        firstName: professor.firstName,
+        lastName: professor.lastName,
+      },
+      process.env.JWT_SECRET || 'fallback-jwt-secret-key-for-development-only',
+      { expiresIn: '7d' }
+    );
+    console.log('  ' + testToken);
     
     return {
       professor: professor.firstName + ' ' + professor.lastName,
       subjects: createdSubjects.length,
       exams: createdExams.length,
-      examPeriod: examPeriod.name
+      examPeriod: examPeriod.name,
+      activeCourses: createdSubjects.filter(s => (15 - s.daysAgo) > 0).length,
+      expiredCourses: createdSubjects.filter(s => (15 - s.daysAgo) <= 0).length
     };
 
   } catch (error) {

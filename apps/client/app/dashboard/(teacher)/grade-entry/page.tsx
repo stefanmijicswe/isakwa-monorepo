@@ -275,8 +275,8 @@ export default function GradeEntryPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Courses</SelectItem>
-                  {courses.map(course => (
-                    <SelectItem key={course.id} value={course.id.toString()}>
+                  {courses.map((course, index) => (
+                    <SelectItem key={`course-${course.id}-${index}`} value={course.id.toString()}>
                       {course.code} - {course.name}
                     </SelectItem>
                   ))}
