@@ -7,13 +7,13 @@ import * as bcrypt from 'bcryptjs';
 const prisma = new PrismaService();
 
 async function seedSimpleAcademicData() {
-  console.log('🎓 Starting SIMPLE academic data seeding...');
+  console.log('Starting SIMPLE academic data seeding...');
 
   try {
     const hashedPassword = await bcrypt.hash('password123', 10);
 
     // 1. Get existing departments
-    console.log('🏢 Getting existing departments...');
+    console.log('Getting existing departments...');
     
     const csDept = await prisma.department.findFirst({
       where: { name: { contains: 'Computer Science' } }
@@ -28,7 +28,7 @@ async function seedSimpleAcademicData() {
     }
 
     // 2. Create professors
-    console.log('👨‍🏫 Creating professors...');
+    console.log('Creating professors...');
     
     const prof1 = await prisma.user.upsert({
       where: { email: 'prof.nikolic@isakwa.edu' },
@@ -84,7 +84,7 @@ async function seedSimpleAcademicData() {
     });
 
     // 3. Get existing students
-    console.log('👨‍🎓 Getting existing students...');
+    console.log('Getting existing students...');
     
     const student1 = await prisma.user.findFirst({ where: { email: 'student1@isakwa.edu' } });
     const student2 = await prisma.user.findFirst({ where: { email: 'student2@isakwa.edu' } });
@@ -94,7 +94,7 @@ async function seedSimpleAcademicData() {
     }
 
     // 4. Create student enrollments in study programs
-    console.log('📝 Creating student enrollments...');
+    console.log('Creating student enrollments...');
     
     await prisma.studentEnrollment.create({
       data: {
@@ -117,7 +117,7 @@ async function seedSimpleAcademicData() {
     });
 
     // 5. Assign professors to subjects
-    console.log('📚 Assigning professors to subjects...');
+    console.log('Assigning professors to subjects...');
     
     await prisma.professorAssignment.create({
       data: {
@@ -142,7 +142,7 @@ async function seedSimpleAcademicData() {
     });
 
     // 6. Enroll students in courses (subjects)
-    console.log('📖 Enrolling students in courses...');
+    console.log('Enrolling students in courses...');
     
     await prisma.courseEnrollment.create({
       data: {
@@ -173,7 +173,7 @@ async function seedSimpleAcademicData() {
     });
 
     // 7. Create exam periods
-    console.log('📅 Creating exam periods...');
+    console.log('Creating exam periods...');
     
     const examPeriod = await prisma.examPeriod.create({
       data: {
@@ -189,7 +189,7 @@ async function seedSimpleAcademicData() {
     });
 
     // 8. Create exams
-    console.log('📝 Creating exams...');
+    console.log('Creating exams...');
     
     const exam1 = await prisma.exam.create({
       data: {
@@ -222,7 +222,7 @@ async function seedSimpleAcademicData() {
     });
 
     // 9. Register students for exams
-    console.log('✍️ Registering students for exams...');
+    console.log('Registering students for exams...');
     
     await prisma.examRegistration.create({
       data: {
@@ -243,7 +243,7 @@ async function seedSimpleAcademicData() {
     });
 
     // 10. Create some past grades
-    console.log('🏆 Creating past grades...');
+    console.log('Creating past grades...');
     
     // Create a past exam period
     const pastExamPeriod = await prisma.examPeriod.create({
@@ -288,7 +288,7 @@ async function seedSimpleAcademicData() {
       }
     });
 
-    console.log('✅ Simple academic data seed completed successfully!');
+    console.log('Simple academic data seed completed successfully!');
     
     return {
       departments: 2,
@@ -302,7 +302,7 @@ async function seedSimpleAcademicData() {
     };
 
   } catch (error) {
-    console.error('❌ Error during simple academic seeding:', error);
+    console.error('Error during simple academic seeding:', error);
     throw error;
   }
 }

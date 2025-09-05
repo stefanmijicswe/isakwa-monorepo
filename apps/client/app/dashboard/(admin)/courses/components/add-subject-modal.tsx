@@ -38,8 +38,8 @@ export function AddSubjectModal({ isOpen, onClose, onSuccess }: AddSubjectModalP
         try {
           const programs = await getStudyPrograms();
           setStudyPrograms(programs);
-          // Set first program as default if none selected
-          if (programs.length > 0 && !formData.studyProgramId) {
+          // Set first program as default if using default value
+          if (programs.length > 0 && formData.studyProgramId === 1) {
             setFormData(prev => ({ ...prev, studyProgramId: programs[0].id }));
           }
         } catch (error) {

@@ -53,16 +53,16 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const user = await this.usersService.findByEmail(loginDto.email);
     if (!user) {
-      throw new UnauthorizedException('Neispravni kredencijali');
+      throw new UnauthorizedException('Wrong credentials');
     }
 
     const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Neispravni kredencijali');
+      throw new UnauthorizedException('Wrong credentials');
     }
 
     if (!user.isActive) {
-      throw new UnauthorizedException('Korisnički račun je deaktiviran');
+      throw new UnauthorizedException('User account is inactive');
     }
 
     const payload = { 
@@ -92,7 +92,7 @@ export class AuthService {
   async getProfile(user: any) {
     const fullUser = await this.usersService.findById(user.sub);
     if (!fullUser) {
-      throw new UnauthorizedException('Korisnik nije pronađen');
+      throw new UnauthorizedException('User not found');
     }
 
     return {

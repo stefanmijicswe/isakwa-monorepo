@@ -69,9 +69,7 @@ export class RequestWorkflowService {
     }
   }
 
-  /**
-   * Applies specific workflow rules based on status change
-   */
+
   private async applyWorkflowRules(request: any, newStatus: RequestStatus, userId: number): Promise<void> {
     switch (newStatus) {
       case RequestStatus.IN_REVIEW:
@@ -219,8 +217,6 @@ export class RequestWorkflowService {
   private async handleAdministrativeApproval(request: any): Promise<void> {
     this.logger.log(`Processing administrative approval for request ${request.id}`);
     
-    // Could trigger document generation, system access changes, etc.
-    // For now, notify student services
     const studentServiceStaff = await this.prisma.user.findMany({
       where: {
         role: UserRole.STUDENT_SERVICE,
@@ -241,9 +237,6 @@ export class RequestWorkflowService {
     }
   }
 
-  /**
-   * Escalates rejected complaints to management
-   */
   private async escalateRejectedComplaint(request: any): Promise<void> {
     const admins = await this.prisma.user.findMany({
       where: {
@@ -291,9 +284,6 @@ export class RequestWorkflowService {
     }
   }
 
-  /**
-   * Notifies financial department
-   */
   private async notifyFinancialDepartment(request: any, message: string): Promise<void> {
     // In a real system, this might query specific financial department staff
     const financialStaff = await this.prisma.user.findMany({

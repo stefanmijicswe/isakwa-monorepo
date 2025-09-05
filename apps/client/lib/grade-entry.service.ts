@@ -57,7 +57,6 @@ class GradeEntryService {
     if (!token) {
       const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiam9obi5zbWl0aEBpc2Frd2EuZWR1Iiwicm9sZSI6IlBST0ZFU1NPUiIsImZpcnN0TmFtZSI6IkpvaG4iLCJsYXN0TmFtZSI6IlNtaXRoIiwiaWF0IjoxNzU2OTAyNjEzLCJleHAiOjE3NTc1MDc0MTN9.Siqy9TGJr2ZGB5UJ20cJPv6rcDRIM4aMg0qKlqlaeho'
       localStorage.setItem('auth_token', testToken)
-      console.log('🔑 Auto-set test authentication token for Grade Entry')
       token = testToken
     }
     
@@ -71,7 +70,6 @@ class GradeEntryService {
     const token = this.getAuthToken()
     const url = `${this.baseUrl}${endpoint}`
 
-    console.log('🔑 GradeEntry Auth token:', token ? `${token.substring(0, 10)}...` : 'NO TOKEN')
 
     const config: RequestInit = {
       ...options,
@@ -82,18 +80,9 @@ class GradeEntryService {
       },
     }
 
-    console.log('📡 GradeEntry API Request:', { 
-      url, 
-      method: config.method || 'GET',
-      hasToken: !!token,
-      headers: config.headers,
-      body: options.body
-    })
-
     try {
       const response = await fetch(url, config)
       
-      console.log('📊 GradeEntry Response status:', response.status, response.statusText)
 
       if (!response.ok) {
         const errorData = await response.text()
@@ -102,7 +91,6 @@ class GradeEntryService {
       }
 
       const data = await response.json()
-      console.log('✅ GradeEntry API Success:', data)
       return data
     } catch (error) {
       console.error('💥 GradeEntry API Error:', error)
@@ -114,11 +102,9 @@ class GradeEntryService {
 
   // Get professor's courses
   async getProfessorCourses(): Promise<Course[]> {
-    console.log('📚 Fetching professor courses from backend...')
     
     try {
       const response = await this.request<Course[]>('/academic-records/professor/courses')
-      console.log('✅ Successfully loaded professor courses from backend:', response)
       return response
     } catch (error) {
       console.error('❌ Failed to fetch professor courses from backend:', error)
@@ -128,13 +114,10 @@ class GradeEntryService {
 
   // Get students enrolled in a course
   async getCourseStudents(courseId?: string): Promise<Student[]> {
-    console.log('👥 Fetching course students from backend...', { courseId })
     
     if (!courseId || courseId === "all") {
-      console.log('📚 Getting all professor students from backend...')
       try {
         const response = await this.request<Student[]>('/academic-records/professor/all-students')
-        console.log('✅ Successfully loaded all professor students from backend:', response)
         return response
       } catch (error) {
         console.error('❌ Failed to fetch all professor students from backend:', error)
@@ -144,7 +127,6 @@ class GradeEntryService {
     
     try {
       const response = await this.request<Student[]>(`/academic-records/professor/courses/${courseId}/students`)
-      console.log('✅ Successfully loaded course students from backend:', response)
       return response
     } catch (error) {
       console.error('❌ Failed to fetch course students from backend:', error)
@@ -154,7 +136,6 @@ class GradeEntryService {
 
   // Save all grades
   async saveGrades(grades: Record<string, string>, courseId?: string): Promise<void> {
-    console.log('💾 Saving grades to backend...', { grades, courseId })
     
     if (!courseId || courseId === "all") {
       throw new Error('Course ID is required for saving grades')
@@ -203,7 +184,6 @@ class GradeEntryService {
              entry.final !== undefined
     })
 
-    console.log('📤 Sending grade entries to backend:', gradeEntries)
     
     try {
       const response = await this.request<any>(`/academic-records/professor/courses/${courseId}/grades`, {
@@ -211,7 +191,6 @@ class GradeEntryService {
         body: JSON.stringify(gradeEntries)
       })
       
-      console.log('✅ Grades saved successfully to backend:', response)
       return response
     } catch (error) {
       console.error('❌ Failed to save grades to backend:', error)
@@ -225,8 +204,9 @@ class GradeEntryService {
     const currentDate = new Date()
     const timeDiff = currentDate.getTime() - examDateTime.getTime()
     const daysElapsed = Math.floor(timeDiff / (1000 * 3600 * 24))
-    const maxDays = 15 // 15 days
+    const maxDays = 15 // 15 days after exam
     
+    // If exam is more than 15 days ago, grade entry is not allowed
     if (daysElapsed > maxDays) {
       return {
         allowed: false,
@@ -235,14 +215,16 @@ class GradeEntryService {
       }
     }
     
+    // If exam is in the future (more than today), grade entry is not allowed yet
     if (daysElapsed < 0) {
       return {
         allowed: false,
         daysElapsed,
-        message: `Cannot enter grades for future exam date.`
+        message: `Cannot enter grades yet. Exam is in ${Math.abs(daysElapsed)} days.`
       }
     }
     
+    // Grade entry is allowed from exam date (day 0) to 15 days after
     return {
       allowed: true,
       daysElapsed,
@@ -252,7 +234,6 @@ class GradeEntryService {
 
   // Export grades
   async exportGrades(courseId?: string, format: 'csv' | 'pdf' = 'csv'): Promise<void> {
-    console.log('Exporting grades:', { courseId, format })
     
     // Get students and course info
     const data = await this.getCourseStudents(courseId)

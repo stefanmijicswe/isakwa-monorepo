@@ -1,4 +1,5 @@
 import { IsString, IsNotEmpty, IsEnum, IsOptional, IsBoolean, IsNumber } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { SemesterType } from '@prisma/client';
 
 export class CreateSyllabusDto {
@@ -43,6 +44,7 @@ export class UpdateSyllabusDto {
 
 export class GetSyllabusDto {
   @IsOptional()
+  @Transform(({ value }) => value ? parseInt(value, 10) : undefined)
   @IsNumber()
   subjectId?: number;
 

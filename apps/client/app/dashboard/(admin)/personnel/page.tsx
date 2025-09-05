@@ -170,7 +170,7 @@ export default function PersonnelPage() {
         return
       }
 
-      console.log('Deleting personnel:', personToDelete)
+      // console.log('Deleting personnel:', personToDelete)
       
       // Make API call to delete personnel
       const response = await fetch(`http://localhost:3001/api/users/${personToDelete.id}`, {
@@ -185,7 +185,7 @@ export default function PersonnelPage() {
         throw new Error(`Failed to delete personnel: ${response.status}`)
       }
 
-      console.log('Personnel deleted successfully')
+      // console.log('Personnel deleted successfully')
       
       // Close dialog and refresh the list
       setIsDeleteDialogOpen(false)
@@ -205,7 +205,7 @@ export default function PersonnelPage() {
         return
       }
 
-      console.log('Saving personnel:', data)
+      // console.log('Saving personnel:', data)
       
       // Prepare update data
       const updateData = {
@@ -233,7 +233,7 @@ export default function PersonnelPage() {
       }
 
       const updatedPersonnel = await response.json()
-      console.log('Personnel updated successfully:', updatedPersonnel)
+      // console.log('Personnel updated successfully:', updatedPersonnel)
       
       // Close modal and refresh the list
       setIsEditModalOpen(false)

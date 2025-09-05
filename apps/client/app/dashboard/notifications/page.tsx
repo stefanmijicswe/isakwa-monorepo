@@ -50,7 +50,7 @@ export default function NotificationsPage() {
       localStorage.setItem('user_role', role);
       localStorage.setItem('user_id', '1'); // John Smith ID
       localStorage.setItem('user_email', 'john.smith@isakwa.edu');
-      console.log('🔑 Auto-set user role and info for Notifications');
+      // console.log('🔑 Auto-set user role and info for Notifications');
     }
     
     setUserRole(role);
@@ -83,7 +83,7 @@ export default function NotificationsPage() {
           code: assignment.subject.code
         }));
         setProfessorCourses(courses);
-        console.log('✅ Loaded professor courses for notifications:', courses);
+        // console.log('✅ Loaded professor courses for notifications:', courses);
       } else {
         console.warn('Failed to load professor courses, using fallback');
         // Fallback to basic courses
@@ -119,15 +119,15 @@ export default function NotificationsPage() {
 
   const fetchNotifications = async (role: string) => {
     try {
-      console.log('🔍 fetchNotifications called with role:', role);
+      // console.log('🔍 fetchNotifications called with role:', role);
       
       if (role === 'ADMIN' || role === 'STUDENT_SERVICE') {
         const data = await getAllNotifications();
-        console.log('🔍 getAllNotifications returned:', data);
+        // console.log('🔍 getAllNotifications returned:', data);
         setNotifications(data);
       } else {
         const data = await getUserNotifications();
-        console.log('🔍 getUserNotifications returned:', data);
+        // console.log('🔍 getUserNotifications returned:', data);
         const transformedData = data.map(recipient => ({
           id: recipient.notificationId,
           title: recipient.notification.title,
@@ -140,11 +140,11 @@ export default function NotificationsPage() {
           creator: recipient.notification.creator,
           recipients: [recipient]
         }));
-        console.log('🔍 Transformed data:', transformedData);
+        // console.log('🔍 Transformed data:', transformedData);
         setNotifications(transformedData);
       }
       
-      console.log('🔍 State updated with notifications:', notifications);
+      // console.log('🔍 State updated with notifications:', notifications);
     } catch (error) {
       console.error('❌ Error in fetchNotifications:', error);
       setError('Failed to fetch notifications');
@@ -155,18 +155,18 @@ export default function NotificationsPage() {
 
   const handleMarkAsRead = async (notificationId: number) => {
     try {
-      console.log('Marking as read:', notificationId);
-      console.log('Auth token:', localStorage.getItem('auth_token'));
-      console.log('User ID:', localStorage.getItem('user_id'));
+      // console.log('Marking as read:', notificationId);
+      // console.log('Auth token:', localStorage.getItem('auth_token'));
+      // console.log('User ID:', localStorage.getItem('user_id'));
       
       await markAsRead(notificationId);
-      console.log('Successfully marked as read');
+      // console.log('Successfully marked as read');
       
       // Force refresh notifications to get updated state from backend
       const role = localStorage.getItem('user_role') || '';
       await fetchNotifications(role);
       
-      console.log('Notifications refreshed after mark as read');
+      // console.log('Notifications refreshed after mark as read');
     } catch (error) {
       console.error('Error marking as read:', error);
       setError(`Failed to mark as read: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -175,18 +175,18 @@ export default function NotificationsPage() {
 
   const handleMarkAllAsRead = async () => {
     try {
-      console.log('Marking all as read');
-      console.log('Auth token:', localStorage.getItem('auth_token'));
-      console.log('User ID:', localStorage.getItem('user_id'));
+      // console.log('Marking all as read');
+      // console.log('Auth token:', localStorage.getItem('auth_token'));
+      // console.log('User ID:', localStorage.getItem('user_id'));
       
       await markAllAsRead();
-      console.log('Successfully marked all as read');
+      // console.log('Successfully marked all as read');
       
       // Force refresh notifications to get updated state from backend
       const role = localStorage.getItem('user_role') || '';
       await fetchNotifications(role);
       
-      console.log('Notifications refreshed after mark all as read');
+      // console.log('Notifications refreshed after mark all as read');
     } catch (error) {
       console.error('Error marking all as read:', error);
       setError(`Failed to mark all as read: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -212,7 +212,7 @@ export default function NotificationsPage() {
 
     setCreating(true);
     try {
-      console.log('🔄 Creating notification with data:', newNotification);
+      // console.log('🔄 Creating notification with data:', newNotification);
 
       // Prepare notification data for backend
       const notificationData = {
@@ -225,7 +225,7 @@ export default function NotificationsPage() {
 
       // Call backend API to create notification
       const createdNotification = await createCourseNotification(notificationData);
-      console.log('✅ Notification created successfully:', createdNotification);
+      // console.log('✅ Notification created successfully:', createdNotification);
 
       // Reset form
       setNewNotification({

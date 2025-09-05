@@ -291,7 +291,7 @@ class StudentSearchService {
 
   // Get all students or filter by faculty
   async getStudents(facultyFilter?: string): Promise<Student[]> {
-    console.log('Getting students with faculty filter:', facultyFilter)
+    // console.log('Getting students with faculty filter:', facultyFilter)
     
     // Try real API first
     try {
@@ -418,7 +418,7 @@ class StudentSearchService {
 
   // Export students data
   async exportStudents(students: Student[], format: 'csv' | 'json' = 'csv'): Promise<void> {
-    console.log('Exporting students:', students.length, 'format:', format)
+    // console.log('Exporting students:', students.length, 'format:', format)
     
     if (students.length === 0) {
       console.warn('No students to export')

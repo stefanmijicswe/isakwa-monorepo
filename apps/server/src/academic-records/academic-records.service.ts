@@ -22,7 +22,7 @@ import { UserRole, StudentStatus } from '@prisma/client';
 
 @Injectable()
 export class AcademicRecordsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async enrollStudent(dto: EnrollStudentDto) {
     const student = await this.prisma.user.findUnique({
@@ -89,11 +89,34 @@ export class AcademicRecordsService {
       });
     }
 
+    //Automatically enroll student in all subjects of their study program
+    const programSubjects = await this.prisma.subject.findMany({
+      where: { studyProgramId: dto.studyProgramId },
+    });
+
+    console.log(`📚 Auto-enrolling student ${dto.studentId} in ${programSubjects.length} subjects for program ${dto.studyProgramId}`);
+
+    // Create CourseEnrollment for each subject in the program
+    if (programSubjects.length > 0) {
+      const courseEnrollments = programSubjects.map(subject => ({
+        studentId: dto.studentId,
+        subjectId: subject.id,
+        academicYear: dto.academicYear,
+        isActive: true,
+        status: 'Active',
+      }));
+
+      await this.prisma.courseEnrollment.createMany({
+        data: courseEnrollments
+      });
+
+      console.log(`✅ Created ${courseEnrollments.length} course enrollments for student ${dto.studentId}`);
+    }
+
     return enrollment;
   }
 
   async enrollInCourse(dto: EnrollCourseDto) {
-    // Prvo pronađi student profile based na studentId (koji je zapravo student profile ID)
     const studentProfile = await this.prisma.studentProfile.findUnique({
       where: { id: dto.studentId },
       include: {
@@ -144,7 +167,6 @@ export class AcademicRecordsService {
         studentId: dto.studentId,
         subjectId: dto.subjectId,
         academicYear: dto.academicYear,
-        // semesterType: dto.semesterType, // Field not in schema
         isActive: dto.isActive ?? true,
       },
       include: {
@@ -163,7 +185,7 @@ export class AcademicRecordsService {
   async assignProfessor(dto: AssignProfessorDto) {
     const professor = await this.prisma.user.findUnique({
       where: { id: dto.professorId },
-              include: { professorProfile: true },
+      include: { professorProfile: true },
     });
 
     if (!professor || professor.role !== UserRole.PROFESSOR) {
@@ -226,7 +248,6 @@ export class AcademicRecordsService {
         registrationStartDate: new Date(dto.registrationStartDate),
         registrationEndDate: new Date(dto.registrationEndDate),
         academicYear: dto.academicYear,
-        // semesterType: dto.semesterType, // Field not in schema
         isActive: dto.isActive ?? true,
       },
     });
@@ -261,7 +282,7 @@ export class AcademicRecordsService {
         examDate: examDate,
         examTime: dto.examTime,
         startTime: '09:00',
-        endTime: '11:00', 
+        endTime: '11:00',
         duration: dto.duration,
         location: dto.location,
         maxPoints: dto.maxPoints ?? 100,
@@ -333,6 +354,9 @@ export class AcademicRecordsService {
   }
 
   async registerForExam(dto: RegisterExamDto) {
+    console.log('🎯 EXAM REGISTRATION DEBUG:');
+    console.log('- DTO:', JSON.stringify(dto, null, 2));
+
     const exam = await this.prisma.exam.findUnique({
       where: { id: dto.examId },
       include: {
@@ -345,10 +369,19 @@ export class AcademicRecordsService {
       throw new NotFoundException('Exam not found');
     }
 
+    console.log('- Exam found:', exam.id, exam.subject?.name);
+    console.log('- Exam period academic year:', exam.examPeriod.academicYear);
+
     const now = new Date();
     if (now < exam.examPeriod.registrationStartDate || now > exam.examPeriod.registrationEndDate) {
       throw new ForbiddenException('Exam registration is not currently active');
     }
+
+    console.log('- Looking for CourseEnrollment with:');
+    console.log('  * studentId:', dto.studentId);
+    console.log('  * subjectId:', exam.subjectId);
+    console.log('  * academicYear:', exam.examPeriod.academicYear);
+    console.log('  * isActive: true');
 
     const courseEnrollment = await this.prisma.courseEnrollment.findFirst({
       where: {
@@ -357,6 +390,23 @@ export class AcademicRecordsService {
         academicYear: exam.examPeriod.academicYear,
         isActive: true,
       },
+    });
+
+    console.log('- CourseEnrollment found:', courseEnrollment ? 'YES' : 'NO');
+    if (courseEnrollment) {
+      console.log('- CourseEnrollment details:', JSON.stringify(courseEnrollment, null, 2));
+    }
+
+    const allStudentEnrollments = await this.prisma.courseEnrollment.findMany({
+      where: { studentId: dto.studentId },
+      include: {
+        subject: { select: { name: true, code: true } }
+      }
+    });
+
+    console.log('- All student enrollments:');
+    allStudentEnrollments.forEach((e, i) => {
+      console.log(`  ${i + 1}: ${e.subject?.name} - Subject ID: ${e.subjectId}, Academic Year: ${e.academicYear}, isActive: ${e.isActive}`);
     });
 
     if (!courseEnrollment) {
@@ -427,7 +477,7 @@ export class AcademicRecordsService {
 
     // Allow grading for development/testing purposes
     const isDevelopment = process.env.NODE_ENV !== 'production';
-    
+
     if (!isDevelopment && now > gradeDeadline) {
       throw new ForbiddenException('Grade entry deadline has passed (15 days after exam)');
     }
@@ -537,11 +587,48 @@ export class AcademicRecordsService {
       },
     });
 
+    // Get course enrollments separately using user IDs
+    const userIds = students.map(s => s.userId);
+    const courseEnrollments = await this.prisma.courseEnrollment.findMany({
+      where: {
+        studentId: { in: userIds },
+        status: 'Completed',
+        isActive: true
+      },
+      include: {
+        subject: {
+          select: {
+            name: true,
+            credits: true
+          },
+        },
+      },
+    });
+
     const studentsWithStats = students.map(student => {
       const passedGrades = student.grades.filter(g => g.passed);
-      const totalECTS = passedGrades.reduce((sum, grade) => sum + grade.exam.subject.credits, 0);
-      const averageGrade = passedGrades.length > 0 
-        ? passedGrades.reduce((sum, grade) => sum + (grade.grade || 0), 0) / passedGrades.length 
+      const studentEnrollments = courseEnrollments.filter(e => e.studentId === student.userId);
+
+      // Combine ECTS from both sources
+      const gradesECTS = passedGrades.reduce((sum, grade) => sum + grade.exam.subject.credits, 0);
+      const enrollmentsECTS = studentEnrollments.reduce((sum, enrollment) => sum + enrollment.subject.credits, 0);
+      const totalECTS = gradesECTS + enrollmentsECTS;
+
+      // Calculate average grade from both sources
+      const gradesSum = passedGrades.reduce((sum, grade) => sum + (grade.grade || 0), 0);
+      const enrollmentsSum = studentEnrollments.reduce((sum, enrollment) => {
+        // Calculate weighted grade from enrollment components
+        const attendance = enrollment.attendance || 0;
+        const assignments = enrollment.assignments || 0;
+        const midterm = enrollment.midterm || 0;
+        const final = enrollment.final || 0;
+        const weightedGrade = Math.round(attendance * 0.1 + assignments * 0.2 + midterm * 0.3 + final * 0.4);
+        return sum + weightedGrade;
+      }, 0);
+
+      const totalPassed = passedGrades.length + studentEnrollments.length;
+      const averageGrade = totalPassed > 0
+        ? (gradesSum + enrollmentsSum) / totalPassed
         : 0;
 
       return {
@@ -549,6 +636,7 @@ export class AcademicRecordsService {
         totalECTS,
         averageGrade: parseFloat(averageGrade.toFixed(2)),
         grades: undefined,
+        courseEnrollments: studentEnrollments, // Include for frontend
       };
     });
 
@@ -578,17 +666,7 @@ export class AcademicRecordsService {
       where: { id: studentId },
       include: {
         user: {
-          select: { firstName: true, lastName: true, email: true },
-          include: {
-            courseEnrollments: {
-              where: { isActive: true },
-              include: {
-                subject: {
-                  select: { name: true, code: true, credits: true },
-                },
-              },
-            },
-          },
+          select: { firstName: true, lastName: true, email: true, id: true },
         },
         studyProgram: {
           include: {
@@ -604,7 +682,6 @@ export class AcademicRecordsService {
             },
           },
         },
-
         grades: {
           include: {
             exam: {
@@ -639,11 +716,24 @@ export class AcademicRecordsService {
       throw new NotFoundException('Student not found');
     }
 
+    // Get course enrollments separately using the user ID
+    const courseEnrollments = await this.prisma.courseEnrollment.findMany({
+      where: {
+        studentId: student.user.id,
+        isActive: true
+      },
+      include: {
+        subject: {
+          select: { name: true, code: true, credits: true },
+        },
+      },
+    });
+
     const passedGrades = student.grades.filter(g => g.passed);
     const failedGrades = student.grades.filter(g => !g.passed);
     const totalECTS = passedGrades.reduce((sum, grade) => sum + grade.exam.subject.credits, 0);
-    const averageGrade = passedGrades.length > 0 
-      ? passedGrades.reduce((sum, grade) => sum + (grade.grade || 0), 0) / passedGrades.length 
+    const averageGrade = passedGrades.length > 0
+      ? passedGrades.reduce((sum, grade) => sum + (grade.grade || 0), 0) / passedGrades.length
       : 0;
 
     return {
@@ -651,11 +741,12 @@ export class AcademicRecordsService {
         ...student,
         totalECTS,
         averageGrade: parseFloat(averageGrade.toFixed(2)),
+        courseEnrollments, // Add course enrollments to student object for compatibility
       },
       passedSubjects: passedGrades,
       failedAttempts: failedGrades,
       currentEnrollments: await Promise.all(
-        student.user.courseEnrollments.map(async (enrollment) => {
+        courseEnrollments.map(async (enrollment) => {
           // Find professor for this subject
           const professorAssignment = await this.prisma.professorAssignment.findFirst({
             where: {
@@ -669,10 +760,10 @@ export class AcademicRecordsService {
               },
             },
           });
-          
+
           // Find grade for this enrollment
           const grade = student.grades.find(g => g.exam.subjectId === enrollment.subjectId);
-          
+
           return {
             ...enrollment,
             professor: professorAssignment ? {
@@ -847,29 +938,12 @@ export class AcademicRecordsService {
 
   // Syllabus Management Methods
   async createSyllabus(dto: CreateSyllabusDto, professorId: number) {
-    // Temporarily disable professor assignment check until assignments are set up
-    // TODO: Re-enable when professor_assignments table is populated
-    /*
-    const assignment = await this.prisma.professorAssignment.findFirst({
-      where: {
-        professorId,
-        subjectId: dto.subjectId,
-        academicYear: dto.academicYear,
-        isActive: true,
-      },
-    });
-
-    if (!assignment) {
-      throw new ForbiddenException('Professor not assigned to this subject');
-    }
-    */
 
     // Check if syllabus already exists
     const existingSyllabus = await this.prisma.syllabus.findFirst({
       where: {
         subjectId: dto.subjectId,
         academicYear: dto.academicYear,
-        // semesterType: dto.semesterType, // Field not in schema
       },
     });
 
@@ -902,7 +976,6 @@ export class AcademicRecordsService {
         subject: { connect: { id: dto.subjectId } },
         title: 'Syllabus',
         academicYear: dto.academicYear,
-        // semesterType: dto.semesterType, // Field not in schema
         description: dto.description,
         objectives: dto.objectives,
         isActive: dto.isActive ?? true,
@@ -936,13 +1009,6 @@ export class AcademicRecordsService {
       throw new NotFoundException('Syllabus not found');
     }
 
-    // Temporarily disable professor assignment check until assignments are set up
-    // TODO: Re-enable when professor_assignments table is populated
-    /*
-    if (syllabus.subject.professorAssignments.length === 0) {
-      throw new ForbiddenException('Professor not assigned to this subject');
-    }
-    */
 
     return this.prisma.syllabus.update({
       where: { id: syllabusId },
@@ -1003,21 +1069,17 @@ export class AcademicRecordsService {
       },
       orderBy: [
         { academicYear: 'desc' },
-        // { semesterType: 'asc' }, // Field not in schema
         { subject: { name: 'asc' } },
       ],
     });
   }
 
   async getSyllabusById(syllabusId: number, professorId?: number) {
-    // Temporarily disable professor assignment check until assignments are set up
-    // TODO: Re-enable when professor_assignments table is populated
-    console.log(`🔍 Looking for syllabus with ID: ${syllabusId}`);
-    
+
     // First, check if any syllabi exist at all
     const allSyllabi = await this.prisma.syllabus.findMany();
     console.log(`📚 All syllabi in database:`, allSyllabi.map(s => ({ id: s.id, subjectId: s.subjectId })));
-    
+
     const syllabus = await this.prisma.syllabus.findUnique({
       where: { id: syllabusId },
       include: {
@@ -1043,18 +1105,18 @@ export class AcademicRecordsService {
   async deleteSyllabus(syllabusId: number, professorId: number) {
     const syllabus = await this.prisma.syllabus.findUnique({
       where: { id: syllabusId },
-              include: {
-          subject: {
-            include: {
-              professorAssignments: {
-                where: {
-                  professorId,
-                  isActive: true,
-                },
+      include: {
+        subject: {
+          include: {
+            professorAssignments: {
+              where: {
+                professorId,
+                isActive: true,
               },
             },
           },
         },
+      },
     });
 
     if (!syllabus) {
@@ -1289,7 +1351,7 @@ export class AcademicRecordsService {
   // Grade Entry Methods
   async getProfessorCoursesWithExams(professorId: number) {
     console.log('🔍 Fetching courses for professor ID:', professorId);
-    
+
     try {
       const assignments = await this.prisma.professorAssignment.findMany({
         where: {
@@ -1312,7 +1374,7 @@ export class AcademicRecordsService {
 
       for (const assignment of assignments) {
         const subject = assignment.subject;
-        
+
         // Find the latest exam for this subject
         const latestExam = await this.prisma.exam.findFirst({
           where: {
@@ -1331,25 +1393,25 @@ export class AcademicRecordsService {
             isActive: true
           }
         });
-        
+
         result.push({
           id: subject.id,
           name: subject.name,
           code: subject.code,
           semester: `${assignment.academicYear || 'Winter 2024'}`,
           studentsEnrolled: enrolledStudents,
-          gradingDeadline: latestExam ? 
-            new Date(new Date(latestExam.examDate).getTime() + (15 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0] : 
+          gradingDeadline: latestExam ?
+            new Date(new Date(latestExam.examDate).getTime() + (15 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0] :
             null,
           examDate: latestExam ? latestExam.examDate.toISOString().split('T')[0] : null,
         });
       }
 
-      console.log('✅ Returning courses:', result);
+      console.log('Returning courses:', result);
       return result;
 
     } catch (error) {
-      console.error('❌ Error in getProfessorCoursesWithExams:', error);
+      console.error('Error in getProfessorCoursesWithExams:', error);
       throw error;
     }
   }
@@ -1397,8 +1459,8 @@ export class AcademicRecordsService {
         courseId: subjectId,
         course: {
           id: subjectId,
-          name: 'Course Name', // Will be filled by frontend
-          code: 'Course Code' // Will be filled by frontend
+          name: 'Course Name',
+          code: 'Course Code'
         },
         attendance: enrollment.attendance || 0,
         assignments: enrollment.assignments || 0,
@@ -1410,8 +1472,8 @@ export class AcademicRecordsService {
   }
 
   async getAllProfessorStudents(professorId: number) {
-    console.log('👥 Fetching all students for professor ID:', professorId);
-    
+    console.log('Fetching all students for professor ID:', professorId);
+
     try {
       // Get all subjects assigned to this professor
       const assignments = await this.prisma.professorAssignment.findMany({
@@ -1425,12 +1487,12 @@ export class AcademicRecordsService {
       });
 
       if (assignments.length === 0) {
-        console.log('⚠️ No subject assignments found for professor');
+        console.log('No subject assignments found for professor');
         return [];
       }
 
       const subjectIds = assignments.map(assignment => assignment.subjectId);
-      
+
       // Get all enrollments for professor's subjects
       const enrollments = await this.prisma.courseEnrollment.findMany({
         where: {
@@ -1458,10 +1520,10 @@ export class AcademicRecordsService {
 
       // Group enrollments by student
       const studentMap = new Map();
-      
+
       enrollments.forEach(enrollment => {
         const studentId = enrollment.student.id;
-        
+
         if (!studentMap.has(studentId)) {
           studentMap.set(studentId, {
             id: enrollment.student.id,
@@ -1472,7 +1534,7 @@ export class AcademicRecordsService {
             enrollments: []
           });
         }
-        
+
         studentMap.get(studentId).enrollments.push({
           id: enrollment.id,
           courseId: enrollment.subjectId,
@@ -1490,11 +1552,11 @@ export class AcademicRecordsService {
       });
 
       const result = Array.from(studentMap.values());
-      console.log(`✅ Found ${result.length} unique students across ${assignments.length} subjects`);
+      console.log(`Found ${result.length} unique students across ${assignments.length} subjects`);
       return result;
 
     } catch (error) {
-      console.error('❌ Error in getAllProfessorStudents:', error);
+      console.error('Error in getAllProfessorStudents:', error);
       throw error;
     }
   }
@@ -1506,8 +1568,8 @@ export class AcademicRecordsService {
     midterm?: number;
     final?: number;
   }>) {
-    console.log('💾 Saving grades for subject:', subjectId, 'professor:', professorId);
-    
+    console.log('Saving grades for subject:', subjectId, 'professor:', professorId);
+
     // Verify professor is assigned to this subject
     const assignment = await this.prisma.professorAssignment.findFirst({
       where: {
@@ -1543,13 +1605,13 @@ export class AcademicRecordsService {
       if (gradeData.assignments !== undefined) updateData.assignments = gradeData.assignments;
       if (gradeData.midterm !== undefined) updateData.midterm = gradeData.midterm;
       if (gradeData.final !== undefined) updateData.final = gradeData.final;
-      
+
       // Determine status
       const hasAllGrades = (gradeData.attendance || enrollment.attendance) &&
-                          (gradeData.assignments || enrollment.assignments) &&
-                          (gradeData.midterm || enrollment.midterm) &&
-                          (gradeData.final || enrollment.final);
-      
+        (gradeData.assignments || enrollment.assignments) &&
+        (gradeData.midterm || enrollment.midterm) &&
+        (gradeData.final || enrollment.final);
+
       if (hasAllGrades) {
         updateData.status = 'Completed';
         updateData.gradedBy = professorId;
@@ -1565,9 +1627,9 @@ export class AcademicRecordsService {
 
     const results = await Promise.all(updatePromises);
     const successfulUpdates = results.filter(result => result !== null);
-    
-    console.log(`✅ Updated ${successfulUpdates.length} enrollments out of ${grades.length} requests`);
-    
+
+    console.log(`Updated ${successfulUpdates.length} enrollments out of ${grades.length} requests`);
+
     return {
       updated: successfulUpdates.length,
       total: grades.length,

@@ -62,7 +62,7 @@ export async function seedStudentSearchData() {
       }
 
       studyPrograms.push({ faculty: facultyData.name, studyProgram });
-      console.log(`✅ Faculty and Study Program created: ${facultyData.name}`);
+      console.log(`Faculty and Study Program created: ${facultyData.name}`);
     }
 
     // Create departments if they don't exist
@@ -83,7 +83,7 @@ export async function seedStudentSearchData() {
             facultyId: faculty?.id
           }
         });
-        console.log(`✅ Department created: ${facultyData.name}`);
+        console.log(`Department created: ${facultyData.name}`);
       }
     }
 
@@ -283,7 +283,7 @@ export async function seedStudentSearchData() {
       });
 
       if (existingUser) {
-        console.log(`⚠️ Student already exists: ${studentData.email}`);
+        console.log(`Student already exists: ${studentData.email}`);
         continue;
       }
 
@@ -325,10 +325,10 @@ export async function seedStudentSearchData() {
       });
 
       studentsCreated++;
-      console.log(`✅ Student created: ${studentData.firstName} ${studentData.lastName} (${studentData.faculty})`);
+      console.log(`Student created: ${studentData.firstName} ${studentData.lastName} (${studentData.faculty})`);
     }
 
-    console.log(`🎉 Student Search data seeding completed! Created ${studentsCreated} students across ${faculties.length} faculties.`);
+    console.log(`Student Search data seeding completed! Created ${studentsCreated} students across ${faculties.length} faculties.`);
     
     return {
       studentsCreated,
@@ -337,7 +337,7 @@ export async function seedStudentSearchData() {
     };
 
   } catch (error) {
-    console.error('❌ Error during Student Search data seeding:', error);
+    console.error('Error during Student Search data seeding:', error);
     throw error;
   }
 }
@@ -348,7 +348,7 @@ async function main() {
     const results = await seedStudentSearchData();
     console.log('📊 Seeding results:', results);
   } catch (error) {
-    console.error('❌ Failed to seed student search data:', error);
+    console.error('Failed to seed student search data:', error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

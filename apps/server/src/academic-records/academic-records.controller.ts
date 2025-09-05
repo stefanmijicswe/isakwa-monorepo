@@ -99,7 +99,8 @@ export class AcademicRecordsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.STUDENT)
   registerForExam(@Body() registerExamDto: RegisterExamDto, @Request() req) {
-    if (req.user.studentProfile?.id !== registerExamDto.studentId) {
+    // Students can only register themselves for exams
+    if (req.user.id !== registerExamDto.studentId) {
       throw new BadRequestException('Students can only register themselves for exams');
     }
     return this.academicRecordsService.registerForExam(registerExamDto);

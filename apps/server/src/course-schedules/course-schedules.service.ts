@@ -14,24 +14,11 @@ export class CourseSchedulesService {
 
   // Course Schedule Management
   async createCourseSchedule(dto: CreateCourseScheduleDto, userId: number, userRole: string) {
-    // TODO: Re-enable professor assignment check when assignments are populated
+    
     console.log('🔍 Creating schedule for user:', userId, 'role:', userRole, 'subject:', dto.subjectId)
     
-    // Temporarily disabled professor assignment check
-    // if (userRole === 'PROFESSOR') {
-    //   // Verify professor is assigned to this subject
-    //   const assignment = await this.prisma.professorAssignment.findFirst({
-    //     where: {
-    //       professorId: userId,
-    //       subjectId: dto.subjectId,
-    //       isActive: true,
-    //     },
-    //   });
 
-    //   if (!assignment) {
-    //     throw new ForbiddenException('Professor not assigned to this subject');
-    //   }
-    // }
+
 
     // Check if schedule already exists
     const existingSchedule = await this.prisma.courseSchedule.findFirst({
@@ -113,7 +100,7 @@ export class CourseSchedulesService {
     
     // Validate scheduleId
     if (!scheduleId || isNaN(scheduleId) || scheduleId === null || scheduleId === undefined) {
-      console.error('❌ Invalid scheduleId provided:', scheduleId)
+      console.error('Invalid scheduleId provided:', scheduleId)
       throw new Error(`Invalid schedule ID: ${scheduleId}`)
     }
     
@@ -122,19 +109,7 @@ export class CourseSchedulesService {
       isActive: true 
     };
 
-    // Temporarily disable professor assignment filtering
-    // if (userRole === 'PROFESSOR' && userId) {
-    //   where.subject = {
-    //     professorAssignments: {
-    //       some: {
-    //         professorId: userId,
-    //         isActive: true,
-    //       },
-    //     },
-    //   };
-    // }
-
-    console.log('🔍 Query where:', JSON.stringify(where, null, 2))
+    console.log('Query where:', JSON.stringify(where, null, 2))
 
     const schedule = await this.prisma.courseSchedule.findFirst({
       where,
@@ -521,10 +496,10 @@ export class CourseSchedulesService {
         orderBy: { createdAt: 'desc' },
       });
       
-      console.log('📅 Found schedules:', schedules.length)
+      console.log('Found schedules:', schedules.length)
       return schedules;
     } catch (error) {
-      console.error('❌ Error fetching schedules:', error)
+      console.error('Error fetching schedules:', error)
       throw error;
     }
   }

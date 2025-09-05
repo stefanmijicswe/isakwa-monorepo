@@ -50,16 +50,21 @@ export class UsersService {
 
     // Kreirati profil na osnovu uloge
     if (data.role === UserRole.PROFESSOR) {
+      const departmentId = data.departmentId || 1;
+      
       await this.prisma.professorProfile.create({
         data: {
           user: { connect: { id: user.id } },
-          department: { connect: { id: data.departmentId || 1 } }, // Default to first department
+          department: { connect: { id: departmentId } },
           title: data.title || '',
           phoneNumber: data.phoneNumber || data.phone,
           officeRoom: data.officeRoom,
           jmbg: generateUniqueJMBG(), // Unique JMBG
         },
       });
+
+      // Automatski dodeli predmete profesoru na osnovu department-a
+      await this.assignCoursesToProfessor(user.id, departmentId);
     } else if (data.role === UserRole.STUDENT) {
       await this.prisma.studentProfile.create({
         data: {
@@ -335,5 +340,79 @@ export class UsersService {
     });
 
     return { message: 'User deleted successfully' };
+  }
+
+
+  private async assignCoursesToProfessor(professorId: number, departmentId: number) {
+    try {
+      console.log(`🎓 Assigning courses to professor ${professorId} from department ${departmentId}`);
+      
+      // Pronađi department i njegov faculty
+      const department = await this.prisma.department.findUnique({
+        where: { id: departmentId },
+        include: { faculty: true }
+      });
+
+      if (!department || !department.faculty) {
+        console.log(`Department ${departmentId} not found or has no faculty`);
+        return;
+      }
+
+      // Pronađi sve study programe koji pripadaju tom faculty-ju
+      const studyPrograms = await this.prisma.studyProgram.findMany({
+        where: { facultyId: department.faculty.id }
+      });
+
+      console.log(`Found ${studyPrograms.length} study programs for faculty ${department.faculty.name}`);
+
+      // Pronađi sve predmete koji pripadaju tim study programima
+      const studyProgramIds = studyPrograms.map(sp => sp.id);
+      const subjects = await this.prisma.subject.findMany({
+        where: { studyProgramId: { in: studyProgramIds } }
+      });
+
+      console.log(`Found ${subjects.length} subjects for faculty`);
+
+      // Dodeli sve predmete iz tih study programa profesoru
+      const currentAcademicYear = '2024/2025';
+      const assignments = [];
+
+      for (const subject of subjects) {
+          
+          // Proveri da li već postoji assignment
+          const existingAssignment = await this.prisma.professorAssignment.findFirst({
+            where: {
+              professorId,
+              subjectId: subject.id,
+              academicYear: currentAcademicYear,
+              isActive: true
+            }
+          });
+
+          if (!existingAssignment) {
+            assignments.push({
+              professorId,
+              subjectId: subject.id,
+              studyProgramId: subject.studyProgramId,
+              academicYear: currentAcademicYear,
+              teachingType: 'LECTURE', // Default teaching type
+              isActive: true
+            });
+          }
+      }
+
+      if (assignments.length > 0) {
+        await this.prisma.professorAssignment.createMany({
+          data: assignments
+        });
+        console.log(`Created ${assignments.length} course assignments for professor ${professorId}`);
+      } else {
+        console.log(`No new assignments needed for professor ${professorId}`);
+      }
+
+    } catch (error) {
+      console.error(`Error assigning courses to professor ${professorId}:`, error);
+      // Ne bacaj grešku jer kreiranje korisnika ne sme da propadne zbog dodele predmeta
+    }
   }
 }

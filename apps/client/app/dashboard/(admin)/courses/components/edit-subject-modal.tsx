@@ -18,9 +18,19 @@ interface EditSubjectModalProps {
 }
 
 export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSubjectModalProps) {
-  const [formData, setFormData] = useState<CreateSubjectDto | null>(null);
+  const [formData, setFormData] = useState<CreateSubjectDto>({
+    name: "",
+    code: "",
+    description: "",
+    credits: 6,
+    semester: 1,
+    lectureHours: 45,
+    exerciseHours: 15,
+    studyProgramId: 1,
+  });
   const [studyPrograms, setStudyPrograms] = useState<StudyProgram[]>([]);
   const [loading, setLoading] = useState(false);
+  const [formInitialized, setFormInitialized] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Fetch study programs when modal opens
@@ -40,9 +50,9 @@ export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSu
     }
   }, [isOpen]);
 
-  // Initialize form data when subject changes
+  // Initialize form data when subject or modal state changes
   useEffect(() => {
-    if (subject) {
+    if (subject && isOpen) {
       setFormData({
         name: subject.name ?? "",
         code: subject.code ?? "",
@@ -54,8 +64,11 @@ export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSu
         studyProgramId: subject.studyProgramId ?? 1,
       });
       setErrors({});
+      setFormInitialized(true);
+    } else if (!isOpen) {
+      setFormInitialized(false);
     }
-  }, [subject]);
+  }, [subject, isOpen]);
 
   const handleInputChange = (field: keyof CreateSubjectDto, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -68,31 +81,31 @@ export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSu
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (formData.name !== undefined && !formData.name.trim()) {
+    if (!formData.name.trim()) {
       newErrors.name = "Name is required";
     }
 
-    if (formData.code !== undefined && !formData.code.trim()) {
+    if (!formData.code.trim()) {
       newErrors.code = "Code is required";
     }
 
-    if (formData.credits !== undefined && (formData.credits < 1 || formData.credits > 30)) {
+    if (formData.credits < 1 || formData.credits > 30) {
       newErrors.credits = "Credits must be between 1 and 30";
     }
 
-    if (formData.semester !== undefined && (formData.semester < 1 || formData.semester > 8)) {
+    if (formData.semester < 1 || formData.semester > 8) {
       newErrors.semester = "Semester must be between 1 and 8";
     }
 
-    if (formData.lectureHours !== undefined && formData.lectureHours < 0) {
+    if (formData.lectureHours < 0) {
       newErrors.lectureHours = "Lecture hours cannot be negative";
     }
 
-    if (formData.exerciseHours !== undefined && formData.exerciseHours < 0) {
+    if (formData.exerciseHours < 0) {
       newErrors.exerciseHours = "Exercise hours cannot be negative";
     }
 
-    if (formData.studyProgramId !== undefined && formData.studyProgramId <= 0) {
+    if (formData.studyProgramId <= 0) {
       newErrors.studyProgramId = "Study Program is required";
     }
 
@@ -107,13 +120,18 @@ export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSu
 
     setLoading(true);
     try {
-      // Only send fields that have values (for partial updates)
-      const updateData: UpdateSubjectDto = {};
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value !== undefined && value !== "") {
-          updateData[key as keyof UpdateSubjectDto] = value;
-        }
-      });
+      // Send all form data for update
+      const updateData: UpdateSubjectDto = {
+        name: formData.name,
+        code: formData.code,
+        description: formData.description,
+        credits: formData.credits,
+        semester: formData.semester,
+        lectureHours: formData.lectureHours,
+        exerciseHours: formData.exerciseHours,
+        studyProgramId: formData.studyProgramId,
+      };
+
 
       const updatedSubject = await updateSubject(subject!.id, updateData);
       onSuccess(updatedSubject);
@@ -159,7 +177,15 @@ export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSu
           <DialogTitle>Edit Subject: {subject.name}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 px-2">
+        {!formInitialized ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="flex items-center space-x-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Loading form...</span>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4 px-2">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name *</Label>
@@ -308,6 +334,7 @@ export function EditSubjectModal({ subject, isOpen, onClose, onSuccess }: EditSu
             </Button>
           </DialogFooter>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

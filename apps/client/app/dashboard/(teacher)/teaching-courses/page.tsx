@@ -33,11 +33,11 @@ export default function TeachingCoursesPage() {
     try {
       setLoading(true)
       setError(null)
-      console.log('🎓 Loading teaching courses from backend...')
+      // console.log('🎓 Loading teaching courses from backend...')
       
       const coursesData = await teachingCoursesService.getTeachingCourses()
       setCourses(coursesData)
-      console.log('✅ Teaching courses loaded successfully:', coursesData.length)
+      // console.log('✅ Teaching courses loaded successfully:', coursesData.length)
       
     } catch (err: any) {
       console.error('❌ Failed to load teaching courses:', err)
@@ -49,10 +49,10 @@ export default function TeachingCoursesPage() {
 
   const loadPinnedCourses = async () => {
     try {
-      console.log('📌 Loading pinned courses...')
+      // console.log('📌 Loading pinned courses...')
       const pinned = await teachingCoursesService.getPinnedCourses()
       setPinnedCourses(new Set(pinned))
-      console.log('✅ Pinned courses loaded:', pinned)
+      // console.log('✅ Pinned courses loaded:', pinned)
     } catch (err) {
       console.warn('⚠️ Failed to load pinned courses:', err)
       // Fallback to empty set
@@ -64,7 +64,7 @@ export default function TeachingCoursesPage() {
     setRefreshing(true)
     try {
       await loadData()
-      console.log('🔄 Data refreshed successfully')
+      // console.log('🔄 Data refreshed successfully')
     } catch (err) {
       console.error('❌ Failed to refresh data:', err)
     } finally {
@@ -84,11 +84,11 @@ export default function TeachingCoursesPage() {
   const togglePinCourse = async (courseId: number) => {
     try {
       setPinnedLoading(true)
-      console.log(`📌 Toggling pin for course ${courseId}...`)
+      // console.log(`📌 Toggling pin for course ${courseId}...`)
       
       const newPinned = await teachingCoursesService.togglePinCourse(courseId)
       setPinnedCourses(new Set(newPinned))
-      console.log('✅ Pin status updated successfully')
+      // console.log('✅ Pin status updated successfully')
       
     } catch (err) {
       console.error('❌ Failed to toggle pin status:', err)
@@ -106,11 +106,11 @@ export default function TeachingCoursesPage() {
   const handleClearPinnedCourses = async () => {
     try {
       setPinnedLoading(true)
-      console.log('🗑️ Clearing all pinned courses...')
+      // console.log('🗑️ Clearing all pinned courses...')
       
       await teachingCoursesService.clearPinnedCourses()
       setPinnedCourses(new Set())
-      console.log('✅ All pinned courses cleared')
+      // console.log('✅ All pinned courses cleared')
       
     } catch (err) {
       console.error('❌ Failed to clear pinned courses:', err)

@@ -25,7 +25,8 @@ import {
   PenTool,
   Database,
   Package,
-  MessageSquare
+  MessageSquare,
+  Upload
 } from "lucide-react"
 import Image from "next/image"
 import { useAuth } from "../../../components/auth"
@@ -61,6 +62,12 @@ const navigationByRole = {
       url: "/dashboard/grades",
       icon: Award,
       description: "View your grades"
+    },
+    {
+      title: "Assignments",
+      url: "/dashboard/assignments",
+      icon: Upload,
+      description: "Submit assignments"
     },
     {
       title: "Exam Registration",

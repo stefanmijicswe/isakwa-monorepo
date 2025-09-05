@@ -60,13 +60,31 @@ const studentSearchService = {
         email: apiStudent.user?.email || apiStudent.email || '',
         enrollmentYear: apiStudent.enrollmentYear || '2024/2025',
         studyProgram: apiStudent.studyProgram,
-        // Transform passed exams from grades that backend provides
-        passedExams: apiStudent.grades?.map((grade: any) => ({
-          subject: grade.exam?.subject?.name || 'Unknown Subject',
-          date: grade.exam?.date || grade.createdAt,
-          grade: grade.grade,
-          points: grade.points || (grade.grade * 10)
-        })) || []
+        // Transform passed exams from both grades and courseEnrollments
+        passedExams: [
+          // From Grade table
+          ...(apiStudent.grades?.map((grade: any) => ({
+            subject: grade.exam?.subject?.name || 'Unknown Subject',
+            date: grade.exam?.date || grade.createdAt,
+            grade: grade.grade,
+            points: grade.points || (grade.grade * 10)
+          })) || []),
+          // From CourseEnrollment table
+          ...(apiStudent.courseEnrollments?.map((enrollment: any) => {
+            const attendance = enrollment.attendance || 0;
+            const assignments = enrollment.assignments || 0;
+            const midterm = enrollment.midterm || 0;
+            const final = enrollment.final || 0;
+            const weightedGrade = Math.round(attendance * 0.1 + assignments * 0.2 + midterm * 0.3 + final * 0.4);
+            
+            return {
+              subject: enrollment.subject?.name || 'Unknown Subject',
+              date: enrollment.gradedAt || enrollment.updatedAt,
+              grade: weightedGrade,
+              points: weightedGrade * 10
+            };
+          }) || [])
+        ]
       }))
 
       return students
@@ -138,7 +156,6 @@ export default function StudentSearchPage() {
     try {
       const filteredStudents = getFilteredStudents()
       // Export functionality - simplified for now
-      console.log('Exporting students:', filteredStudents.length)
     } catch (error) {
       console.error('Export failed:', error)
     } finally {

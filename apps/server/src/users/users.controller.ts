@@ -9,12 +9,12 @@ import { CreateUserData } from './users.service';
 import * as bcrypt from 'bcryptjs';
 
 @Controller('users')
-@UseGuards(JwtAuthGuard)  // Re-enabled JWT authentication
+@UseGuards(JwtAuthGuard)  
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Get('profile')
-  @UseGuards(JwtAuthGuard)  // Re-enabled JWT authentication
+  @UseGuards(JwtAuthGuard)  
   async getProfile(@CurrentUser() user: any) {
     if (!user) {
       throw new Error('User not authenticated');
@@ -23,8 +23,8 @@ export class UsersController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard)  // Re-enabled authentication and authorization
-  @Roles(UserRole.ADMIN)  // Re-enabled role-based access control
+  @UseGuards(JwtAuthGuard, RolesGuard)  
+  @Roles(UserRole.ADMIN) 
   async getAllUsers() {
     console.log('🔍 [UsersController] getAllUsers called');
     const result = await this.usersService.findAll();
@@ -33,8 +33,8 @@ export class UsersController {
   }
 
   @Get('professors')
-  @UseGuards(JwtAuthGuard, RolesGuard)  // Re-enabled authentication and authorization
-  @Roles(UserRole.ADMIN)  // Re-enabled role-based access control
+  @UseGuards(JwtAuthGuard, RolesGuard)  
+  @Roles(UserRole.ADMIN) 
   async getProfessors() {
     console.log('🔍 [UsersController] getProfessors called');
     const result = await this.usersService.findByRole(UserRole.PROFESSOR);
@@ -43,8 +43,8 @@ export class UsersController {
   }
 
   @Get('student-service')
-  @UseGuards(JwtAuthGuard, RolesGuard)  // Re-enabled authentication and authorization
-  @Roles(UserRole.ADMIN)  // Re-enabled role-based access control
+  @UseGuards(JwtAuthGuard, RolesGuard) 
+  @Roles(UserRole.ADMIN) 
   async getStudentService() {
     console.log('🔍 [UsersController] getStudentService called');
     const result = await this.usersService.findByRole(UserRole.STUDENT_SERVICE);
@@ -53,20 +53,20 @@ export class UsersController {
   }
 
   @Get('students')
-  @UseGuards(JwtAuthGuard, RolesGuard)  // Re-enabled authentication and authorization
-  @Roles(UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT_SERVICE)  // Re-enabled role-based access control
+  @UseGuards(JwtAuthGuard, RolesGuard)  
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR, UserRole.STUDENT_SERVICE) 
   async getStudents(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
     @Query('search') search?: string,
   ) {
-    console.log('🔍 [UsersController] getStudents called with:', { page, limit, search });
+    console.log('[UsersController] getStudents called with:', { page, limit, search });
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 10;
     
-    console.log('✅ [UsersController] getStudents - calling service with:', { pageNum, limitNum, search });
+    console.log('[UsersController] getStudents - calling service with:', { pageNum, limitNum, search });
     const result = await this.usersService.findByRole(UserRole.STUDENT, pageNum, limitNum, search);
-    console.log('✅ [UsersController] getStudents - service returned:', result?.users?.length || 0, 'students');
+    console.log('[UsersController] getStudents - service returned:', result?.users?.length || 0, 'students');
     return result;
   }
 
@@ -88,7 +88,7 @@ export class UsersController {
     };
 
     const result = await this.usersService.create(userData);
-    console.log('✅ [UsersController] createUser - service returned:', result?.id);
+    console.log('[UsersController] createUser - service returned:', result?.id);
     return result;
   }
 
@@ -96,9 +96,9 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.STUDENT_SERVICE)
   async getUserById(@Param('id') id: string) {
-    console.log('🔍 [UsersController] getUserById called with:', { id });
+    console.log('[UsersController] getUserById called with:', { id });
     const result = await this.usersService.findById(parseInt(id));
-    console.log('✅ [UsersController] getUserById - service returned:', result?.id);
+    console.log('[UsersController] getUserById - service returned:', result?.id);
     return result;
   }
 
@@ -109,9 +109,9 @@ export class UsersController {
     @Param('id') id: string,
     @Body() updateData: any
   ) {
-    console.log('🔍 [UsersController] updateUser called with:', { id, updateData });
+    console.log('[UsersController] updateUser called with:', { id, updateData });
     const result = await this.usersService.updateUser(parseInt(id), updateData);
-    console.log('✅ [UsersController] updateUser - service returned:', result);
+    console.log('[UsersController] updateUser - service returned:', result);
     return result;
   }
 
@@ -119,9 +119,9 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   async deleteUser(@Param('id') id: string) {
-    console.log('🔍 [UsersController] deleteUser called with:', { id });
+    console.log('[UsersController] deleteUser called with:', { id });
     const result = await this.usersService.deleteUser(parseInt(id));
-    console.log('✅ [UsersController] deleteUser - service returned:', result);
+    console.log('[UsersController] deleteUser - service returned:', result);
     return result;
   }
 }

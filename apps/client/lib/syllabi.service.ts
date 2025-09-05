@@ -80,7 +80,6 @@ class SyllabiService {
     if (!token) {
       const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiam9obi5zbWl0aEBpc2Frd2EuZWR1Iiwicm9sZSI6IlBST0ZFU1NPUiIsImZpcnN0TmFtZSI6IkpvaG4iLCJsYXN0TmFtZSI6IlNtaXRoIiwiaWF0IjoxNzU2OTAyNjEzLCJleHAiOjE3NTc1MDc0MTN9.Siqy9TGJr2ZGB5UJ20cJPv6rcDRIM4aMg0qKlqlaeho'
       localStorage.setItem('auth_token', testToken)
-      console.log('🔑 Auto-set test authentication token for Syllabi')
       token = testToken
     }
     
@@ -94,7 +93,6 @@ class SyllabiService {
     const token = this.getAuthToken()
     const url = `${API_BASE_URL}${endpoint}`
 
-    console.log('🔑 Auth token from localStorage:', token ? `${token.substring(0, 10)}...` : 'NO TOKEN')
 
     const config: RequestInit = {
       ...options,
@@ -105,18 +103,10 @@ class SyllabiService {
       },
     }
 
-    console.log('📡 Syllabi API Request:', { 
-      url, 
-      method: config.method || 'GET',
-      hasToken: !!token,
-      headers: config.headers,
-      body: options.body
-    })
 
     try {
       const response = await fetch(url, config)
       
-      console.log('📊 Response status:', response.status, response.statusText)
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -132,7 +122,6 @@ class SyllabiService {
       }
 
       const data = await response.json()
-      console.log('✅ Syllabi API Response:', data)
       return data
     } catch (error) {
       console.error('💥 Syllabi API Request failed:', error)
@@ -142,15 +131,11 @@ class SyllabiService {
 
   // Get professor's subjects
   async getProfessorSubjects(academicYear?: string): Promise<Subject[]> {
-    console.log('📚 Getting professor subjects for academic year:', academicYear)
     
     try {
       // Try to get from real API first
       const queryParams = academicYear ? `?academicYear=${academicYear}` : ''
-      console.log('🔗 Calling endpoint:', `/academic-records/my-subjects${queryParams}`)
       const assignments = await this.request<any[]>(`/academic-records/my-subjects${queryParams}`)
-      console.log('📊 Raw assignments received:', assignments)
-      console.log('📊 Number of assignments:', assignments?.length || 0)
       
       // Map ProfessorAssignment objects to Subject objects
       const subjects = assignments.map(assignment => ({
@@ -167,8 +152,6 @@ class SyllabiService {
         studyProgramId: assignment.subject.studyProgramId
       }))
       
-      console.log('✅ Processed subjects:', subjects)
-      console.log('✅ Number of subjects processed:', subjects.length)
       return subjects
     } catch (error) {
       console.warn('⚠️ API not available, using mock data:', error)
@@ -264,7 +247,6 @@ class SyllabiService {
 
   // Get syllabi (with optional filters)
   async getSyllabi(filters: GetSyllabusDto = {}): Promise<Syllabus[]> {
-    console.log('📋 Getting syllabi with filters:', filters)
     
     try {
       // Try to get from real API first
@@ -275,11 +257,8 @@ class SyllabiService {
       
       const query = queryParams.toString()
       const endpoint = `/academic-records/syllabus${query ? `?${query}` : ''}`
-      console.log('🔗 Calling syllabi endpoint:', endpoint)
       
       const syllabi = await this.request<Syllabus[]>(endpoint)
-      console.log('📊 Raw syllabi received:', syllabi)
-      console.log('📊 Number of syllabi:', syllabi?.length || 0)
       
       return syllabi
     } catch (error) {
@@ -363,7 +342,6 @@ class SyllabiService {
 
   // Get single syllabus by ID
   async getSyllabusById(id: number): Promise<Syllabus> {
-    console.log('Getting syllabus by ID:', id)
     
     try {
       // Try to get from real API first
@@ -385,7 +363,6 @@ class SyllabiService {
 
   // Create new syllabus
   async createSyllabus(data: CreateSyllabusDto): Promise<Syllabus> {
-    console.log('Creating syllabus:', data)
     
     try {
       // Try to send to real API first
@@ -417,7 +394,6 @@ class SyllabiService {
 
   // Update existing syllabus
   async updateSyllabus(id: number, data: UpdateSyllabusDto): Promise<Syllabus> {
-    console.log('Updating syllabus:', { id, data })
     
     try {
       // Try to update via real API first
@@ -449,7 +425,6 @@ class SyllabiService {
 
   // Delete syllabus
   async deleteSyllabus(id: number): Promise<void> {
-    console.log('Deleting syllabus (mock):', id)
     
     // For presentation, just log the action
     return Promise.resolve()
@@ -463,7 +438,6 @@ class SyllabiService {
 
   // Topic management
   async createTopic(data: { syllabusId: number; title: string; description?: string; weekNumber?: number }): Promise<SyllabusTopic> {
-    console.log('Creating topic (mock):', data)
     
     // For presentation, return mock topic
     const newTopic: SyllabusTopic = {
@@ -488,7 +462,6 @@ class SyllabiService {
   }
 
   async updateTopic(id: number, data: { title?: string; description?: string; weekNumber?: number }): Promise<SyllabusTopic> {
-    console.log('Updating topic (mock):', { id, data })
     
     // For presentation, return mock updated topic
     const updatedTopic: SyllabusTopic = {
@@ -513,7 +486,6 @@ class SyllabiService {
   }
 
   async deleteTopic(id: number): Promise<void> {
-    console.log('Deleting topic (mock):', id)
     
     // For presentation, just resolve
     return Promise.resolve()
@@ -527,7 +499,6 @@ class SyllabiService {
 
   // Material management
   async createMaterial(data: { syllabusId: number; title: string; description?: string; filePath?: string }): Promise<SyllabusMaterial> {
-    console.log('Creating material (mock):', data)
     
     // For presentation, return mock material
     const newMaterial: SyllabusMaterial = {
@@ -552,7 +523,6 @@ class SyllabiService {
   }
 
   async updateMaterial(id: number, data: { title?: string; description?: string; filePath?: string }): Promise<SyllabusMaterial> {
-    console.log('Updating material (mock):', { id, data })
     
     // For presentation, return mock updated material
     const updatedMaterial: SyllabusMaterial = {
@@ -577,7 +547,6 @@ class SyllabiService {
   }
 
   async deleteMaterial(id: number): Promise<void> {
-    console.log('Deleting material (mock):', id)
     
     // For presentation, just resolve
     return Promise.resolve()
@@ -595,9 +564,9 @@ class SyllabiService {
   }
 
   getCurrentAcademicYear(): string {
-    // For development/demo purposes, use 2023/2024 academic year 
-    // since that's what we have seeded data for
-    return '2023/2024'
+    // For development/demo purposes, use 2024/2025 academic year 
+    // since that's what we have current professor assignments for
+    return '2024/2025'
     
     /* Original dynamic code - commented out for demo
     const now = new Date()

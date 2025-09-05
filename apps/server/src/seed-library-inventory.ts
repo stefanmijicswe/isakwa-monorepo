@@ -7,11 +7,11 @@ import * as bcrypt from 'bcryptjs';
 const prisma = new PrismaService();
 
 async function seedLibraryInventoryData() {
-  console.log('📚📦 Starting Library & Inventory seed...');
+  console.log('Starting Library & Inventory seed...');
 
   try {
     // 1. Create test users (students and staff) for Library & Inventory
-    console.log('👥 Creating test users...');
+    console.log('Creating test users...');
     
     const hashedPassword = await bcrypt.hash('password123', 10); // Proper bcrypt hash
     
@@ -70,7 +70,7 @@ async function seedLibraryInventoryData() {
     }
 
     // Create StudentProfiles for test students
-    console.log('📝 Creating student profiles...');
+    console.log('Creating student profiles...');
     
     let student1Profile = await prisma.studentProfile.findFirst({
       where: { userId: student1.id }
@@ -115,7 +115,7 @@ async function seedLibraryInventoryData() {
     }
 
     // 2. Library Items
-    console.log('📚 Creating library items...');
+    console.log('Creating library items...');
     
     await prisma.libraryItem.upsert({
       where: { id: 1 },
@@ -201,7 +201,7 @@ async function seedLibraryInventoryData() {
     });
 
     // 3. Library Borrowings
-    console.log('📖 Creating library borrowings...');
+    console.log('Creating library borrowings...');
     
     const today = new Date();
     const oneWeekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -248,7 +248,7 @@ async function seedLibraryInventoryData() {
     });
 
     // 4. Inventory Items
-    console.log('📦 Creating inventory items...');
+    console.log('Creating inventory items...');
     
     await prisma.inventoryItem.upsert({
       where: { id: 1 },
@@ -335,7 +335,7 @@ async function seedLibraryInventoryData() {
     });
 
     // 5. Inventory Issuances
-    console.log('📤 Creating inventory issuances...');
+    console.log('Creating inventory issuances...');
     
     await prisma.inventoryIssuance.upsert({
       where: { id: 1 },
@@ -385,7 +385,7 @@ async function seedLibraryInventoryData() {
     });
 
     // 6. Inventory Requests
-    console.log('📝 Creating inventory requests...');
+    console.log('Creating inventory requests...');
     
     await prisma.inventoryRequest.upsert({
       where: { id: 1 },
@@ -431,7 +431,7 @@ async function seedLibraryInventoryData() {
       }
     });
 
-    console.log('✅ Library & Inventory seed completed successfully!');
+    console.log('Library & Inventory seed completed successfully!');
     
     return {
       users: 3,
@@ -444,7 +444,7 @@ async function seedLibraryInventoryData() {
     };
 
   } catch (error) {
-    console.error('❌ Library & Inventory seed failed:', error);
+    console.error('Library & Inventory seed failed:', error);
     throw error;
   }
 }
@@ -456,11 +456,11 @@ export { seedLibraryInventoryData };
 if (require.main === module) {
   seedLibraryInventoryData()
     .then((result) => {
-      console.log('🎉 Library & Inventory seed results:', result);
+      console.log('Library & Inventory seed results:', result);
       process.exit(0);
     })
     .catch((error) => {
-      console.error('💥 Library & Inventory seed failed:', error);
+      console.error('Library & Inventory seed failed:', error);
       process.exit(1);
     })
     .finally(() => {

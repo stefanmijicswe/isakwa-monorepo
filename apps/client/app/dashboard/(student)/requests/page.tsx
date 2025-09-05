@@ -30,13 +30,6 @@ export default function RequestsPage() {
       
       // Debug auth state
       const token = localStorage.getItem('auth_token')
-      console.log('Requests page debug:', {
-        isAuthenticated,
-        hasUser: !!user,
-        hasToken: !!token,
-        tokenLength: token?.length,
-        userId: user?.id
-      })
       
       const response: RequestsResponse = await requestsService.getRequests(pagination.page)
       setRequests(response.requests)

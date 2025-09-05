@@ -39,12 +39,7 @@ export function RegisterForm({
     }
   }
 
-  const handleRoleChange = (role: UserRole) => {
-    setFormData(prev => ({ ...prev, role }))
-    if (submitError) {
-      setSubmitError("")
-    }
-  }
+  // Role is fixed to STUDENT for public registration
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -165,22 +160,19 @@ export function RegisterForm({
           )}
         </div>
 
+        {/* Role is automatically set to STUDENT - no UI selection needed */}
         <div className="space-y-2">
-          <Label htmlFor="role" className="text-sm font-medium">Role</Label>
-          <div className="grid grid-cols-2 gap-2">
-            {(["STUDENT", "PROFESSOR", "STUDENT_SERVICE", "ADMIN"] as UserRole[]).map((role) => (
-              <Button
-                key={role}
-                type="button"
-                variant={formData.role === role ? "default" : "outline"}
-                size="sm"
-                className="h-9 text-xs"
-                onClick={() => handleRoleChange(role)}
-                disabled={isLoading}
-              >
-                {role.replace("_", " ")}
-              </Button>
-            ))}
+          <Label className="text-sm font-medium">Account Type</Label>
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <div className="flex items-center space-x-2">
+              <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm font-medium text-blue-900">Student Account</span>
+            </div>
+            <p className="text-xs text-blue-700 mt-1">
+              You're creating a student account. For faculty or staff accounts, contact your administrator.
+            </p>
           </div>
         </div>
         

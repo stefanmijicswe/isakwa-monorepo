@@ -58,7 +58,6 @@ class TeachingCoursesService {
     if (!token) {
       const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiam9obi5zbWl0aEBpc2Frd2EuZWR1Iiwicm9sZSI6IlBST0ZFU1NPUiIsImZpcnN0TmFtZSI6IkpvaG4iLCJsYXN0TmFtZSI6IlNtaXRoIiwiaWF0IjoxNzU2OTAyNjEzLCJleHAiOjE3NTc1MDc0MTN9.Siqy9TGJr2ZGB5UJ20cJPv6rcDRIM4aMg0qKlqlaeho'
       localStorage.setItem('auth_token', testToken)
-      console.log('🔑 Auto-set test authentication token for Teaching Courses')
       token = testToken
     }
     
@@ -72,7 +71,6 @@ class TeachingCoursesService {
     const token = this.getAuthToken()
     const url = `${this.baseUrl}${endpoint}`
 
-    console.log('🔑 TeachingCourses Auth token:', token ? `${token.substring(0, 10)}...` : 'NO TOKEN')
 
     const config: RequestInit = {
       ...options,
@@ -83,18 +81,9 @@ class TeachingCoursesService {
       },
     }
 
-    console.log('📡 TeachingCourses API Request:', { 
-      url, 
-      method: config.method || 'GET',
-      hasToken: !!token,
-      headers: config.headers,
-      body: options.body
-    })
-
     try {
       const response = await fetch(url, config)
       
-      console.log('📊 TeachingCourses Response status:', response.status, response.statusText)
 
       if (!response.ok) {
         const errorData = await response.text()
@@ -110,7 +99,6 @@ class TeachingCoursesService {
       }
 
       const data = await response.json()
-      console.log('✅ TeachingCourses API Success:', data)
       return data
     } catch (error) {
       // For 403 errors, just warn instead of error
@@ -126,13 +114,10 @@ class TeachingCoursesService {
   // Get professor's teaching courses
   async getTeachingCourses(): Promise<Course[]> {
     try {
-      console.log('🎓 Fetching teaching courses from backend...')
       
       // Try to get professor's subjects from backend
       const assignments = await this.request<any[]>('/academic-records/my-subjects')
       
-      console.log('📚 Raw assignments from backend:', assignments)
-      console.log('📊 Number of assignments found:', assignments?.length || 0)
 
       // Transform assignments to Course format with students
       const courses: Course[] = []
@@ -158,11 +143,10 @@ class TeachingCoursesService {
 
         // Fetch students enrolled in this course
         try {
-          console.log(`📚 Fetching students for course ${course.id} (${course.name})...`)
           const enrollments = await this.getCourseStudents(course.id)
           course.students = enrollments
           course.studentsEnrolled = enrollments.length
-          console.log(`✅ Found ${enrollments.length} students for ${course.name}`)
+          // // console.log(`✅ Found ${enrollments.length} students for ${course.name}`)
         } catch (error) {
           console.warn(`❌ Failed to fetch students for course ${course.id}:`, error)
           course.students = []
@@ -172,7 +156,7 @@ class TeachingCoursesService {
         courses.push(course)
       }
 
-      console.log('✅ Processed teaching courses:', courses)
+      // // console.log('✅ Processed teaching courses:', courses)
       return courses
 
     } catch (error) {
@@ -183,11 +167,11 @@ class TeachingCoursesService {
 
   // Get students enrolled in a specific course
   async getCourseStudents(courseId: number): Promise<Student[]> {
-    console.log(`👨‍🎓 Fetching students for course ${courseId}...`)
+    // // console.log(`👨‍🎓 Fetching students for course ${courseId}...`)
     
     try {
       const enrollments = await this.request<any[]>(`/academic-records/professor/courses/${courseId}/students`)
-      console.log(`📊 Raw enrollments for course ${courseId}:`, enrollments)
+      // // console.log(`📊 Raw enrollments for course ${courseId}:`, enrollments)
       
       // Transform enrollments to Student format
       const students: Student[] = enrollments.map((enrollment, index) => {
@@ -202,7 +186,7 @@ class TeachingCoursesService {
         }
       })
 
-      console.log(`✅ Processed students for course ${courseId}:`, students)
+      // // console.log(`✅ Processed students for course ${courseId}:`, students)
       return students
       
     } catch (error: any) {
@@ -256,7 +240,7 @@ class TeachingCoursesService {
   // Get course by ID (used internally, may not be needed for current implementation)
   async getCourseById(id: number): Promise<Course | null> {
     try {
-      console.log(`🔍 Fetching course ${id} from backend...`)
+      // // console.log(`🔍 Fetching course ${id} from backend...`)
       
       const subject = await this.request<any>(`/subjects/${id}`)
       
@@ -289,7 +273,7 @@ class TeachingCoursesService {
   // Update course information (if needed for future features)
   async updateCourse(id: number, data: UpdateCourseDto): Promise<Course> {
     try {
-      console.log(`✏️ Updating course ${id}:`, data)
+      // // console.log(`✏️ Updating course ${id}:`, data)
       
       // Use PATCH to update subject
       const updatedSubject = await this.request<any>(`/subjects/${id}`, {
@@ -303,7 +287,7 @@ class TeachingCoursesService {
         }),
       })
 
-      console.log('✅ Course updated successfully:', updatedSubject)
+      // // console.log('✅ Course updated successfully:', updatedSubject)
 
       // Return updated course
       const updatedCourse = await this.getCourseById(id)
@@ -322,13 +306,13 @@ class TeachingCoursesService {
   // Get pinned courses from localStorage (primary storage)
   async getPinnedCourses(): Promise<number[]> {
     try {
-      console.log('📌 Fetching pinned courses from localStorage...')
+      // // console.log('📌 Fetching pinned courses from localStorage...')
       
       // Use localStorage as primary storage since backend doesn't have user preferences endpoint
       const saved = localStorage.getItem('pinned-courses')
       const pinnedCourses = saved ? JSON.parse(saved) : []
       
-      console.log('✅ Pinned courses from localStorage:', pinnedCourses)
+      // // console.log('✅ Pinned courses from localStorage:', pinnedCourses)
       return pinnedCourses
 
     } catch (error) {
@@ -340,11 +324,11 @@ class TeachingCoursesService {
   // Save pinned courses to localStorage (primary storage)
   async savePinnedCourses(pinnedCourses: number[]): Promise<void> {
     try {
-      console.log('💾 Saving pinned courses to localStorage:', pinnedCourses)
+      // // console.log('💾 Saving pinned courses to localStorage:', pinnedCourses)
       
       // Use localStorage as primary storage since backend doesn't have user preferences endpoint
       localStorage.setItem('pinned-courses', JSON.stringify(pinnedCourses))
-      console.log('✅ Pinned courses saved to localStorage successfully')
+      // // console.log('✅ Pinned courses saved to localStorage successfully')
 
     } catch (error) {
       console.error('❌ Failed to save pinned courses to localStorage:', error)
@@ -379,7 +363,7 @@ class TeachingCoursesService {
 
   // Refresh course data (useful for real-time updates)
   async refreshCourseData(courseId: number): Promise<Course | null> {
-    console.log(`🔄 Refreshing data for course ${courseId}...`)
+    // // console.log(`🔄 Refreshing data for course ${courseId}...`)
     return this.getCourseById(courseId)
   }
 

@@ -153,8 +153,8 @@ export class NotificationsService {
   }
 
   async createCourseNotification(createCourseNotificationDto: CreateCourseNotificationDto, professorId: number) {
-    console.log('📢 Creating course notification:', createCourseNotificationDto);
-    console.log('👨‍🏫 Professor ID:', professorId);
+    console.log('Creating course notification:', createCourseNotificationDto);
+    console.log('Professor ID:', professorId);
 
     // Verify professor teaches this subject if subjectId is provided
     if (createCourseNotificationDto.subjectId) {
@@ -173,7 +173,7 @@ export class NotificationsService {
         throw new Error('You are not authorized to create notifications for this subject');
       }
 
-      console.log('✅ Professor is authorized for subject:', assignment.subject.name);
+      console.log('Professor is authorized for subject:', assignment.subject.name);
     }
 
     // Create the notification
@@ -197,7 +197,7 @@ export class NotificationsService {
       },
     });
 
-    console.log('✅ Notification created:', notification);
+    console.log('Notification created:', notification);
 
     // Determine recipients based on subject
     let recipientUserIds: number[] = [];
@@ -241,7 +241,7 @@ export class NotificationsService {
       });
 
       recipientUserIds = [...new Set(enrollments.map(enrollment => enrollment.studentId))]; // Remove duplicates
-      console.log(`📚 Found ${recipientUserIds.length} unique students across professor's ${subjectIds.length} subjects`);
+      console.log(`Found ${recipientUserIds.length} unique students across professor's ${subjectIds.length} subjects`);
     }
 
     // Also include the professor as a recipient
@@ -258,7 +258,7 @@ export class NotificationsService {
         data: recipients,
       });
 
-      console.log(`📤 Created notification recipients for ${recipientUserIds.length} users`);
+      console.log(`Created notification recipients for ${recipientUserIds.length} users`);
     }
 
     // Return notification with recipients included

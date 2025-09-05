@@ -70,7 +70,7 @@ class ScheduleService {
       }
 
       const data = await response.json()
-      console.log('✅ Schedule API Response:', data)
+      // console.log('✅ Schedule API Response:', data)
       return data
     } catch (error) {
       console.error('💥 Schedule API Request failed:', error)
@@ -80,7 +80,7 @@ class ScheduleService {
 
   // Get professor courses
   async getProfessorCourses(): Promise<Course[]> {
-    console.log('Getting professor courses for schedule planning')
+    // console.log('Getting professor courses for schedule planning')
     
     try {
       // Try to get from real API first
@@ -106,12 +106,12 @@ class ScheduleService {
 
     // Get saved schedules
   async getSchedules(): Promise<Schedule[]> {
-    console.log('Getting saved schedules')
+    // console.log('Getting saved schedules')
 
     try {
       // Try to get from real API first
       const apiSchedules = await this.request<any[]>('/course-schedules/my-schedules')
-      console.log('✅ Retrieved schedules from API:', apiSchedules.length)
+      // console.log('✅ Retrieved schedules from API:', apiSchedules.length)
       
       // Transform API data to our Schedule format
       return apiSchedules.map(apiSchedule => ({
@@ -165,7 +165,7 @@ class ScheduleService {
 
   // Get schedule by ID
   async getScheduleById(id: number): Promise<Schedule> {
-    console.log('Getting schedule by ID:', id)
+    // console.log('Getting schedule by ID:', id)
     
     // Return mock schedule for presentation
     const schedules = this.getMockSchedules()
@@ -182,7 +182,7 @@ class ScheduleService {
 
     // Create new schedule
   async createSchedule(data: CreateScheduleDto): Promise<Schedule> {
-    console.log('Creating schedule:', data)
+    // console.log('Creating schedule:', data)
 
     try {
       // Step 1: Create CourseSchedule
@@ -198,7 +198,7 @@ class ScheduleService {
         body: JSON.stringify(schedulePayload),
       })
 
-      console.log('✅ Schedule created via API:', scheduleResponse.id)
+      // console.log('✅ Schedule created via API:', scheduleResponse.id)
       
       // Step 2: Create sessions for lectures and practice
       const allSessions = []
@@ -223,7 +223,7 @@ class ScheduleService {
         })
         
         allSessions.push(sessionResponse)
-        console.log('✅ Lecture session created:', sessionResponse.id)
+        // console.log('✅ Lecture session created:', sessionResponse.id)
       }
       
       // Add practice sessions  
@@ -246,7 +246,7 @@ class ScheduleService {
         })
         
         allSessions.push(sessionResponse)
-        console.log('✅ Practice session created:', sessionResponse.id)
+        // console.log('✅ Practice session created:', sessionResponse.id)
       }
 
       // Transform API response to our Schedule format
@@ -315,10 +315,10 @@ class ScheduleService {
 
     // Update existing schedule
   async updateSchedule(data: UpdateScheduleDto): Promise<Schedule> {
-    console.log('Updating schedule:', data)
+    // console.log('Updating schedule:', data)
 
     // Use localStorage for stable demonstration
-    console.log('📱 Using localStorage for schedule update')
+    // console.log('📱 Using localStorage for schedule update')
     const allSchedules = await this.getSchedules()
     const existingSchedule = allSchedules.find(s => s.id === data.id)
 
@@ -395,7 +395,7 @@ class ScheduleService {
         body: JSON.stringify(apiPayload),
       })
 
-      console.log('✅ Schedule updated via API:', apiResponse.id)
+      // console.log('✅ Schedule updated via API:', apiResponse.id)
 
       // Transform API response to our Schedule format
       const course = this.getMockCourses().find(c => c.id === data.courseId)
@@ -467,7 +467,7 @@ class ScheduleService {
 
   // Delete schedule
   async deleteSchedule(id: number): Promise<void> {
-    console.log('Deleting schedule (mock):', id)
+    // console.log('Deleting schedule (mock):', id)
     
     // For presentation, just resolve
     return Promise.resolve()
@@ -727,7 +727,7 @@ class ScheduleService {
   private saveSchedulesToStorage(schedules: Schedule[]): void {
     try {
       localStorage.setItem('professor_schedules', JSON.stringify(schedules))
-      console.log('✅ Schedules saved to localStorage:', schedules.length)
+      // console.log('✅ Schedules saved to localStorage:', schedules.length)
     } catch (error) {
       console.error('Error saving schedules to localStorage:', error)
     }

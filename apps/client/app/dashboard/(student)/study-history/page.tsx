@@ -6,21 +6,11 @@ import { Badge } from "@/components/ui/badge"
 import { BookOpen, GraduationCap, Clock, CheckCircle, XCircle, TrendingUp } from "lucide-react"
 import { 
   getStudyHistory, 
-  getStudyHistoryStats,
-  type StudyHistoryItem,
-  type StudyHistoryStats
+  type StudyHistoryItem
 } from "@/lib/courses.service"
 
 export default function StudyHistoryPage() {
   const [studyHistory, setStudyHistory] = useState<StudyHistoryItem[]>([])
-  const [stats, setStats] = useState<StudyHistoryStats>({
-    totalCourses: 0,
-    passedCourses: 0,
-    failedCourses: 0,
-    totalEcts: 0,
-    averageGrade: 0,
-    totalAttempts: 0
-  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -33,13 +23,8 @@ export default function StudyHistoryPage() {
       setLoading(true)
       setError(null)
       
-      const [history, historyStats] = await Promise.all([
-        getStudyHistory(),
-        getStudyHistoryStats()
-      ])
-      
+      const history = await getStudyHistory()
       setStudyHistory(history)
-      setStats(historyStats)
     } catch (err) {
       console.error('Failed to fetch study history:', err)
       setError(err instanceof Error ? err.message : 'Failed to load study history')
@@ -119,21 +104,6 @@ export default function StudyHistoryPage() {
         <p className="text-slate-600">Overview of your academic results and completed courses</p>
       </div>
 
-      {/* Simple Stats Row */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-lg border border-slate-200">
-          <div className="text-2xl font-semibold text-slate-900">{stats.totalCourses}</div>
-          <div className="text-sm text-slate-600">Total Courses</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-slate-200">
-          <div className="text-2xl font-semibold text-slate-900">{stats.passedCourses}</div>
-          <div className="text-sm text-slate-600">Passed</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-slate-200">
-          <div className="text-2xl font-semibold text-slate-900">{stats.totalEcts}</div>
-          <div className="text-sm text-slate-600">ECTS Credits</div>
-        </div>
-      </div>
 
       {/* Course History */}
       <div className="bg-white rounded-lg border border-slate-200">

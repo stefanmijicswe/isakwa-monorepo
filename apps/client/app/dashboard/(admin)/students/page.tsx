@@ -147,7 +147,7 @@ export default function StudentsPage() {
         return
       }
 
-      console.log('Deleting student:', studentToDelete)
+      // console.log('Deleting student:', studentToDelete)
       
       // Make API call to delete student
       const response = await fetch(`http://localhost:3001/api/users/${studentToDelete.id}`, {
@@ -162,7 +162,7 @@ export default function StudentsPage() {
         throw new Error(`Failed to delete student: ${response.status}`)
       }
 
-      console.log('Student deleted successfully')
+      // console.log('Student deleted successfully')
       
       // Close dialog and refresh the list
       setIsDeleteDialogOpen(false)
@@ -178,7 +178,7 @@ export default function StudentsPage() {
   const handleSaveStudent = async (data: StudentFormValues) => {
     try {
       // TODO: Implement API call to update student
-      console.log('Saving student:', data)
+      // console.log('Saving student:', data)
       
       // For now, just close the modal and refresh the list
       setIsEditModalOpen(false)

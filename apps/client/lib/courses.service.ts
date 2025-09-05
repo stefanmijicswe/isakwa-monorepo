@@ -2,6 +2,7 @@ import { authService } from './auth.service';
 
 export interface Course {
   id: number;
+  subjectId?: number; // Add subjectId for API calls
   name: string;
   acronym: string;
   ects: number;
@@ -215,6 +216,7 @@ class CoursesService {
 
       return allCourses.map((enrollment: any, index: number) => ({
         id: `${enrollment._type}-${enrollment.id || enrollment.subjectId || index}`, // Guaranteed unique ID
+        subjectId: enrollment.subjectId || enrollment.subject?.id || null, // Store subjectId for API calls
         name: enrollment.subject?.name || enrollment.name || 'Unknown Course',
         acronym: enrollment.subject?.code || enrollment.code || 'N/A',
         ects: enrollment.subject?.credits || enrollment.credits || 0,
@@ -282,23 +284,76 @@ class CoursesService {
       const response = await this.request<any>(`/academic-records/students/${user.studentProfile.id}/academic-history`);
       
       // Transform backend data to frontend Grade format
-      // Get grades from student.grades array
+      // UPDATED: Get grades from courseEnrollments (where professor entered them)
+      const courseEnrollments = response.student?.courseEnrollments || [];
       const grades = response.student?.grades || [];
       
-      return grades.map((grade: any) => ({
-        id: grade.id || Math.random(),
-        courseId: grade.exam?.subjectId || grade.subjectId || 0,
-        courseName: grade.exam?.subject?.name || 'Unknown Course',
-        courseAcronym: grade.exam?.subject?.code || 'N/A',
-        assessmentType: 'Final Exam',
-        assessmentDate: grade.gradedAt || new Date().toISOString(),
-        grade: grade.grade?.toString() || '0',
-        numericalGrade: grade.grade || 0,
-        ects: grade.exam?.subject?.credits || 0,
-        semester: 'Unknown',
-        professor: 'TBD',
-        comments: grade.comments
-      }));
+      
+      // Create grades from courseEnrollments that have completed grading
+      const enrollmentGrades = courseEnrollments
+        .filter((enrollment: any) => {
+          const isCompleted = enrollment.status === 'Completed';
+          const hasAttendance = enrollment.attendance !== null && enrollment.attendance !== 0;
+          const hasFinal = enrollment.final !== null && enrollment.final !== 0;
+          
+          return isCompleted && hasAttendance && hasFinal;
+        })
+        .map((enrollment: any) => {
+          // Calculate weighted final grade
+          const attendance = enrollment.attendance || 0;
+          const assignments = enrollment.assignments || 0;
+          const midterm = enrollment.midterm || 0;
+          const final = enrollment.final || 0;
+          
+          const weightedGrade = Math.round(
+            attendance * 0.1 + 
+            assignments * 0.2 + 
+            midterm * 0.3 + 
+            final * 0.4
+          );
+          
+          const gradeRecord = {
+            id: enrollment.id || Math.random(),
+            courseId: enrollment.subjectId || 0,
+            courseName: enrollment.subject?.name || 'Unknown Course',
+            courseAcronym: enrollment.subject?.code || 'N/A',
+            assessmentType: 'Final Exam' as const,
+            assessmentDate: enrollment.gradedAt || new Date().toISOString(),
+            grade: weightedGrade.toString(),
+            numericalGrade: weightedGrade,
+            ects: enrollment.subject?.credits || 0,
+            semester: this.formatSemester(enrollment.gradedAt),
+            professor: 'Professor', // TODO: Get from enrollment
+            comments: `Attendance: ${attendance}, Assignments: ${assignments}, Midterm: ${midterm}, Final: ${final}`
+          };
+          
+          return gradeRecord;
+        });
+      
+      // Also include traditional grades from Grade table (if any)
+      const traditionalGrades = grades.map((grade: any) => {
+        const subjectId = grade.exam?.subjectId || grade.subjectId;
+        
+        return {
+          id: grade.id || Math.random(),
+          courseId: subjectId || 0,
+          courseName: grade.exam?.subject?.name || 'Unknown Course',
+          courseAcronym: grade.exam?.subject?.code || 'N/A',
+          assessmentType: 'Final Exam' as const,
+          assessmentDate: grade.gradedAt || grade.exam?.examDate || new Date().toISOString(),
+          grade: grade.grade?.toString() || '0',
+          numericalGrade: grade.grade || 0,
+          ects: grade.exam?.subject?.credits || 0,
+          semester: this.formatSemester(grade.exam?.examDate),
+          professor: 'Professor',
+          comments: grade.comments
+        };
+      });
+      
+      // Combine both types of grades
+      const allGrades = [...enrollmentGrades, ...traditionalGrades];
+      return allGrades;
+      
     } catch (error) {
       console.warn('Failed to fetch grades from backend, using fallback data:', error);
       // Return empty array if backend fails
@@ -358,6 +413,24 @@ class CoursesService {
         totalEcts: 0,
         gpa: 0
       };
+    }
+  }
+
+  // Helper method to format semester based on exam date
+  private formatSemester(examDate?: string): string {
+    if (!examDate) return 'Unknown';
+    
+    const date = new Date(examDate);
+    const month = date.getMonth() + 1; // getMonth() returns 0-11
+    const year = date.getFullYear();
+    
+    // Determine semester based on month
+    if (month >= 2 && month <= 7) {
+      return `Summer ${year}`;
+    } else if (month >= 9 && month <= 12) {
+      return `Winter ${year}/${year + 1}`;
+    } else { // January
+      return `Winter ${year - 1}/${year}`;
     }
   }
 
@@ -455,15 +528,15 @@ class CoursesService {
       if (!currentUser || !currentUser.studentProfile?.id) return false;
 
       // Call the backend API to register for exam
+      // FIXED: Use user.id (not studentProfile.id) as backend expects
       const response = await this.request<any>('/academic-records/register-exam', {
         method: 'POST',
         body: JSON.stringify({
-          studentId: parseInt(currentUser.studentProfile.id.toString(), 10),
+          studentId: parseInt(currentUser.id.toString(), 10),
           examId: parseInt(examId.toString(), 10)
         })
       });
 
-      console.log(`Student ${currentUser.studentProfile.id} successfully registered for exam ${examId}:`, response);
       return true;
     } catch (error) {
       console.error('Error registering for exam:', error);
@@ -484,7 +557,6 @@ class CoursesService {
         })
       });
 
-      console.log(`Successfully cancelled exam registration ${registrationId}:`, response);
       return true;
     } catch (error) {
       console.error('Error cancelling exam registration:', error);
@@ -694,7 +766,6 @@ export async function getNotifications(): Promise<Notification[]> {
 
     // For now, we'll use a mock approach since the notifications endpoint might not be fully implemented
     // In real implementation, this would call the backend notifications endpoint
-    console.log(`Fetching notifications for user ${currentUser.id}`);
     
     // Return empty array for now - this will be replaced with real API call when backend is ready
     return [];
@@ -712,7 +783,6 @@ export async function markNotificationAsRead(notificationId: number): Promise<bo
 
     // Mark notification as read (this would be a PATCH request in real implementation)
     // For now, we'll just simulate success
-    console.log(`Marking notification ${notificationId} as read for user ${currentUser.id}`);
     return true;
   } catch (error) {
     console.error('Failed to mark notification as read:', error);
@@ -727,7 +797,6 @@ export async function deleteNotification(notificationId: number): Promise<boolea
 
     // Delete notification (this would be a DELETE request in real implementation)
     // For now, we'll just simulate success
-    console.log(`Deleting notification ${notificationId} for user ${currentUser.id}`);
     return true;
   } catch (error) {
     console.error('Failed to delete notification:', error);

@@ -95,7 +95,7 @@ export function EditPersonnelModal({ isOpen, onClose, personnel, onSave }: EditP
       }
 
       const data = await response.json()
-      console.log('Departments response:', data)
+      // console.log('Departments response:', data)
       
       // Store full department objects
       setDepartments(data)

@@ -11,11 +11,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user) {
-      // Redirect students to my-courses, admin to students
+      // Redirect students to my-courses, admin to students, student service to request management
       if (user.role === 'STUDENT') {
         router.replace('/dashboard/my-courses')
       } else if (user.role === 'ADMIN') {
         router.replace('/dashboard/students')
+      } else if (user.role === 'STUDENT_SERVICE') {
+        router.replace('/dashboard/request-management')
       }
     }
   }, [user, router])
@@ -39,6 +41,18 @@ export default function DashboardPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-slate-600">Redirecting to student management...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show loading while redirecting student service
+  if (user?.role === 'STUDENT_SERVICE') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Redirecting to request management...</p>
         </div>
       </div>
     )

@@ -127,9 +127,9 @@ export class EvaluationExportService {
         include: {
           subject: {
             include: {
-              studyPrograms: {
+              studyProgram: {
                 include: {
-                  // faculty: true, // Not available in SubjectStudyProgram
+                  faculty: true, // Include faculty through studyProgram
                 },
               },
             },
@@ -173,7 +173,7 @@ export class EvaluationExportService {
          .text(`Type: ${instrument.type}`)
          .text(`Max Points: ${instrument.maxPoints}`)
          .text(`Subject: ${instrument.subject.name}`)
-                   .text(`Faculty: Unknown`) // Faculty not available through SubjectStudyProgram
+         .text(`Faculty: ${instrument.subject.studyProgram?.faculty?.name || 'Unknown'}`)
          .moveDown(2);
 
       if (instrument.description) {

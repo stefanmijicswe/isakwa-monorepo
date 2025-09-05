@@ -31,9 +31,40 @@ interface Student {
 }
 
 interface AcademicHistory {
+  student: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    totalECTS: number;
+    averageGrade: number;
+    grades: Array<{
+      id: number;
+      grade: number;
+      points: number;
+      passed: boolean;
+      gradedAt: string;
+      exam: {
+        subject: {
+          name: string;
+          code: string;
+          credits: number;
+        };
+      };
+    }>;
+    studyProgram?: {
+      name: string;
+      faculty: {
+        name: string;
+      };
+    };
+    year?: number;
+    studentIndex?: string;
+  };
   currentEnrollments: any[];
   examRegistrations: any[];
-  grades: any[];
+  passedSubjects: any[];
+  failedAttempts: any[];
 }
 
 export default function CertificatesPage() {
@@ -79,17 +110,27 @@ export default function CertificatesPage() {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/users/students', {
+        setLoading(true);
+        // Fetch with a large limit to get all students
+        const response = await fetch('http://localhost:3001/api/users/students?page=1&limit=1000', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            'Content-Type': 'application/json',
           }
         });
+        
+        
         if (response.ok) {
           const data = await response.json();
           setStudents(data.users || []);
+        } else {
+          const errorText = await response.text();
+          console.error('Students API error:', response.status, errorText);
         }
       } catch (error) {
         console.error('Error fetching students:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -199,7 +240,7 @@ export default function CertificatesPage() {
               <div class="progress">
                 <h3>Academic Progress Summary:</h3>
                 <p><strong>Total Courses:</strong> ${history.currentEnrollments?.length || 0}</p>
-                <p><strong>Completed Courses:</strong> ${history.grades?.filter(g => g.passed).length || 0}</p>
+                <p><strong>Completed Courses:</strong> ${history.student?.grades?.filter(g => g.passed).length || 0}</p>
                 <p><strong>Active Courses:</strong> ${history.currentEnrollments?.filter(c => c.isActive).length || 0}</p>
               </div>
             </div>
@@ -229,7 +270,7 @@ export default function CertificatesPage() {
               
               <div class="grades">
                 <h3>Academic Record:</h3>
-                ${history.grades?.map(grade => `
+                ${history.student?.grades?.map(grade => `
                   <div class="grade-item">
                     <span>${grade.exam?.subject?.name || 'Unknown Subject'}</span>
                     <span>Grade: ${grade.grade || 'N/A'}</span>
@@ -426,6 +467,7 @@ export default function CertificatesPage() {
 
   // Get selected student display name
   const getSelectedStudentName = () => {
+    if (loading) return 'Loading students...';
     if (!selectedStudent) return 'Choose a student...';
     const student = students.find(s => s.id.toString() === selectedStudent);
     if (!student) return 'Choose a student...';
@@ -474,7 +516,9 @@ export default function CertificatesPage() {
                       <Command>
                         <CommandInput placeholder="Search students..." />
                         <CommandList>
-                          <CommandEmpty>No student found.</CommandEmpty>
+                          <CommandEmpty>
+                            {loading ? 'Loading students...' : 'No student found.'}
+                          </CommandEmpty>
                           <CommandGroup>
                             {students.map((student) => (
                               <CommandItem

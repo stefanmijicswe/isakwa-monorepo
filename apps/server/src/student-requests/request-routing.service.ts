@@ -12,9 +12,6 @@ export class RequestRoutingService {
     private notificationsService: NotificationsService,
   ) {}
 
-  /**
-   * Automatically assigns request to appropriate personnel based on category and type
-   */
   async autoAssignRequest(requestId: number): Promise<void> {
     const request = await this.prisma.studentRequest.findUnique({
       where: { id: requestId },
@@ -146,9 +143,6 @@ export class RequestRoutingService {
     return staffMembers.length > 0 ? staffMembers[0].id : null;
   }
 
-  /**
-   * Calculates due date based on request type and category
-   */
   private calculateDueDate(type: RequestType, category: RequestCategory): Date {
     const now = new Date();
     let daysToAdd = 7; // Default 7 days
@@ -201,9 +195,6 @@ export class RequestRoutingService {
     );
   }
 
-  /**
-   * Sends escalation notification when request is overdue
-   */
   async checkAndEscalateOverdueRequests(): Promise<void> {
     const overdueRequests = await this.prisma.studentRequest.findMany({
       where: {

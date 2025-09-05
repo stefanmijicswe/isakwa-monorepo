@@ -38,13 +38,13 @@ export default function SyllabiPage() {
       
       // Fetch existing syllabi for these subjects individually
       const syllabi = await syllabiService.getSyllabi({ academicYear: currentYear })
-      console.log('🔍 Retrieved syllabi from backend:', syllabi)
-      console.log('📚 Retrieved subjects:', subjects)
+      // console.log('🔍 Retrieved syllabi from backend:', syllabi)
+      // console.log('📚 Retrieved subjects:', subjects)
       
       // Combine subjects with their syllabi
       const coursesWithSyllabi: CourseWithSyllabus[] = subjects.map(subject => {
         const syllabus = syllabi.find(s => s.subjectId === subject.id)
-        console.log(`🔗 Subject ${subject.id} (${subject.name}):`, { syllabus, exists: !!syllabus })
+        // console.log(`🔗 Subject ${subject.id} (${subject.name}):`, { syllabus, exists: !!syllabus })
         return {
           ...subject,
           syllabus,
@@ -135,8 +135,8 @@ Upon completion of this course, students will be able to:
       
       // Parse the content to extract description and objectives
       const sections = parseSyllabusContent(syllabusContent)
-      console.log('📝 Parsed sections:', sections)
-      console.log('📄 Original content:', syllabusContent)
+      // console.log('📝 Parsed sections:', sections)
+      // console.log('📄 Original content:', syllabusContent)
       
       if (selectedCourse.syllabusExists && selectedCourse.syllabus) {
         // Update existing syllabus

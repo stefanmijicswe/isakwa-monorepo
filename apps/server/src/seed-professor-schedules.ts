@@ -135,7 +135,7 @@ const scheduleData = [
 ]
 
 export async function seedProfessorSchedules() {
-  console.log('🌱 Seeding professor schedules...')
+  console.log('Seeding professor schedules...')
 
   try {
     // Find the professor user (john.smith@isakwa.edu)
@@ -144,15 +144,15 @@ export async function seedProfessorSchedules() {
     })
 
     if (!professor) {
-      console.error('❌ Professor not found! Run seed-professor-syllabi.ts first')
+      console.error('Professor not found! Run seed-professor-syllabi.ts first')
       return
     }
 
-    console.log('👨‍🏫 Found professor:', professor.email)
+    console.log('Found professor:', professor.email)
 
     // Process each schedule
     for (const scheduleItem of scheduleData) {
-      console.log(`📚 Processing schedule for ${scheduleItem.subjectCode}...`)
+      console.log(`Processing schedule for ${scheduleItem.subjectCode}...`)
 
       // Find the subject
       const subject = await prisma.subject.findFirst({
@@ -160,7 +160,7 @@ export async function seedProfessorSchedules() {
       })
 
       if (!subject) {
-        console.warn(`⚠️ Subject ${scheduleItem.subjectCode} not found, skipping...`)
+        console.warn(`Subject ${scheduleItem.subjectCode} not found, skipping...`)
         continue
       }
 
@@ -174,7 +174,7 @@ export async function seedProfessorSchedules() {
       })
 
       if (existingSchedule) {
-        console.log(`✅ Schedule for ${scheduleItem.subjectCode} already exists, skipping...`)
+        console.log(`Schedule for ${scheduleItem.subjectCode} already exists, skipping...`)
         continue
       }
 
@@ -219,13 +219,13 @@ export async function seedProfessorSchedules() {
         }
       })
 
-      console.log(`✅ Created schedule for ${scheduleItem.subjectCode} with ${schedule.sessions?.length || 0} sessions`)
+      console.log(`Created schedule for ${scheduleItem.subjectCode} with ${schedule.sessions?.length || 0} sessions`)
     }
 
-    console.log('🎉 Successfully seeded professor schedules!')
+    console.log('Successfully seeded professor schedules!')
 
   } catch (error) {
-    console.error('❌ Error seeding professor schedules:', error)
+    console.error('Error seeding professor schedules:', error)
     throw error
   } finally {
     await prisma.$disconnect()

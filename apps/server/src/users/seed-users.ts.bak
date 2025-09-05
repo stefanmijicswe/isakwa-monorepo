@@ -3,7 +3,7 @@ import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 export async function seedUsers(prisma: PrismaService) {
-  console.log('🌱 Seeding users...');
+  console.log('Seeding users...');
 
   // Get departments
   const computerScienceDept = await prisma.department.findFirst({
@@ -31,7 +31,7 @@ export async function seedUsers(prisma: PrismaService) {
       isActive: true,
     },
   });
-  console.log('✅ Admin user created:', admin.email);
+  console.log('Admin user created:', admin.email);
 
   // Create professor users
   const professors = [
@@ -80,7 +80,7 @@ export async function seedUsers(prisma: PrismaService) {
         officeRoom: profData.officeRoom,
       },
     });
-    console.log('✅ Professor created:', professor.email);
+    console.log('Professor created:', professor.email);
   }
 
   // Create student users with proper IDs and study programs
@@ -169,7 +169,7 @@ export async function seedUsers(prisma: PrismaService) {
         status: 'ACTIVE',
       },
     });
-    console.log('✅ Student created:', student.email, `(ID: ${student.id})`);
+    console.log('Student created:', student.email, `(ID: ${student.id})`);
   }
 
   // Create student service users
@@ -219,8 +219,8 @@ export async function seedUsers(prisma: PrismaService) {
         officeRoom: userData.officeRoom,
       },
     });
-    console.log('✅ Student service user created:', user.email);
+    console.log('Student service user created:', user.email);
   }
 
-  console.log('✅ Users seeding completed!');
+  console.log('Users seeding completed!');
 }

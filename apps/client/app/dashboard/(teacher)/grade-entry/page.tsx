@@ -332,7 +332,9 @@ export default function GradeEntryPage() {
                         <span className="text-sm text-slate-700 font-medium">
                           {gradeStatus.allowed 
                             ? `${15 - gradeStatus.daysElapsed} days remaining`
-                            : `Expired ${gradeStatus.daysElapsed - 15} days ago`
+                            : gradeStatus.daysElapsed < 0 
+                              ? `Exam in ${Math.abs(gradeStatus.daysElapsed)} days`
+                              : `Expired ${gradeStatus.daysElapsed - 15} days ago`
                           }
                         </span>
                       </div>
@@ -475,7 +477,9 @@ export default function GradeEntryPage() {
                             <div className="text-xs text-slate-500">
                               {gradeStatus.allowed 
                                 ? `${15 - gradeStatus.daysElapsed} days left`
-                                : `Expired ${gradeStatus.daysElapsed - 15} days ago`
+                                : gradeStatus.daysElapsed < 0 
+                                  ? `Exam in ${Math.abs(gradeStatus.daysElapsed)} days`
+                                  : `Expired ${gradeStatus.daysElapsed - 15} days ago`
                               }
                             </div>
                           )

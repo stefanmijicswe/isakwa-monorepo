@@ -25,22 +25,26 @@ export class SubjectsService {
     }
 
     return this.prisma.subject.create({
-      data: createSubjectDto,
+      data: {
+        name: createSubjectDto.name,
+        code: createSubjectDto.code,
+        description: createSubjectDto.description,
+        credits: createSubjectDto.credits,
+        semester: createSubjectDto.semester,
+        numberOfLectures: createSubjectDto.lectureHours,
+        numberOfExercises: createSubjectDto.exerciseHours,
+        studyProgramId: createSubjectDto.studyProgramId,
+      },
       include: {
-        studyPrograms: {
+        studyProgram: {
           select: {
             id: true,
-            studyProgram: {
+            name: true,
+            facultyId: true,
+            faculty: {
               select: {
                 id: true,
-                name: true,
-                facultyId: true,
-                faculty: {
-                  select: {
-                    id: true,
-                    name: true
-                  }
-                }
+                name: true
               }
             }
           }
@@ -89,24 +93,19 @@ export class SubjectsService {
         skip,
         take: limit,
         include: {
-                  studyPrograms: {
-          select: {
-            id: true,
-            studyProgram: {
-              select: {
-                id: true,
-                name: true,
-                facultyId: true,
-                faculty: {
-                  select: {
-                    id: true,
-                    name: true
-                  }
+          studyProgram: {
+            select: {
+              id: true,
+              name: true,
+              facultyId: true,
+              faculty: {
+                select: {
+                  id: true,
+                  name: true
                 }
               }
             }
           }
-        }
         },
         orderBy: [
           { semester: 'asc' },
@@ -131,26 +130,21 @@ export class SubjectsService {
     const subject = await this.prisma.subject.findUnique({
       where: { id },
       include: {
-        studyPrograms: {
+        studyProgram: {
           select: {
             id: true,
-            studyProgram: {
+            name: true,
+            duration: true,
+            facultyId: true,
+            faculty: {
               select: {
                 id: true,
                 name: true,
-                duration: true,
-                facultyId: true,
-                faculty: {
+                universityId: true,
+                university: {
                   select: {
                     id: true,
-                    name: true,
-                    universityId: true,
-                    university: {
-                      select: {
-                        id: true,
-                        name: true
-                      }
-                    }
+                    name: true
                   }
                 }
               }
@@ -183,15 +177,10 @@ export class SubjectsService {
         { name: 'asc' }
       ],
       include: {
-        studyPrograms: {
+        studyProgram: {
           select: {
             id: true,
-            studyProgram: {
-              select: {
-                id: true,
-                name: true
-              }
-            }
+            name: true
           }
         }
       }
@@ -205,19 +194,14 @@ export class SubjectsService {
         name: 'asc'
       },
       include: {
-        studyPrograms: {
+        studyProgram: {
           select: {
             id: true,
-            studyProgram: {
+            name: true,
+            faculty: {
               select: {
                 id: true,
-                name: true,
-                faculty: {
-                  select: {
-                    id: true,
-                    name: true
-                  }
-                }
+                name: true
               }
             }
           }
@@ -227,6 +211,10 @@ export class SubjectsService {
   }
 
   async update(id: number, updateSubjectDto: UpdateSubjectDto) {
+    console.log('Backend received update request:');
+    console.log('- Subject ID:', id);
+    console.log('- Update data:', JSON.stringify(updateSubjectDto, null, 2));
+    
     const existingSubject = await this.prisma.subject.findUnique({
       where: { id }
     });
@@ -255,24 +243,32 @@ export class SubjectsService {
       }
     }
 
+    const updateData: any = {};
+    
+    if (updateSubjectDto.name !== undefined) updateData.name = updateSubjectDto.name;
+    if (updateSubjectDto.code !== undefined) updateData.code = updateSubjectDto.code;
+    if (updateSubjectDto.description !== undefined) updateData.description = updateSubjectDto.description;
+    if (updateSubjectDto.credits !== undefined) updateData.credits = updateSubjectDto.credits;
+    if (updateSubjectDto.semester !== undefined) updateData.semester = updateSubjectDto.semester;
+    if (updateSubjectDto.lectureHours !== undefined) updateData.numberOfLectures = updateSubjectDto.lectureHours;
+    if (updateSubjectDto.exerciseHours !== undefined) updateData.numberOfExercises = updateSubjectDto.exerciseHours;
+    if (updateSubjectDto.studyProgramId !== undefined) updateData.studyProgramId = updateSubjectDto.studyProgramId;
+    
+    console.log('🔍 Mapped update data for Prisma:', JSON.stringify(updateData, null, 2));
+
     return this.prisma.subject.update({
       where: { id },
-      data: updateSubjectDto,
+      data: updateData,
       include: {
-        studyPrograms: {
+        studyProgram: {
           select: {
             id: true,
-            studyProgram: {
+            name: true,
+            facultyId: true,
+            faculty: {
               select: {
                 id: true,
-                name: true,
-                facultyId: true,
-                faculty: {
-                  select: {
-                    id: true,
-                    name: true
-                  }
-                }
+                name: true
               }
             }
           }

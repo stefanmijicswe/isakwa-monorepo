@@ -328,7 +328,7 @@ export async function seedProfessorSyllabi() {
       });
 
       if (existingSyllabus) {
-        console.log(`⚠️ Syllabus already exists for ${template.subject}`);
+        console.log(`Syllabus already exists for ${template.subject}`);
         continue;
       }
 
@@ -375,10 +375,10 @@ export async function seedProfessorSyllabi() {
       }
 
       syllabusCreated++;
-      console.log(`✅ Syllabus created for ${template.subject} (${subject.code})`);
+      console.log(`Syllabus created for ${template.subject} (${subject.code})`);
     }
 
-    console.log(`🎉 Professor Syllabi seeding completed! Created ${syllabusCreated} syllabi for Professor ${professor.firstName} ${professor.lastName}.`);
+    console.log(`Professor Syllabi seeding completed! Created ${syllabusCreated} syllabi for Professor ${professor.firstName} ${professor.lastName}.`);
     
     return {
       professorEmail: professor.email,
@@ -387,7 +387,7 @@ export async function seedProfessorSyllabi() {
     };
 
   } catch (error) {
-    console.error('❌ Error during Professor Syllabi seeding:', error);
+    console.error('Error during Professor Syllabi seeding:', error);
     throw error;
   }
 }
@@ -396,9 +396,9 @@ export async function seedProfessorSyllabi() {
 async function main() {
   try {
     const results = await seedProfessorSyllabi();
-    console.log('📊 Seeding results:', results);
+    console.log('Seeding results:', results);
   } catch (error) {
-    console.error('❌ Failed to seed professor syllabi:', error);
+    console.error('Failed to seed professor syllabi:', error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

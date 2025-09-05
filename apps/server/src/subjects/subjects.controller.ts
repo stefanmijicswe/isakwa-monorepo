@@ -23,8 +23,8 @@ export class SubjectsController {
   constructor(private readonly subjectsService: SubjectsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)  // Re-enabled authentication and authorization
-  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)  // Re-enabled role-based access control
+  @UseGuards(JwtAuthGuard, RolesGuard) 
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
   create(@Body() createSubjectDto: CreateSubjectDto) {
     return this.subjectsService.create(createSubjectDto);
   }
@@ -63,8 +63,8 @@ export class SubjectsController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)  // Re-enabled authentication and authorization
-  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)  // Re-enabled role-based access control
+  @UseGuards(JwtAuthGuard, RolesGuard)  
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)  
   update(
     @Param('id', ParseIntPipe) id: number, 
     @Body() updateSubjectDto: UpdateSubjectDto
@@ -73,8 +73,8 @@ export class SubjectsController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)  // Re-enabled authentication and authorization
-  @Roles(UserRole.ADMIN)  // Re-enabled role-based access control
+  @UseGuards(JwtAuthGuard, RolesGuard)  
+  @Roles(UserRole.ADMIN) 
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.subjectsService.remove(id);
   }

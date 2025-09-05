@@ -28,17 +28,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-    console.log('🔍 JwtStrategy.validate() called with payload:', payload);
+    console.log('JwtStrategy.validate() called with payload:', payload);
     
     const user = await this.authService.validateUser(payload.sub);
-    console.log('🔍 JwtStrategy.validate() - user from authService:', user);
+    console.log('JwtStrategy.validate() - user from authService:', user);
     
     if (!user) {
-      console.log('❌ JwtStrategy.validate() - user not found');
+      console.log('JwtStrategy.validate() - user not found');
       throw new UnauthorizedException();
     }
     
-    console.log('✅ JwtStrategy.validate() - returning user:', user);
+    console.log('JwtStrategy.validate() - returning user:', user);
     return user;
   }
 }

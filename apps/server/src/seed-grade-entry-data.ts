@@ -277,7 +277,7 @@ export async function seedGradeEntryData() {
       }
     }
 
-    console.log('✅ Grade Entry seeding completed successfully!');
+    console.log('Grade Entry seeding completed successfully!');
     
     return {
       professor: professor.firstName + ' ' + professor.lastName,
@@ -287,7 +287,7 @@ export async function seedGradeEntryData() {
     };
 
   } catch (error) {
-    console.error('❌ Error during Grade Entry seeding:', error);
+    console.error('Error during Grade Entry seeding:', error);
     throw error;
   } finally {
     await prisma.$disconnect();
@@ -298,11 +298,11 @@ export async function seedGradeEntryData() {
 if (require.main === module) {
   seedGradeEntryData()
     .then(result => {
-      console.log('🎉 Grade Entry seeding result:', result);
+      console.log('Grade Entry seeding result:', result);
       process.exit(0);
     })
     .catch(error => {
-      console.error('💥 Grade Entry seeding failed:', error);
+      console.error('Grade Entry seeding failed:', error);
       process.exit(1);
     });
 }

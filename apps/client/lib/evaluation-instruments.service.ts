@@ -122,7 +122,7 @@ class EvaluationInstrumentsService {
     if (!token) {
       const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiam9obi5zbWl0aEBpc2Frd2EuZWR1Iiwicm9sZSI6IlBST0ZFU1NPUiIsImZpcnN0TmFtZSI6IkpvaG4iLCJsYXN0TmFtZSI6IlNtaXRoIiwiaWF0IjoxNzU2OTAyNjEzLCJleHAiOjE3NTc1MDc0MTN9.Siqy9TGJr2ZGB5UJ20cJPv6rcDRIM4aMg0qKlqlaeho'
       localStorage.setItem('auth_token', testToken)
-      console.log('🔑 Auto-set test authentication token for development')
+      // console.log('🔑 Auto-set test authentication token for development')
       token = testToken
     }
     
@@ -136,7 +136,7 @@ class EvaluationInstrumentsService {
     const token = this.getAuthToken()
     const url = `${this.baseUrl}${endpoint}`
 
-    console.log('🔑 EvalInstruments Auth token:', token ? `${token.substring(0, 10)}...` : 'NO TOKEN')
+    // console.log('🔑 EvalInstruments Auth token:', token ? `${token.substring(0, 10)}...` : 'NO TOKEN')
 
     const config: RequestInit = {
       ...options,
@@ -147,39 +147,39 @@ class EvaluationInstrumentsService {
       },
     }
 
-    console.log('🚀 ═══ EVALUATION INSTRUMENTS REQUEST START ═══')
-    console.log('📡 URL:', url)
-    console.log('🔧 Method:', config.method || 'GET')
-    console.log('🔑 Has Token:', !!token)
-    console.log('📋 Headers:', JSON.stringify(config.headers, null, 2))
+    // console.log('🚀 ═══ EVALUATION INSTRUMENTS REQUEST START ═══')
+    // console.log('📡 URL:', url)
+    // console.log('🔧 Method:', config.method || 'GET')
+    // console.log('🔑 Has Token:', !!token)
+    // console.log('📋 Headers:', JSON.stringify(config.headers, null, 2))
     if (config.body) {
-      console.log('📦 Request Body:', config.body)
+      // console.log('📦 Request Body:', config.body)
       try {
         const parsedBody = JSON.parse(config.body as string)
-        console.log('📊 Parsed Body:', JSON.stringify(parsedBody, null, 2))
+        // console.log('📊 Parsed Body:', JSON.stringify(parsedBody, null, 2))
       } catch (e) {
-        console.log('📄 Body (not JSON):', config.body)
+        // console.log('📄 Body (not JSON):', config.body)
       }
     }
-    console.log('═══════════════════════════════════════════════')
+    // console.log('═══════════════════════════════════════════════')
 
     try {
       const response = await fetch(url, config)
       
-      console.log('📈 ═══ EVALUATION INSTRUMENTS RESPONSE ═══')
-      console.log('🎯 Status:', response.status, response.statusText)
-      console.log('📋 Response Headers:', Object.fromEntries(response.headers.entries()))
+      // console.log('📈 ═══ EVALUATION INSTRUMENTS RESPONSE ═══')
+      // console.log('🎯 Status:', response.status, response.statusText)
+      // console.log('📋 Response Headers:', Object.fromEntries(response.headers.entries()))
 
       if (!response.ok) {
         const errorData = await response.text()
         
-        console.log('❌ Error Response Body:', errorData)
+        // console.log('❌ Error Response Body:', errorData)
         
         // Try to parse error details if it's JSON
         let detailedError = errorData
         try {
           const parsedError = JSON.parse(errorData)
-          console.log('🔍 Parsed Error:', JSON.stringify(parsedError, null, 2))
+          // console.log('🔍 Parsed Error:', JSON.stringify(parsedError, null, 2))
           if (parsedError.message) {
             detailedError = parsedError.message
           }
@@ -188,21 +188,21 @@ class EvaluationInstrumentsService {
             detailedError += ' - ' + JSON.stringify(parsedError.details)
           }
         } catch (e) {
-          console.log('⚠️ Error response is not JSON')
+          // console.log('⚠️ Error response is not JSON')
         }
         
-        console.log('═══════════════════════════════════════════════')
+        // console.log('═══════════════════════════════════════════════')
         throw new Error(`HTTP ${response.status}: ${detailedError}`)
       }
 
       const data = await response.json()
-      console.log('✅ Success Response Data:', JSON.stringify(data, null, 2))
-      console.log('═══════════════════════════════════════════════')
+      // console.log('✅ Success Response Data:', JSON.stringify(data, null, 2))
+      // console.log('═══════════════════════════════════════════════')
       return data
     } catch (error) {
-      console.log('💥 ═══ EVALUATION INSTRUMENTS ERROR ═══')
+      // console.log('💥 ═══ EVALUATION INSTRUMENTS ERROR ═══')
       console.error('Error:', error)
-      console.log('═══════════════════════════════════════════════')
+      // console.log('═══════════════════════════════════════════════')
       throw error
     }
   }
@@ -213,7 +213,7 @@ class EvaluationInstrumentsService {
     type?: string,
     isActive?: boolean
   ): Promise<EvaluationInstrument[]> {
-    console.log('🔬 Fetching evaluation instruments from backend...')
+    // console.log('🔬 Fetching evaluation instruments from backend...')
     
     try {
       const params = new URLSearchParams()
@@ -233,7 +233,7 @@ class EvaluationInstrumentsService {
         `/evaluation-instruments${queryString ? `?${queryString}` : ''}`
       )
       
-      console.log('✅ Loaded evaluation instruments from database:', instruments)
+      // console.log('✅ Loaded evaluation instruments from database:', instruments)
       return instruments
     } catch (error) {
       console.warn('⚠️ Failed to fetch evaluation instruments from backend, returning empty array:', error)
@@ -247,15 +247,8 @@ class EvaluationInstrumentsService {
   }
 
   async createEvaluationInstrument(data: CreateEvaluationInstrumentData): Promise<EvaluationInstrument> {
-    console.log('📝 ═══ CREATING EVALUATION INSTRUMENT ═══')
-    console.log('📊 Raw form data received:', JSON.stringify(data, null, 2))
-    console.log('📊 Raw form data types:', {
-      subjectId: typeof data.subjectId,
-      title: typeof data.title,
-      maxPoints: typeof data.maxPoints,
-      type: typeof data.type,
-      dueDate: typeof data.dueDate
-    })
+    // console.log('📝 ═══ CREATING EVALUATION INSTRUMENT ═══')
+    // console.log('📊 Raw form data received:', JSON.stringify(data, null, 2))
     
     // Ensure numeric fields are numbers, not strings, and validate required fields
     const payload = {
@@ -265,40 +258,33 @@ class EvaluationInstrumentsService {
       dueDate: data.dueDate && data.dueDate.trim() !== '' ? data.dueDate : undefined
     }
     
-    console.log('🔧 Transformed payload:', JSON.stringify(payload, null, 2))
-    console.log('🔧 Transformed payload types:', {
-      subjectId: typeof payload.subjectId,
-      title: typeof payload.title,
-      maxPoints: typeof payload.maxPoints,
-      type: typeof payload.type,
-      dueDate: typeof payload.dueDate
-    })
+    // console.log('🔧 Transformed payload:', JSON.stringify(payload, null, 2))
     
     // Validate required fields
-    console.log('✅ Starting validation...')
+    // console.log('✅ Starting validation...')
     if (!payload.subjectId || payload.subjectId === 0) {
       console.error('❌ Validation failed: Subject is required')
       throw new Error('Subject is required')
     }
-    console.log('✅ Subject validation passed:', payload.subjectId)
+    // console.log('✅ Subject validation passed:', payload.subjectId)
     
     if (!payload.title || payload.title.trim() === '') {
       console.error('❌ Validation failed: Title is required')
       throw new Error('Title is required')
     }
-    console.log('✅ Title validation passed:', payload.title)
+    // console.log('✅ Title validation passed:', payload.title)
     
     if (!payload.maxPoints || payload.maxPoints <= 0) {
       console.error('❌ Validation failed: Max points must be greater than 0')
       throw new Error('Max points must be greater than 0')
     }
-    console.log('✅ Max points validation passed:', payload.maxPoints)
+    // console.log('✅ Max points validation passed:', payload.maxPoints)
     
     if (!payload.type) {
       console.error('❌ Validation failed: Type is required')
       throw new Error('Type is required')
     }
-    console.log('✅ Type validation passed:', payload.type)
+    // console.log('✅ Type validation passed:', payload.type)
     
     // Validate enum values
     const validTypes = ['PROJECT', 'TEST', 'QUIZ', 'ASSIGNMENT', 'EXAM', 'MIDTERM', 'LABORATORY', 'PRESENTATION', 'FINAL']
@@ -306,32 +292,32 @@ class EvaluationInstrumentsService {
       console.error('❌ Validation failed: Invalid type:', payload.type)
       throw new Error(`Invalid type: ${payload.type}. Must be one of: ${validTypes.join(', ')}`)
     }
-    console.log('✅ Type enum validation passed')
+    // console.log('✅ Type enum validation passed')
     
-    console.log('🚀 All validations passed, sending to backend...')
-    console.log('📤 Final payload:', JSON.stringify(payload, null, 2))
+    // console.log('🚀 All validations passed, sending to backend...')
+    // console.log('📤 Final payload:', JSON.stringify(payload, null, 2))
     
-    console.log('🔍 ═══ BACKEND EXPECTATIONS vs PAYLOAD COMPARISON ═══')
-    console.log('Backend DTO expects (CreateEvaluationInstrumentDto):')
-    console.log('├── subjectId: number (required) ✓', typeof payload.subjectId, '=', payload.subjectId)
-    console.log('├── title: string (required) ✓', typeof payload.title, '=', payload.title)
-    console.log('├── description?: string (optional)', typeof payload.description, '=', payload.description)
-    console.log('├── type: EvaluationType (required) ✓', typeof payload.type, '=', payload.type)
-    console.log('├── maxPoints: number (required) ✓', typeof payload.maxPoints, '=', payload.maxPoints)
-    console.log('├── dueDate?: string (ISO date, optional)', typeof payload.dueDate, '=', payload.dueDate)
-    console.log('└── isActive?: boolean (optional)', typeof payload.isActive, '=', payload.isActive)
-    console.log('')
-    console.log('Valid EvaluationType enum values: PROJECT, TEST, QUIZ, ASSIGNMENT, EXAM, MIDTERM, LABORATORY, PRESENTATION, FINAL')
-    console.log('Our type value:', payload.type, '- Valid?', validTypes.includes(payload.type) ? '✅' : '❌')
-    console.log('═══════════════════════════════════════════════')
+    // console.log('🔍 ═══ BACKEND EXPECTATIONS vs PAYLOAD COMPARISON ═══')
+    // console.log('Backend DTO expects (CreateEvaluationInstrumentDto):')
+    // console.log('├── subjectId: number (required) ✓', typeof payload.subjectId, '=', payload.subjectId)
+    // console.log('├── title: string (required) ✓', typeof payload.title, '=', payload.title)
+    // console.log('├── description?: string (optional)', typeof payload.description, '=', payload.description)
+    // console.log('├── type: EvaluationType (required) ✓', typeof payload.type, '=', payload.type)
+    // console.log('├── maxPoints: number (required) ✓', typeof payload.maxPoints, '=', payload.maxPoints)
+    // console.log('├── dueDate?: string (ISO date, optional)', typeof payload.dueDate, '=', payload.dueDate)
+    // console.log('└── isActive?: boolean (optional)', typeof payload.isActive, '=', payload.isActive)
+    // console.log('')
+    // console.log('Valid EvaluationType enum values: PROJECT, TEST, QUIZ, ASSIGNMENT, EXAM, MIDTERM, LABORATORY, PRESENTATION, FINAL')
+    // console.log('Our type value:', payload.type, '- Valid?', validTypes.includes(payload.type) ? '✅' : '❌')
+    // console.log('═══════════════════════════════════════════════')
     
     const instrument = await this.request<EvaluationInstrument>('/evaluation-instruments', {
       method: 'POST',
       body: JSON.stringify(payload),
     })
     
-    console.log('✅ Successfully created evaluation instrument:', JSON.stringify(instrument, null, 2))
-    console.log('═══════════════════════════════════════════════')
+    // console.log('✅ Successfully created evaluation instrument:', JSON.stringify(instrument, null, 2))
+    // console.log('═══════════════════════════════════════════════')
     return instrument
   }
 
@@ -362,7 +348,7 @@ class EvaluationInstrumentsService {
     studentId?: number,
     passed?: boolean
   ): Promise<EvaluationSubmission[]> {
-    console.log('📋 Fetching evaluation submissions from backend...')
+    // console.log('📋 Fetching evaluation submissions from backend...')
     
     try {
       // Try backend first, but if it fails use mock data
@@ -384,7 +370,7 @@ class EvaluationInstrumentsService {
         `/evaluation-instruments/submissions${queryString ? `?${queryString}` : ''}`
       )
       
-      console.log('✅ Loaded evaluation submissions from database:', submissions)
+      // console.log('✅ Loaded evaluation submissions from database:', submissions)
       return submissions
     } catch (error) {
       console.warn('⚠️ Backend submissions endpoint has validation issues, using sample data:', error)
@@ -437,7 +423,7 @@ class EvaluationInstrumentsService {
         }
       ]
       
-      console.log('📋 Using sample submissions data for UI demonstration')
+      // console.log('📋 Using sample submissions data for UI demonstration')
       return sampleSubmissions
     }
   }
@@ -532,26 +518,26 @@ class EvaluationInstrumentsService {
 
   // Import XML
   async importFromXML(xmlContent: string): Promise<any> {
-    console.log('📥 Importing XML to backend...')
+    // console.log('📥 Importing XML to backend...')
     
     const result = await this.request<any>('/evaluation-instruments/import/xml', {
       method: 'POST',
       body: JSON.stringify({ xmlContent }),
     })
     
-    console.log('✅ XML imported successfully:', result)
+    // console.log('✅ XML imported successfully:', result)
     return result
   }
 
   // Get professor subjects from professor assignments
   async getProfessorSubjects(): Promise<any[]> {
-    console.log('📚 Fetching professor subjects from backend...')
+    // console.log('📚 Fetching professor subjects from backend...')
     
     try {
       // Use the same endpoint as Teaching Courses
       const assignments = await this.request<any[]>('/academic-records/my-subjects')
       
-      console.log('📊 Raw professor assignments from backend:', assignments)
+      // console.log('📊 Raw professor assignments from backend:', assignments)
       
       // Transform assignments to simple subject format
       const subjects = assignments.map(assignment => ({
@@ -562,7 +548,7 @@ class EvaluationInstrumentsService {
         description: assignment.subject.description
       }))
       
-      console.log('✅ Processed professor subjects:', subjects)
+      // console.log('✅ Processed professor subjects:', subjects)
       return subjects
     } catch (error) {
       console.error('❌ Failed to fetch professor subjects from backend:', error)

@@ -11,10 +11,10 @@ async function setupFusekiDataset() {
     if (!isHealthy) {
       throw new Error('Fuseki server is not accessible. Please ensure it is running.');
     }
-    console.log('✅ Fuseki server is accessible');
+    console.log('Fuseki server is accessible');
 
     // Create the universities dataset using curl to admin API
-    console.log('📝 Creating universities dataset...');
+    console.log('Creating universities dataset...');
     
     // Create dataset via Fuseki admin interface
     const createDatasetUrl = 'http://localhost:3030/$/datasets';
@@ -27,16 +27,16 @@ async function setupFusekiDataset() {
     });
 
     if (response.ok) {
-      console.log('✅ Universities dataset created successfully');
+      console.log('Universities dataset created successfully');
     } else if (response.status === 409) {
-      console.log('ℹ️  Universities dataset already exists');
+      console.log('Universities dataset already exists');
     } else {
       const errorText = await response.text();
       throw new Error(`Failed to create dataset: ${response.status} - ${errorText}`);
     }
 
     // Test the dataset
-    console.log('🧪 Testing dataset...');
+    console.log('Testing dataset...');
     const testQuery = `
       SELECT (COUNT(*) as ?count) WHERE {
         ?s ?p ?o .
@@ -45,15 +45,15 @@ async function setupFusekiDataset() {
     
     try {
       const results = await fusekiService.query(testQuery);
-      console.log('✅ Dataset is working, count:', results[0]?.count?.value || '0');
+      console.log('Dataset is working, count:', results[0]?.count?.value || '0');
     } catch (error) {
-      console.log('⚠️  Dataset query test failed:', error.message);
+      console.log('Dataset query test failed:', error.message);
     }
 
-    console.log('🎉 Fuseki setup completed successfully!');
+    console.log('Fuseki setup completed successfully!');
 
   } catch (error) {
-    console.error('❌ Error during Fuseki setup:', error.message);
+    console.error('Error during Fuseki setup:', error.message);
     process.exit(1);
   }
 }
@@ -62,11 +62,11 @@ async function setupFusekiDataset() {
 if (require.main === module) {
   setupFusekiDataset()
     .then(() => {
-      console.log('✨ Setup script completed');
+      console.log('Setup script completed');
       process.exit(0);
     })
     .catch((error) => {
-      console.error('💥 Setup script failed:', error);
+      console.error('Setup script failed:', error);
       process.exit(1);
     });
 }

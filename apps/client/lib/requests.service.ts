@@ -103,12 +103,6 @@ class RequestsService {
     const token = await this.getAuthToken()
     
     // Debug logging
-    console.log('RequestsService debug:', {
-      endpoint,
-      hasToken: !!token,
-      tokenLength: token?.length,
-      tokenStart: token?.substring(0, 20) + '...'
-    })
     
     const config: RequestInit = {
       ...options,

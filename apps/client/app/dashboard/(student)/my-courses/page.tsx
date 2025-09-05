@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BookOpen, GraduationCap, Clock, User, Calendar, MapPin, Clock3, Users, FileText, BookMarked, Library, FileSpreadsheet } from "lucide-react"
 import { coursesService, type Course } from "@/lib/courses.service"
+import { syllabiService, type Syllabus, type SyllabusMaterial } from "@/lib/syllabi.service"
 
 export default function MyCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([])
@@ -15,6 +16,8 @@ export default function MyCoursesPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
   const [showDetailsDialog, setShowDetailsDialog] = useState(false)
+  const [courseSyllabus, setCourseSyllabus] = useState<Syllabus | null>(null)
+  const [syllabusLoading, setSyllabusLoading] = useState(false)
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -32,16 +35,36 @@ export default function MyCoursesPage() {
     fetchCourses()
   }, [])
 
-  const totalCourses = courses.length
-  const activeCourses = courses.filter(course => course.status === 'Active').length
-  const totalEcts = courses.reduce((sum, course) => sum + (course.ects || 0), 0)
-  const averageGrade = courses.length > 0 
-    ? (courses.reduce((sum, course) => sum + (parseFloat(course.grade || '0') || 0), 0) / courses.length).toFixed(1)
-    : '0.0'
 
-  const handleDetailsClick = (course: Course) => {
+  const handleDetailsClick = async (course: Course) => {
     setSelectedCourse(course)
     setShowDetailsDialog(true)
+    
+    // Fetch syllabus data for the selected course
+    setSyllabusLoading(true)
+    try {
+      const subjectId = course.subjectId
+      
+      
+      if (subjectId && !isNaN(subjectId) && subjectId > 0) {
+        const syllabi = await syllabiService.getSyllabi({ subjectId: subjectId })
+        
+        if (syllabi && syllabi.length > 0) {
+          setCourseSyllabus(syllabi[0]) // Use the first syllabus found
+        } else {
+          console.warn('📚 No syllabus found for this course')
+          setCourseSyllabus(null)
+        }
+      } else {
+        console.warn('❌ No valid subject ID found for course:', course.name, 'Subject ID:', subjectId)
+        setCourseSyllabus(null)
+      }
+    } catch (error) {
+      console.error('❌ Error fetching syllabus:', error)
+      setCourseSyllabus(null)
+    } finally {
+      setSyllabusLoading(false)
+    }
   }
 
   if (loading) {
@@ -73,25 +96,6 @@ export default function MyCoursesPage() {
         <p className="text-gray-500 mt-1">Manage your enrolled courses</p>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="text-center">
-          <div className="text-3xl font-semibold text-gray-900">{totalCourses}</div>
-          <div className="text-sm text-gray-500 mt-1">Total Courses</div>
-        </div>
-          <div className="text-center">
-          <div className="text-3xl font-semibold text-gray-900">{activeCourses}</div>
-          <div className="text-sm text-gray-500 mt-1">Active Courses</div>
-        </div>
-          <div className="text-center">
-          <div className="text-3xl font-semibold text-gray-900">{totalEcts}</div>
-          <div className="text-sm text-gray-500 mt-1">Total ECTS</div>
-        </div>
-          <div className="text-center">
-          <div className="text-3xl font-semibold text-gray-900">{averageGrade}</div>
-          <div className="text-sm text-gray-500 mt-1">Average Grade</div>
-        </div>
-      </div>
 
       {/* Enrolled Courses */}
       <div>
@@ -269,35 +273,53 @@ export default function MyCoursesPage() {
                     <h4 className="text-lg font-medium text-gray-900">Course Syllabus</h4>
                   </div>
                   
-                  <div className="space-y-3">
-                    <div className="p-3 bg-white rounded-lg border border-gray-200">
-                      <h5 className="font-medium text-gray-900 mb-2">Course Objectives</h5>
-                      <p className="text-sm text-gray-600">
-                        This course provides fundamental knowledge and practical skills in programming concepts, 
-                        algorithms, and software development methodologies.
-                      </p>
+                  {syllabusLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-300"></div>
+                      <span className="ml-2 text-gray-600">Loading syllabus...</span>
                     </div>
-
-                    <div className="p-3 bg-white rounded-lg border border-gray-200">
-                      <h5 className="font-medium text-gray-900 mb-2">Learning Outcomes</h5>
-                      <ul className="text-sm text-gray-600 space-y-1">
-                        <li>• Understand basic programming concepts and syntax</li>
-                        <li>• Develop problem-solving skills through coding exercises</li>
-                        <li>• Learn software development best practices</li>
-                        <li>• Gain hands-on experience with real-world projects</li>
-                      </ul>
-                    </div>
-
-                    <div className="p-3 bg-white rounded-lg border border-gray-200">
-                      <h5 className="font-medium text-gray-900 mb-2">Assessment Methods</h5>
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <p>• Final Exam: 60%</p>
-                        <p>• Assignments: 25%</p>
-                        <p>• Participation: 15%</p>
+                  ) : courseSyllabus ? (
+                    <div className="space-y-3">
+                      <div className="p-3 bg-white rounded-lg border border-gray-200">
+                        <h5 className="font-medium text-gray-900 mb-2">Course Description</h5>
+                        <p className="text-sm text-gray-600">
+                          {courseSyllabus.description || 'No description available.'}
+                        </p>
                       </div>
-                  </div>
+
+                      <div className="p-3 bg-white rounded-lg border border-gray-200">
+                        <h5 className="font-medium text-gray-900 mb-2">Learning Objectives</h5>
+                        <div className="text-sm text-gray-600 whitespace-pre-line">
+                          {courseSyllabus.objectives || 'No objectives defined yet.'}
+                        </div>
+                      </div>
+
+                      {courseSyllabus.topics && courseSyllabus.topics.length > 0 && (
+                        <div className="p-3 bg-white rounded-lg border border-gray-200">
+                          <h5 className="font-medium text-gray-900 mb-2">Course Topics</h5>
+                          <div className="space-y-2">
+                            {courseSyllabus.topics.map((topic, index) => (
+                              <div key={topic.id || index} className="border-l-2 border-blue-200 pl-3">
+                                <p className="font-medium text-sm text-gray-900">{topic.title}</p>
+                                {topic.description && (
+                                  <p className="text-xs text-gray-600 mt-1">{topic.description}</p>
+                                )}
+                                {topic.weekNumber && (
+                                  <span className="text-xs text-blue-600">Week {topic.weekNumber}</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <BookMarked className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                      <p>No syllabus available for this course</p>
+                    </div>
+                  )}
                 </div>
-              </div>
               </TabsContent>
 
               {/* Course Materials Tab */}
@@ -308,46 +330,51 @@ export default function MyCoursesPage() {
                     <h4 className="text-lg font-medium text-gray-900">Course Materials</h4>
                   </div>
                   
-                  <div className="space-y-3">
-                    <div className="p-3 bg-white rounded-lg border border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <FileText className="h-5 w-5 text-blue-600" />
-                          <div>
-                            <h5 className="font-medium text-gray-900">Course Notes</h5>
-                            <p className="text-sm text-gray-600">Comprehensive lecture notes and slides</p>
-                          </div>
-                        </div>
-                        <Button size="sm" variant="outline">Download</Button>
-                      </div>
+                  {syllabusLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-300"></div>
+                      <span className="ml-2 text-gray-600">Loading materials...</span>
                     </div>
-
-                    <div className="p-3 bg-white rounded-lg border border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <FileSpreadsheet className="h-5 w-5 text-green-600" />
-                          <div>
-                            <h5 className="font-medium text-gray-900">Practice Exercises</h5>
-                            <p className="text-sm text-gray-600">Weekly programming assignments</p>
+                  ) : courseSyllabus && courseSyllabus.materials && courseSyllabus.materials.length > 0 ? (
+                    <div className="space-y-3">
+                      {courseSyllabus.materials.map((material, index) => (
+                        <div key={material.id || index} className="p-3 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <FileText className="h-5 w-5 text-blue-600" />
+                              <div>
+                                <h5 className="font-medium text-gray-900">{material.title}</h5>
+                                <p className="text-sm text-gray-600">{material.description}</p>
+                                {material.fileSize && (
+                                  <p className="text-xs text-gray-500">
+                                    Size: {(material.fileSize / 1024).toFixed(1)} KB
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            {material.fileUrl ? (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => window.open(material.fileUrl, '_blank')}
+                              >
+                                Download
+                              </Button>
+                            ) : (
+                              <Button size="sm" variant="outline" disabled>
+                                Unavailable
+                              </Button>
+                            )}
                           </div>
                         </div>
-                        <Button size="sm" variant="outline">View</Button>
-                      </div>
+                      ))}
                     </div>
-
-                    <div className="p-3 bg-white rounded-lg border border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <BookOpen className="h-5 w-5 text-purple-600" />
-                          <div>
-                            <h5 className="font-medium text-gray-900">Reading List</h5>
-                            <p className="text-sm text-gray-600">Recommended textbooks and resources</p>
-                          </div>
-                        </div>
-                        <Button size="sm" variant="outline">Browse</Button>
-                      </div>
-          </div>
-      </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Library className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                      <p>No materials available for this course</p>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>

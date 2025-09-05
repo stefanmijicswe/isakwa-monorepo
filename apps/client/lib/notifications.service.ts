@@ -11,7 +11,7 @@ const getAuthToken = (): string | null => {
   if (!token) {
     const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiam9obi5zbWl0aEBpc2Frd2EuZWR1Iiwicm9sZSI6IlBST0ZFU1NPUiIsImZpcnN0TmFtZSI6IkpvaG4iLCJsYXN0TmFtZSI6IlNtaXRoIiwiaWF0IjoxNzU2OTAyNjEzLCJleHAiOjE3NTc1MDc0MTN9.Siqy9TGJr2ZGB5UJ20cJPv6rcDRIM4aMg0qKlqlaeho';
     localStorage.setItem('auth_token', testToken);
-    console.log('🔑 Auto-set test authentication token for Notifications');
+    // console.log('🔑 Auto-set test authentication token for Notifications');
     token = testToken;
   }
   
@@ -112,7 +112,7 @@ export const createCourseNotification = async (notificationData: {
   type?: NotificationType;
   priority?: 'LOW' | 'NORMAL' | 'HIGH';
 }): Promise<Notification> => {
-  console.log('📤 Creating course notification:', notificationData);
+  // console.log('📤 Creating course notification:', notificationData);
   
   const response = await fetch(`${API_BASE_URL}/notifications/course`, {
     method: 'POST',
@@ -130,7 +130,7 @@ export const createCourseNotification = async (notificationData: {
   }
 
   const result = await response.json();
-  console.log('✅ Course notification created successfully:', result);
+  // console.log('✅ Course notification created successfully:', result);
   return result;
 };
 

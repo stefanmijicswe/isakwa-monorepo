@@ -12,6 +12,7 @@ import {
   Logger,
   Res,
   HttpStatus,
+  Request,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { EvaluationInstrumentsService } from './evaluation-instruments.service';
@@ -20,6 +21,7 @@ import {
   CreateEvaluationInstrumentDto, 
   UpdateEvaluationInstrumentDto,
   CreateEvaluationSubmissionDto,
+  CreateStudentSubmissionDto,
   UpdateEvaluationSubmissionDto
 } from './dto';
 import { QueryEvaluationInstrumentsDto, QueryEvaluationSubmissionsDto } from './dto/query-evaluation-instruments.dto';
@@ -245,5 +247,28 @@ export class EvaluationInstrumentsController {
   @Roles(UserRole.PROFESSOR, UserRole.ADMIN)
   async importEvaluationResultsFromXML(@Body('xmlContent') xmlContent: string) {
     return this.evaluationExportService.importEvaluationResultsFromXML(xmlContent);
+  }
+
+  // Student endpoints
+  @Get('student/assignments')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.STUDENT)
+  async getStudentAssignments(@Request() req: any) {
+    return this.evaluationInstrumentsService.getStudentAssignments(req.user.id);
+  }
+
+  @Post('student/submissions')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.STUDENT)
+  async createStudentSubmission(
+    @Body() createSubmissionDto: CreateStudentSubmissionDto,
+    @Request() req: any,
+  ) {
+    // Create full submission DTO with student ID from JWT
+    const fullSubmissionDto: CreateEvaluationSubmissionDto = {
+      instrumentId: createSubmissionDto.instrumentId,
+      studentId: req.user.id,
+    };
+    return this.evaluationInstrumentsService.createEvaluationSubmission(fullSubmissionDto);
   }
 }

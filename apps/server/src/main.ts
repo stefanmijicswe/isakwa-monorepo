@@ -9,7 +9,7 @@ if (!process.env.DATABASE_URL) {
 // Fallback za JWT_SECRET ako nije postavljena
 if (!process.env.JWT_SECRET) {
   process.env.JWT_SECRET = 'fallback-jwt-secret-key-for-development-only';
-  console.warn('⚠️  Using fallback JWT_SECRET. Set JWT_SECRET environment variable for production!');
+  console.warn('Using fallback JWT_SECRET. Set JWT_SECRET environment variable for production!');
 }
 
 import { NestFactory } from '@nestjs/core';
@@ -43,9 +43,9 @@ async function bootstrap() {
   const port = process.env.PORT || 3001;
   await app.listen(port);
   
-  console.log(`🚀 Server is running on: http://localhost:${port}`);
-  console.log(`📚 API documentation: http://localhost:${port}/api`);
-  console.log(`🔐 Auth endpoints: http://localhost:${port}/api/auth/login | http://localhost:${port}/api/auth/register`);
+  console.log(`Server is running on: http://localhost:${port}`);
+  console.log(`API documentation: http://localhost:${port}/api`);
+  console.log(`Auth endpoints: http://localhost:${port}/api/auth/login | http://localhost:${port}/api/auth/register`);
 }
 
 bootstrap();

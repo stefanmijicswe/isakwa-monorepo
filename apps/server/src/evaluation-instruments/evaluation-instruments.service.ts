@@ -172,6 +172,20 @@ export class EvaluationInstrumentsService {
   // Evaluation Submissions CRUD
   async createEvaluationSubmission(createDto: CreateEvaluationSubmissionDto) {
     try {
+      // Check if submission already exists
+      const existingSubmission = await this.prisma.evaluationSubmission.findFirst({
+        where: {
+          studentId: createDto.studentId,
+          instrumentId: createDto.instrumentId,
+          isActive: true,
+        },
+      });
+
+      if (existingSubmission) {
+        this.logger.warn(`Submission already exists for student ${createDto.studentId} and instrument ${createDto.instrumentId}`);
+        throw new BadRequestException('Assignment already submitted');
+      }
+
       const submission = await this.prisma.evaluationSubmission.create({
         data: {
           ...createDto,
@@ -187,10 +201,13 @@ export class EvaluationInstrumentsService {
         },
       });
 
-      this.logger.log(`Created evaluation submission for student: ${submission.studentId}`);
+      this.logger.log(`Created evaluation submission for student: ${submission.studentId}, instrument: ${submission.instrumentId}`);
       return submission;
     } catch (error) {
       this.logger.error(`Failed to create evaluation submission: ${error.message}`);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
       throw new BadRequestException('Failed to create evaluation submission');
     }
   }
@@ -358,6 +375,83 @@ export class EvaluationInstrumentsService {
     } catch (error) {
       this.logger.error(`Failed to get student evaluation history: ${error.message}`);
       throw new BadRequestException('Failed to get student evaluation history');
+    }
+  }
+
+  // Get assignments for a specific student
+  async getStudentAssignments(studentId: number) {
+    try {
+      // Get student's course enrollments to find subjects they're enrolled in
+      const courseEnrollments = await this.prisma.courseEnrollment.findMany({
+        where: {
+          studentId: studentId,
+          isActive: true,
+        },
+        include: {
+          subject: true,
+        },
+      });
+
+      const enrolledSubjectIds = courseEnrollments.map(enrollment => enrollment.subjectId);
+
+      if (enrolledSubjectIds.length === 0) {
+        return [];
+      }
+
+      // Get evaluation instruments for enrolled subjects
+      const instruments = await this.prisma.evaluationInstrument.findMany({
+        where: {
+          subjectId: {
+            in: enrolledSubjectIds,
+          },
+          isActive: true,
+        },
+        include: {
+          subject: {
+            include: {
+              studyProgram: {
+                include: {
+                  faculty: true,
+                },
+              },
+            },
+          },
+          submissions: {
+            where: {
+              studentId: studentId,
+              isActive: true,
+            },
+          },
+        },
+        orderBy: {
+          dueDate: 'asc',
+        },
+      });
+
+      // Transform to frontend format
+      return instruments.map(instrument => ({
+        id: instrument.id,
+        title: instrument.title,
+        description: instrument.description || '',
+        subject: instrument.subject.name,
+        subjectCode: instrument.subject.code,
+        dueDate: instrument.dueDate?.toISOString() || null,
+        maxPoints: instrument.maxPoints,
+        type: instrument.type,
+        status: instrument.submissions.length > 0 
+          ? (instrument.submissions[0].grade ? 'graded' : 'submitted')
+          : 'pending',
+        submission: instrument.submissions.length > 0 ? {
+          id: instrument.submissions[0].id,
+          fileName: `submission-${instrument.submissions[0].id}.pdf`, // Mock filename
+          submittedAt: instrument.submissions[0].createdAt.toISOString(),
+          grade: instrument.submissions[0].grade,
+          feedback: instrument.submissions[0].feedback,
+        } : undefined,
+      }));
+    } catch (error) {
+      this.logger.error(`Failed to get student assignments: ${error.message}`);
+      throw new BadRequestException('Failed to get student assignments');
     }
   }
 }

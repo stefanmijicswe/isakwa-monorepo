@@ -270,7 +270,7 @@ export default function ScheduleManagementPage() {
       setShowCreateSchedule(false);
       setScheduleForm({ subjectId: '', academicYear: '', semesterType: 'WINTER' });
       
-      console.log('Course schedule created successfully:', newSchedule);
+      // console.log('Course schedule created successfully:', newSchedule);
     } catch (error) {
       console.error('Failed to create course schedule:', error);
       alert(`Failed to create course schedule: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -312,7 +312,7 @@ export default function ScheduleManagementPage() {
           sessionType: 'LECTURE' as 'LECTURE' | 'EXERCISE' | 'MENTORING'
         });
       
-      console.log('Course session created successfully:', newSession);
+      // console.log('Course session created successfully:', newSession);
       alert('Session created successfully!');
       
       // Refresh schedules to show new session
@@ -372,7 +372,7 @@ export default function ScheduleManagementPage() {
       setShowCreateExamPeriod(false);
       setExamPeriodForm({ name: '', startDate: '', endDate: '', registrationStartDate: '', registrationEndDate: '', academicYear: '', semesterType: 'WINTER' });
       
-      console.log('Exam period created successfully:', newPeriod);
+      // console.log('Exam period created successfully:', newPeriod);
       alert('Exam period created successfully!');
     } catch (error) {
       console.error('Failed to create exam period:', error);
@@ -407,7 +407,7 @@ export default function ScheduleManagementPage() {
       setShowAddExam(false);
       setExamForm({ subjectId: '', examDate: '', examTime: '', duration: '', location: '', maxPoints: '100', status: 'SCHEDULED' });
       
-      console.log('Exam created successfully:', newExam);
+      // console.log('Exam created successfully:', newExam);
       alert('Exam created successfully!');
       
       // Refresh exams list
@@ -446,7 +446,7 @@ export default function ScheduleManagementPage() {
       setShowCreateEvaluation(false);
       setEvaluationForm({ name: '', description: '', courseId: '', type: 'PROJECT', maxPoints: '', dueDate: '' });
       
-      console.log('Evaluation created successfully:', newEvaluation);
+      // console.log('Evaluation created successfully:', newEvaluation);
       alert('Evaluation tool created successfully!');
       
       // Refresh evaluation instruments list

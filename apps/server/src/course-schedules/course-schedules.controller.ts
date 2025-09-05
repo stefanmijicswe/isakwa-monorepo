@@ -65,9 +65,9 @@ export class CourseSchedulesController {
     @Param('id') id: string,
     @Request() req: any,
   ) {
-    console.log('🔍 Controller getCourseScheduleById called with id:', id, 'type:', typeof id)
+    console.log('Controller getCourseScheduleById called with id:', id, 'type:', typeof id)
     const numericId = parseInt(id);
-    console.log('🔍 Parsed ID:', numericId, 'isNaN:', isNaN(numericId))
+    console.log('Parsed ID:', numericId, 'isNaN:', isNaN(numericId))
     
     if (isNaN(numericId)) {
       throw new Error(`Invalid ID parameter: ${id}. Expected a number.`);

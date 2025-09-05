@@ -104,7 +104,6 @@ export class UniversitiesService {
     }
   }
 
-  // Metoda za dobijanje glavnog univerziteta (pretpostavljamo da je uvek ID = 1)
   async getMainUniversity() {
     try {
       // Try to get from Fuseki first

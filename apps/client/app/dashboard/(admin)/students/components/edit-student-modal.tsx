@@ -110,7 +110,7 @@ export function EditStudentModal({
   useEffect(() => {
     const fetchStudyPrograms = async () => {
       try {
-        console.log('🔍 Fetching study programs...')
+        // console.log('🔍 Fetching study programs...')
         setLoadingPrograms(true)
         
         // Try without Authorization header first since backend doesn't require it
@@ -120,11 +120,11 @@ export function EditStudentModal({
           }
         })
         
-        console.log('📡 Response status:', response.status)
+        // console.log('📡 Response status:', response.status)
         
         if (response.ok) {
           const data = await response.json()
-          console.log('✅ Study programs data:', data)
+          // console.log('✅ Study programs data:', data)
           // Backend returns {data: [...], meta: {...}} format
           setStudyPrograms(data.data || [])
         } else {
@@ -140,7 +140,7 @@ export function EditStudentModal({
     }
 
     if (isOpen) {
-      console.log('🚀 Modal opened, fetching study programs...')
+      // console.log('🚀 Modal opened, fetching study programs...')
       fetchStudyPrograms()
     }
   }, [isOpen])

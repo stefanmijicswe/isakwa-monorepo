@@ -6,7 +6,7 @@ import { PrismaService } from './prisma/prisma.service';
 const prisma = new PrismaService();
 
 async function seedPerfectData() {
-  console.log('🌱 Starting PERFECT seed based on exact schema...');
+  console.log('Starting PERFECT seed based on exact schema...');
 
   try {
     // 1. Country (ima unique name i code)
@@ -21,7 +21,7 @@ async function seedPerfectData() {
     });
 
     // 2. State (nema unique name, koristim findFirst)
-    console.log('🏛️ Creating state...');
+    console.log('Creating state...');
     let vojvodina = await prisma.state.findFirst({
       where: { name: 'Vojvodina' }
     });
@@ -36,7 +36,7 @@ async function seedPerfectData() {
     }
 
     // 3. City (nema unique name, koristim findFirst)
-    console.log('🏙️ Creating city...');
+    console.log('Creating city...');
     let noviSad = await prisma.city.findFirst({
       where: { name: 'Novi Sad' }
     });
@@ -53,7 +53,7 @@ async function seedPerfectData() {
     }
 
     // 4. Address (potreban za University i Faculty)
-    console.log('🏠 Creating address...');
+    console.log('Creating address...');
     let mainAddress = await prisma.address.findFirst({
       where: { street: 'Vojvode Putnika' }
     });
@@ -69,7 +69,7 @@ async function seedPerfectData() {
     }
 
     // 5. University (nema unique name, koristim findFirst)
-    console.log('🎓 Creating university...');
+    console.log('Creating university...');
     let university = await prisma.university.findFirst({
       where: { name: 'Isakwa University' }
     });
@@ -90,7 +90,7 @@ async function seedPerfectData() {
     }
 
     // 6. Faculty (nema unique name, koristim findFirst)
-    console.log('🏛️ Creating faculties...');
+    console.log('Creating faculties...');
     let facultyIT = await prisma.faculty.findFirst({
       where: { name: 'Faculty of Information Technology' }
     });
@@ -130,7 +130,7 @@ async function seedPerfectData() {
     }
 
     // 7. Department (nema unique name, koristim findFirst)
-    console.log('🏢 Creating departments...');
+    console.log('Creating departments...');
     let deptCS = await prisma.department.findFirst({
       where: { name: 'Department of Computer Science' }
     });
@@ -158,7 +158,7 @@ async function seedPerfectData() {
     }
 
     // 8. StudyProgram (ima unique name i code)
-    console.log('🎓 Creating study programs...');
+    console.log('Creating study programs...');
     const bachelorCS = await prisma.studyProgram.upsert({
       where: { name: 'Bachelor of Computer Science' },
       update: {},
@@ -190,7 +190,7 @@ async function seedPerfectData() {
     });
 
     // 9. Subject (ima unique code)
-    console.log('📚 Creating subjects...');
+    console.log('Creating subjects...');
     await prisma.subject.upsert({
       where: { code: 'CS101' },
       update: {},
@@ -242,7 +242,7 @@ async function seedPerfectData() {
       }
     });
 
-    console.log('✅ Perfect seed completed successfully!');
+    console.log('Perfect seed completed successfully!');
     
     return {
       countries: 1,
@@ -257,7 +257,7 @@ async function seedPerfectData() {
     };
 
   } catch (error) {
-    console.error('❌ Perfect seed failed:', error);
+    console.error('Perfect seed failed:', error);
     throw error;
   }
 }
@@ -269,11 +269,11 @@ export { seedPerfectData };
 if (require.main === module) {
   seedPerfectData()
     .then((result) => {
-      console.log('🎉 Perfect seed results:', result);
+      console.log('Perfect seed results:', result);
       process.exit(0);
     })
     .catch((error) => {
-      console.error('💥 Perfect seed failed:', error);
+      console.error('Perfect seed failed:', error);
       process.exit(1);
     })
     .finally(() => {
